@@ -672,6 +672,23 @@ class BookInfoViewModel(
         }
     }
 
+    /** 单独为本书关闭/开启阅读记录：只影响这一本，其他书照常记录。 */
+    fun toggleDisableReadRecord() {
+        currentBook?.let { book ->
+            book.disableReadRecord = !book.disableReadRecord
+            currentBook = book
+            syncUiState()
+            ReadBook.setReadRecordDisabled(book.bookUrl, book.disableReadRecord)
+            AudioPlay.book?.takeIf { it.bookUrl == book.bookUrl }
+                ?.disableReadRecord = book.disableReadRecord
+            if (inBookshelf) {
+                saveBook(book)
+            } else {
+                execute { bookRepository.update(book) }
+            }
+        }
+    }
+
     fun toggleSplitLongChapter() {
         currentBook?.takeIf { it.isLocal && it.type and BookType.text > 0 }?.let { book ->
             book.setSplitLongChapter(!book.getSplitLongChapter())
@@ -756,20 +773,6 @@ class BookInfoViewModel(
         dismissSheet()
     }
 
-    fun topBook() {
-        currentBook?.let { book ->
-            execute {
-                val minOrder = bookRepository.getMinOrder()
-                book.order = minOrder - 1
-                book.durChapterTime = System.currentTimeMillis()
-                bookRepository.update(book)
-                book
-            }.onSuccess {
-                currentBook = it
-                syncUiState()
-            }
-        }
-    }
     fun syncFromRemote() {
         val book = currentBook ?: return
         if (!book.isLocal) return
@@ -1571,12 +1574,10 @@ class BookInfoViewModel(
             }
             BookInfoMenuAction.SyncRemote -> syncFromRemote()
             BookInfoMenuAction.Refresh -> refreshCurrentBook()
-            BookInfoMenuAction.ReadRecord -> setSheet(BookInfoSheet.ReadRecord)
             BookInfoMenuAction.Login -> bookSource?.let {
                 emitEffect(BookInfoEffect.OpenSourceLogin(it.bookSourceUrl))
             }
 
-            BookInfoMenuAction.Top -> topBook()
             BookInfoMenuAction.SetSourceVariable -> requestSourceVariableSheet()
             BookInfoMenuAction.SetBookVariable -> requestBookVariableSheet()
             BookInfoMenuAction.CopyBookUrl -> emitEffect(
@@ -1585,15 +1586,6 @@ class BookInfoViewModel(
                     source = bookSource,
                     book = book.uiCopy(),
                     action = BookInfoCallbackAction.CopyText(book.bookUrl),
-                )
-            )
-
-            BookInfoMenuAction.CopyTocUrl -> emitEffect(
-                BookInfoEffect.RunSourceCallback(
-                    event = SourceCallBack.CLICK_COPY_TOC_URL,
-                    source = bookSource,
-                    book = book.uiCopy(),
-                    action = BookInfoCallbackAction.CopyText(book.tocUrl),
                 )
             )
 
@@ -1611,6 +1603,7 @@ class BookInfoViewModel(
 
             BookInfoMenuAction.ShowLog -> showAppLog()
             BookInfoMenuAction.TogglePrivate -> toggleBookPrivate()
+            BookInfoMenuAction.ToggleDisableReadRecord -> toggleDisableReadRecord()
         }
     }
 
@@ -2081,6 +2074,7 @@ class BookInfoViewModel(
             isLocal = isLocal,
             type = type,
             canUpdate = canUpdate,
+            disableReadRecord = disableReadRecord,
             splitLongChapter = getSplitLongChapter(),
             durChapterTitle = durChapterTitle,
             latestChapterTitle = latestChapterTitle,

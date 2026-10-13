@@ -23,7 +23,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1035,42 +1034,48 @@ private fun BookInfoOverflowMenu(
 ) {
     val book = state.book
     RoundDropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
-        if (state.bookSourceUi?.hasCustomButton == true) {
-            RoundDropdownMenuItem(
-                text = stringResource(R.string.custom_button),
-                onClick = { onMenuAction(BookInfoMenuAction.CustomButton) }
-            )
-        }
+        // 书源编辑 / 书源登录
         if (state.inBookshelf) {
             RoundDropdownMenuItem(
-                text = stringResource(R.string.edit),
+                text = stringResource(R.string.book_source_edit),
                 onClick = { onMenuAction(BookInfoMenuAction.Edit) }
-            )
-        }
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.refresh),
-            onClick = { onMenuAction(BookInfoMenuAction.Refresh) }
-        )
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.read_record),
-            onClick = { onMenuAction(BookInfoMenuAction.ReadRecord) }
-        )
-        if (book?.isLocal == true) {
-            RoundDropdownMenuItem(
-                text = stringResource(R.string.re_sync_webdav),
-                onClick = { onMenuAction(BookInfoMenuAction.SyncRemote) }
-            )
-            RoundDropdownMenuItem(
-                text = stringResource(R.string.upload_to_remote),
-                onClick = { onMenuAction(BookInfoMenuAction.Upload) }
             )
         }
         if (state.bookSourceUi?.hasLogin == true) {
             RoundDropdownMenuItem(
-                text = stringResource(R.string.login),
+                text = stringResource(R.string.book_source_login),
                 onClick = { onMenuAction(BookInfoMenuAction.Login) }
             )
         }
+        // 删除提醒 / 允许更新 / 清理缓存 / 阅读日志 / 标记为私密
+        RoundDropdownMenuItem(
+            text = stringResource(R.string.delete_alert),
+            onClick = { onMenuAction(BookInfoMenuAction.ToggleDeleteAlert) },
+            isSelected = state.deleteAlertEnabled
+        )
+        if (book?.isLocal == false) {
+            RoundDropdownMenuItem(
+                text = stringResource(R.string.allow_update),
+                onClick = { onMenuAction(BookInfoMenuAction.ToggleCanUpdate) },
+                isSelected = book.canUpdate
+            )
+        }
+        RoundDropdownMenuItem(
+            text = stringResource(R.string.clear_cache),
+            onClick = { onMenuAction(BookInfoMenuAction.ClearCache) }
+        )
+        RoundDropdownMenuItem(
+            text = stringResource(R.string.read_log),
+            onClick = { onMenuAction(BookInfoMenuAction.ShowLog) }
+        )
+        RoundDropdownMenuItem(
+            text = stringResource(
+                if (state.bookPrivate) R.string.private_unmark_book else R.string.private_mark_book
+            ),
+            onClick = { onMenuAction(BookInfoMenuAction.TogglePrivate) },
+            isSelected = state.bookPrivate
+        )
+        // 设置源变量 / 设置书籍变量 / 拷贝书籍 URL
         if (state.bookSourceUi != null) {
             RoundDropdownMenuItem(
                 text = stringResource(R.string.set_source_variable),
@@ -1084,20 +1089,28 @@ private fun BookInfoOverflowMenu(
                 text = stringResource(R.string.copy_book_url),
                 onClick = { onMenuAction(BookInfoMenuAction.CopyBookUrl) }
             )
+        }
+        // 单独为本书关闭阅读记录
+        RoundDropdownMenuItem(
+            text = stringResource(R.string.book_disable_read_record),
+            onClick = { onMenuAction(BookInfoMenuAction.ToggleDisableReadRecord) },
+            isSelected = book?.disableReadRecord == true
+        )
+        // 其余项
+        if (state.bookSourceUi?.hasCustomButton == true) {
             RoundDropdownMenuItem(
-                text = stringResource(R.string.copy_toc_url),
-                onClick = { onMenuAction(BookInfoMenuAction.CopyTocUrl) }
+                text = stringResource(R.string.custom_button),
+                onClick = { onMenuAction(BookInfoMenuAction.CustomButton) }
             )
         }
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.to_top),
-            onClick = { onMenuAction(BookInfoMenuAction.Top) }
-        )
-        if (book?.isLocal == false ){
+        if (book?.isLocal == true) {
             RoundDropdownMenuItem(
-                text = stringResource(R.string.allow_update),
-                onClick = { onMenuAction(BookInfoMenuAction.ToggleCanUpdate) },
-                isSelected = book.canUpdate
+                text = stringResource(R.string.re_sync_webdav),
+                onClick = { onMenuAction(BookInfoMenuAction.SyncRemote) }
+            )
+            RoundDropdownMenuItem(
+                text = stringResource(R.string.upload_to_remote),
+                onClick = { onMenuAction(BookInfoMenuAction.Upload) }
             )
         }
         if (book?.isLocal == true && book.type and BookType.text > 0) {
@@ -1107,26 +1120,6 @@ private fun BookInfoOverflowMenu(
                 isSelected = book.splitLongChapter
             )
         }
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.delete_alert),
-            onClick = { onMenuAction(BookInfoMenuAction.ToggleDeleteAlert) },
-            isSelected = state.deleteAlertEnabled
-        )
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.clear_cache),
-            onClick = { onMenuAction(BookInfoMenuAction.ClearCache) }
-        )
-        RoundDropdownMenuItem(
-            text = stringResource(R.string.log),
-            onClick = { onMenuAction(BookInfoMenuAction.ShowLog) }
-        )
-        RoundDropdownMenuItem(
-            text = stringResource(
-                if (state.bookPrivate) R.string.private_unmark_book else R.string.private_mark_book
-            ),
-            onClick = { onMenuAction(BookInfoMenuAction.TogglePrivate) },
-            isSelected = state.bookPrivate
-        )
     }
 }
 
@@ -1290,21 +1283,32 @@ private fun BookInfoHeader(
                                 )
                             }
                         }
-                        AnimatedTextLine(
-                            text = stringResource(R.string.author_show, book.realAuthor),
-                            style = LegadoTheme.typography.bodyLarge,
-                            color = LegadoTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.combinedClickable(
-                                onClick = { onAuthorClick(false) },
-                                onLongClick = { onAuthorClick(true) }
+                        book.realAuthor.takeIf { it.isNotBlank() }?.let { author ->
+                            AnimatedTextLine(
+                                text = stringResource(R.string.author_show, author),
+                                style = LegadoTheme.typography.bodyLarge,
+                                color = LegadoTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { onAuthorClick(false) },
+                                    onLongClick = { onAuthorClick(true) }
+                                )
                             )
-                        )
-                        AnimatedTextLine(
+                        }
+                        TextCard(
                             text = stringResource(R.string.origin_show, book.originName),
-                            style = LegadoTheme.typography.labelMedium,
-                            color = LegadoTheme.colorScheme.primary,
-                            modifier = Modifier.clickable(onClick = onOriginClick)
+                            textStyle = LegadoTheme.typography.labelLargeEmphasized,
+                            backgroundColor = LegadoTheme.colorScheme.surfaceContainer,
+                            contentColor = LegadoTheme.colorScheme.onSurfaceVariant,
+                            onClick = onOriginClick,
                         )
+                        groupNames?.takeIf { it.isNotBlank() }?.let { group ->
+                            TextCard(
+                                text = stringResource(R.string.group_s, group),
+                                textStyle = LegadoTheme.typography.labelLargeEmphasized,
+                                backgroundColor = LegadoTheme.colorScheme.surfaceContainer,
+                                contentColor = LegadoTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -1319,7 +1323,7 @@ private fun BookInfoHeader(
                     widthFraction = 0.34f,
                     thickness = 20.dp
                 )
-            } else if (kindLabels.isNotEmpty() || !groupNames.isNullOrBlank()) {
+            } else if (kindLabels.isNotEmpty()) {
                 val kindListState = rememberLazyListState()
                 LazyRow(
                     state = kindListState,
@@ -1328,16 +1332,6 @@ private fun BookInfoHeader(
                         .fadingEdge(kindListState),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    groupNames?.takeIf { it.isNotBlank() }?.let {
-                        item(key = "group-$it") {
-                            TextCard(
-                                text = stringResource(R.string.group_s, it),
-                                textStyle = LegadoTheme.typography.labelLargeEmphasized,
-                                backgroundColor = LegadoTheme.colorScheme.surfaceContainer,
-                                contentColor = LegadoTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
                     itemsIndexed(
                         items = kindLabels,
                         key = { index, label -> "kind-$index-$label" }

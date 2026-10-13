@@ -862,7 +862,7 @@ fun BookItem(
                 )
             }
         } else null,
-        subTitle = if (locked) null else if (isCompact) {
+        subTitle = if (locked || book.author.isBlank()) null else if (isCompact) {
             stringResource(R.string.author_read, book.author, unreadCount)
         } else {
             book.author
