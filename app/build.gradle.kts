@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.legato.kazusa"
+        applicationId = "io.legado.mao"
         minSdk = 26
         targetSdk = 37
         versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 10000 + it } ?: 32640
@@ -117,6 +117,17 @@ android {
                 "proguard-rules.pro",
                 "cronet-proguard-rules.pro"
             )
+        }
+        // 正式版的共存包：与主包（io.legado.mao）并存安装、互不覆盖，仅显示名不同
+        create("releaseA") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".a"
+            matchingFallbacks += listOf("release")
+        }
+        create("releaseB") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".b"
+            matchingFallbacks += listOf("release")
         }
     }
 

@@ -30,6 +30,12 @@ android {
     productFlavors {
         create("app") { dimension = "mode" }
     }
+
+    // 与 app 模块新增的共存 buildType 对应（基线测试不跑它们，仅防 AGP 找不到对应 buildType）
+    buildTypes {
+        create("releaseA") {}
+        create("releaseB") {}
+    }
 }
 
 // This is the configuration block for the Baseline Profile plugin.
@@ -48,7 +54,9 @@ dependencies {
 
 androidComponents {
     beforeVariants { v ->
-        if (v.buildType == "noR8" || v.buildType == "debug") {
+        if (v.buildType == "noR8" || v.buildType == "debug" ||
+            v.buildType == "releaseA" || v.buildType == "releaseB"
+        ) {
             v.enable = false
         }
     }
