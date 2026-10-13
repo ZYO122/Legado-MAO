@@ -1,21 +1,15 @@
-# Legado with MD3
+# Legado-MAO
 
 <p align="left">
-  <a href="https://github.com/HapeLee/legado-with-MD3">简体中文</a> ｜ 
-  <a href="https://github.com/HapeLee/legado-with-MD3/blob/main/English.md">English</a>
+  <a href="https://github.com/ZYO122/Legado-MAO">简体中文</a> ｜ 
+  <a href="https://github.com/ZYO122/Legado-MAO/blob/main/English.md">English</a>
 </p>
 
 ---
 
 ## 📖 Introduction
 
-**Legado with MD3** is a Material Design 3–styled refactor based on the open-source project
-👉 [Legado (阅读)](https://github.com/gedoor/legado).
-
-In addition to a visual redesign of the UI, this project introduces multiple branch-specific
-features.
-It is also gradually migrating from the traditional **View system** to **Jetpack Compose**, aiming
-to deliver a more modern, smooth, and consistent reading experience.
+**Legado-MAO** is a reading app based on [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) (upstream).
 
 > [!CAUTION]
 > **Important Notes**
@@ -27,26 +21,6 @@ to deliver a more modern, smooth, and consistent reading experience.
 > Custom themes and dynamic color features are currently unavailable.
 > This limitation will be addressed after the Jetpack Compose migration is completed.
 > (Due to limited developer resources, this process may take a considerable amount of time.)
-
----
-
-## ✨ Branch Features
-
-Compared to the official version, this project provides the following exclusive features:
-
-* **New Theme System:**
-  A fully redesigned Material Design 3 UI, with support for **predictive back gestures** and *
-  *shared element transitions**.
-* **Reading Interface:**
-  More personalized reading layouts and menu configurations.
-* **Reading Records:**
-  Detailed reading statistics with **timeline** and **chapter-based** views.
-* **Enhanced Experience:**
-  Improved experiences for **comic reading**, **audiobooks**, and **discovery** pages.
-* **Bookshelf Layouts:**
-  More bookshelf layout options, with dedicated UI optimizations for **tablet devices**.
-* **Practical Features:**
-  Added book notes and **smart companion groups** (automatically categorizing read / unread books).
 
 ---
 
@@ -70,18 +44,10 @@ Compared to the official version, this project provides the following exclusive 
 
 ---
 
-## 🤝 Community & Support
+## 💬 Community
 
-The following communities belong to the **original project**.
-Due to limited developer availability, this fork currently does **not** have an independent
-community.
-
-* **Official Wiki:**
-  [Book Source Rule Tutorial](https://mgz0227.github.io/The-tutorial-of-Legado/)
-* **Community Channels:**
-  [Telegram](https://t.me/legado_channels) ｜ [Discord](https://discord.gg/VtUfRyzRXn) ｜ [Yuque Wiki](https://www.yuque.com/legado/wiki/community)
-* **Related Documents:**
-  [Disclaimer](https://gedoor.github.io/Disclaimer) 
+* **Telegram Group:** [https://t.me/Legado_MAO](https://t.me/Legado_MAO)
+* **Releases:** [GitHub Releases](https://github.com/ZYO122/Legado-MAO/releases)
 
 ---
 
@@ -91,15 +57,7 @@ Special thanks to the following excellent open-source projects for inspiration a
 support:
 
 * [gedoor/legado](https://github.com/gedoor/legado) *(the legendary original project)*
-* [Luoyacheng/legado](https://github.com/Luoyacheng/legado) *(providing extended features)*
-* [komikku-app/komikku](https://github.com/komikku-app/komikku) *(UI inspiration and Compose
-  components)*
-* [FoedusProgramme/Gramophone](https://github.com/FoedusProgramme/Gramophone) *(UI inspiration and
-  View-based cover color extraction)*
-* [jordond/MaterialKolor](https://github.com/jordond/MaterialKolor) *(excellent dynamic color
-  implementation for Jetpack Compose)*
-* [Calvin-LL/Reorderable](https://github.com/Calvin-LL/Reorderable) *(drag-and-drop reordering for
-  Jetpack Compose)*
+* [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) *(provides the overall framework)*
 * And many more open-source projects...
 
 ---
@@ -109,4 +67,3 @@ support:
 
 This project is a **non-official fork** of Legado and is intended for learning,
 personal use, and experimentation only.
-

@@ -1,17 +1,13 @@
-# Legado with MD3
+# Legado-MAO
 
 <p align="left">
-  <a href="https://github.com/HapeLee/legado-with-MD3">简体中文</a> ｜ 
-  <a href="https://github.com/HapeLee/legado-with-MD3/blob/main/English.md">English</a>
+  <a href="https://github.com/ZYO122/Legado-MAO">简体中文</a> ｜ 
+  <a href="https://github.com/ZYO122/Legado-MAO/blob/main/English.md">English</a>
 </p>
 
 ## 📖 介绍
 
-**Legado with MD3** 是基于开源项目 [阅读 (Legado)](https://github.com/gedoor/legado) 开发的 Material
-Design 3 风格重构版本。
-
-本项目在对 UI 进行重绘的基础上，加入了多项分支独有功能，并正在逐步从传统 View 迁移至 Jetpack Compose
-框架，目标是提供更加现代、流畅且一致的阅读体验。
+**Legado-MAO** 是基于 [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3)（上游）开发的阅读应用。
 
 > [!CAUTION]
 > **注意事项：**
@@ -20,19 +16,6 @@ Design 3 风格重构版本。
 > **Android 12 以下设备：**
 > 暂时无法使用自定义主题与动态取色功能。此限制将在 Jetpack Compose
 > 迁移完成后得到解决（由于开发者精力有限，迁移过程将持续较长时间）。
-
----
-
-## ✨ 分支特性
-
-相比于官方版本，本项目具有以下独有特性：
-
-* **全新主题：** 全新 Material Design 3 设计界面，支持 **预测性返回手势** 与 **共享元素动画**。
-* **阅读界面：** 更加个性化的阅读界面与菜单配置。
-* **阅读记录：** 提供详尽的阅读记录，支持 **时间轴** 与 **章节维度** 统计。
-* **体验增强：** 更健全的 **漫画阅读** 、 **有声书** 与 **发现** 等界面体验。
-* **书架布局：** 更多的书架布局选择，针对 **平板端** 进行了专门的界面优化。
-* **实用功能：** 新增书籍备注、智能伴生分组（自动归类已读/未读），支持**手柄**上下**翻页**。
 
 ---
 
@@ -48,10 +31,8 @@ Design 3 风格重构版本。
 
 ## 💬 交流
 
-* **Telegram 群组：** [Legado with MD3](https://t.me/materado)
-* **版本发布：**
-  最新版本会自动发布至群组，也可在 [GitHub Releases](https://github.com/HapeLee/legado-with-MD3/releases)
-  下载。
+* **Telegram 群组：** [https://t.me/Legado_MAO](https://t.me/Legado_MAO)
+* **版本发布：** [GitHub Releases](https://github.com/ZYO122/Legado-MAO/releases)
 
 ---
 
@@ -60,15 +41,7 @@ Design 3 风格重构版本。
 感谢以下优秀开源项目提供的灵感与技术支持：
 
 * [gedoor/legado](https://github.com/gedoor/legado) (这个项目最吊的老爹)
-* [Luoyacheng/legado](https://github.com/Luoyacheng/legado) (提供了更多的扩展功能)
-* [komikku-app/komikku](https://github.com/komikku-app/komikku) (提供了界面灵感与一些 Compose
-  的优秀控件)
-* [FoedusProgramme/Gramophone](https://github.com/FoedusProgramme/Gramophone) (提供了界面灵感与 View
-  系统的封面取色方法)
-* [jordond/MaterialKolor](https://github.com/jordond/MaterialKolor) (基于 Jetpack Compose
-  优秀的取色实现)
-* [Calvin-LL/Reorderable](https://github.com/Calvin-LL/Reorderable) (基于 Jetpack Compose
-  优秀的拖动排序实现)
+* [HapeLee/legado-with-MD3](https://github.com/HapeLee/legado-with-MD3) (提供了整体框架)
 * 以及更多开源项目...
 
 ## ⚠️ 用户协议与免责声明
@@ -110,4 +83,3 @@ Design 3 风格重构版本。
 2. 用户应确保其使用本软件获取、处理或访问相关内容的行为符合适用法律法规及权利要求。
 3. 若权利人认为某些第三方规则存在涉嫌侵权情形，可依法向相关内容实际托管方主张权利。
 4. 权利人亦可向开发者提交包含身份证明、权属证明、具体规则信息及相关说明的有效通知。开发者将在合理技术能力范围内，对涉嫌违规规则采取必要处理措施。
-
