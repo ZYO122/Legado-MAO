@@ -1115,7 +1115,7 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
                 AppLog.putDebug("moveToNextChapter-章节已加载,刷新视图")
                 renderCallBack?.upContent()
             }
-            loadContent(durChapterIndex.plus(1), upContent, false)
+            if (prefetchNextChapterEnabled) loadContent(durChapterIndex.plus(1), upContent, false)
             saveRead()
             callBack?.upMenuView()
             AppLog.putDebug("moveToNextChapter-curPageChanged()")
@@ -1145,7 +1145,7 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
                 AppLog.putDebug("moveToNextChapter-章节已加载,刷新视图")
                 renderCallBack?.upContentAwait()
             }
-            loadContent(durChapterIndex.plus(1), upContent, false)
+            if (prefetchNextChapterEnabled) loadContent(durChapterIndex.plus(1), upContent, false)
             saveRead()
             callBack?.upMenuView()
             AppLog.putDebug("moveToNextChapter-curPageChanged()")
@@ -1179,7 +1179,7 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
             } else if (upContent && upContentInPlace) {
                 renderCallBack?.upContent()
             }
-            loadContent(durChapterIndex.minus(1), upContent, false)
+            if (prefetchPrevChapterEnabled) loadContent(durChapterIndex.minus(1), upContent, false)
             saveRead()
             callBack?.upMenuView()
             curPageChanged()
