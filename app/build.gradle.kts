@@ -74,6 +74,8 @@ android {
             "Cronet_Main_Version",
             "\"${project.findProperty("CronetMainVersion")}\""
         )
+        // 发布资产名里的变体后缀：主包为空、共存版 -A / -B（与 CI 命名一致）
+        buildConfigField("String", "UPDATE_ASSET_SUFFIX", "\"\"")
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -131,11 +133,13 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".a"
             matchingFallbacks += listOf("release")
+            buildConfigField("String", "UPDATE_ASSET_SUFFIX", "\"-A\"")
         }
         create("releaseB") {
             initWith(getByName("release"))
             applicationIdSuffix = ".b"
             matchingFallbacks += listOf("release")
+            buildConfigField("String", "UPDATE_ASSET_SUFFIX", "\"-B\"")
         }
     }
 

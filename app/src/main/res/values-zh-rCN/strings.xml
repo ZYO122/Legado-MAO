@@ -138,7 +138,7 @@
     <string name="change_origin">换源</string>
     <string name="about_description">全新设计的阅读 3.0</string>
     <string name="app_share_description">
-        阅读 3.0 下载地址：\nhttps://github.com/gedoor/legado/releases
+        阅读 3.0 下载地址：\nhttps://github.com/ZYO122/Legado-MAO/releases
     </string>
     <string name="version_name">版本 %s</string>
     <string name="pt_background_verification">后台校验书源</string>

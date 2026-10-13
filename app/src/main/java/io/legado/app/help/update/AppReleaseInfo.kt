@@ -1,8 +1,8 @@
 package io.legado.app.help.update
 
-import android.os.Build
 import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
+import io.legado.app.BuildConfig
 import io.legado.app.exception.NoStackTraceException
 import java.time.Instant
 
@@ -37,42 +37,32 @@ data class GithubRelease(
     val createdAt: String?
 ) {
     fun gitReleaseToAppReleaseInfo(
-        supportedAbis: List<String> = Build.SUPPORTED_ABIS.asList()
+        variantSuffix: String = BuildConfig.UPDATE_ASSET_SUFFIX
     ): List<AppReleaseInfo> {
         assets ?: throw NoStackTraceException("获取新版本出错")
 
         val version = tagName
-        return selectCompatibleAssets(assets, supportedAbis)
+        return selectCompatibleAssets(assets, variantSuffix)
             .map { it.assetToAppReleaseInfo(isPreRelease, body.orEmpty(), version) }
     }
 }
 
-private val releaseAbis = listOf(
-    "arm64-v8a",
-    "armeabi-v7a",
-    "x86_64",
-    "armeabi",
-    "x86"
-)
-
 internal fun selectCompatibleAssets(
     assets: List<Asset>,
-    supportedAbis: List<String>
+    variantSuffix: String
 ): List<Asset> {
-    val validAssets = assets.filter { it.isValid }
-
-    supportedAbis.forEach { supportedAbi ->
-        val matchingAssets = validAssets.filter { asset ->
-            asset.releaseAbi.equals(supportedAbi, ignoreCase = true)
-        }
-        if (matchingAssets.isNotEmpty()) return matchingAssets
-    }
-
-    return validAssets.filter { it.releaseAbi == null }
+    return assets.filter { it.isValid && it.variantSuffix == variantSuffix }
 }
 
-private val Asset.releaseAbi: String?
-    get() = releaseAbis.firstOrNull { name.contains(it, ignoreCase = true) }
+// 资产名形如 legado-<版本>.apk / legado-<版本>-A.apk / -B.apk；末尾 A/B 标记共存版
+private val Asset.variantSuffix: String
+    get() = name.substringBeforeLast('.').substringAfterLast('-').let { last ->
+        if (last.equals("a", ignoreCase = true) || last.equals("b", ignoreCase = true)) {
+            "-${last.uppercase()}"
+        } else {
+            ""
+        }
+    }
 
 @Keep
 data class Asset(
