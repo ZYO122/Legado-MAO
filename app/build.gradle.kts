@@ -26,7 +26,15 @@ val versionMajor = versionProps["VERSION_MAJOR"]?.toString()?.toInt() ?: 0
 val versionMinor = versionProps["VERSION_MINOR"]?.toString()?.toInt() ?: 0
 val versionPatch = versionProps["VERSION_PATCH"]?.toString()?.toInt() ?: 0
 val appName = "legado"
-val projectVersionName = "$versionMajor.$versionMinor.$versionPatch"
+val isBetaBuild = providers.gradleProperty("beta").isPresent
+val versionCodeOverride = providers.gradleProperty("versionCode").map(String::toInt).orNull
+val versionCodeRelease = versionProps["VERSION_CODE_RELEASE"]?.toString()?.toInt() ?: 1
+val versionCodeBeta = versionProps["VERSION_CODE_BETA"]?.toString()?.toInt() ?: 1
+val baseVersionName = "$versionMajor.$versionMinor.$versionPatch"
+val versionSuffix = versionProps["VERSION_SUFFIX"]?.toString()?.toInt() ?: 1
+// 正式版即基础版本号；加 -Pbeta 构建测试版，后缀取 version.properties 的 VERSION_SUFFIX（如 3.26.1-Beta.1）
+val projectVersionName =
+    if (isBetaBuild) "$baseVersionName-Beta.$versionSuffix" else baseVersionName
 val enableAbiSplits = providers.gradleProperty("enableAbiSplits")
     .map(String::toBoolean)
     .getOrElse(true)
@@ -56,7 +64,7 @@ android {
         applicationId = "io.legado.mao"
         minSdk = 26
         targetSdk = 37
-        versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 10000 + it } ?: 32640
+        versionCode = versionCodeOverride ?: (if (isBetaBuild) versionCodeBeta else versionCodeRelease)
         versionName = System.getenv("APP_VERSION_NAME") ?: projectVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
