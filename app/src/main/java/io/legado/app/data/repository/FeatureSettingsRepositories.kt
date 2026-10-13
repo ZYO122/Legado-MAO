@@ -152,7 +152,8 @@ internal fun Preferences.toDownloadCacheSettings(): DownloadCacheSettings =
     DownloadCacheSettings(
         bitmapCacheSize = compatDsInt(PreferKey.bitmapCacheSize) ?: 50,
         imageRetainNum = compatDsInt(PreferKey.imageRetainNum) ?: 0,
-        preDownloadNum = compatDsInt(PreferKey.preDownloadNum) ?: 10,
+        preDownloadNum = compatDsInt(PreferKey.preDownloadNum) ?: 1,
+        preDownloadNumPrev = compatDsInt(PreferKey.preDownloadNumPrev) ?: 0,
         threadCount = compatDsInt(PreferKey.threadCount) ?: 16,
         cacheBookThreadCount = compatDsInt(PreferKey.cacheBookThreadCount) ?: 16,
         userAgent = compatDsString(PreferKey.userAgent).orEmpty().ifBlank {
@@ -167,6 +168,7 @@ internal fun DownloadCacheSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.bitmapCacheSize to bitmapCacheSize,
     PreferKey.imageRetainNum to imageRetainNum,
     PreferKey.preDownloadNum to preDownloadNum,
+    PreferKey.preDownloadNumPrev to preDownloadNumPrev,
     PreferKey.threadCount to threadCount,
     PreferKey.cacheBookThreadCount to cacheBookThreadCount,
     PreferKey.userAgent to userAgent,
