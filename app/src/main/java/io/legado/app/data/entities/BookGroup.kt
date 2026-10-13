@@ -18,11 +18,11 @@ data class BookGroup(
     var cover: String? = null,
     var order: Int = 0,
     @ColumnInfo(defaultValue = "1")
-    var enableRefresh: Boolean = true,
+    var enableRefresh: Boolean = false,
     @ColumnInfo(defaultValue = "1")
     var show: Boolean = true,
     @ColumnInfo(defaultValue = "-1")
-    var bookSort: Int = -1,
+    var bookSort: Int = 3,
     @ColumnInfo(defaultValue = "0")
     var isPrivate: Boolean = false
 ) : Parcelable {

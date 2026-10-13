@@ -104,10 +104,10 @@ fun GroupEditContent(
 ) {
     val context = LocalContext.current
     var groupName by remember(group) { mutableStateOf(group?.groupName ?: "") }
-    var enableRefresh by remember(group) { mutableStateOf(group?.enableRefresh ?: true) }
+    var enableRefresh by remember(group) { mutableStateOf(group?.enableRefresh ?: false) }
     var isPrivate by remember(group) { mutableStateOf(group?.isPrivate ?: false) }
     var showDisablePrivateDialog by remember(group) { mutableStateOf(false) }
-    var selectedSortIndex by remember(group) { mutableIntStateOf(group?.bookSort ?: -1) }
+    var selectedSortIndex by remember(group) { mutableIntStateOf(group?.bookSort ?: 3) }
     var pattern by remember(tagGroupRule) { mutableStateOf(tagGroupRule?.pattern ?: "") }
     var showPattern by remember(tagGroupRule) { mutableStateOf(tagGroupRule != null || pattern.isNotBlank()) }
     var isSaving by remember(group) { mutableStateOf(false) }

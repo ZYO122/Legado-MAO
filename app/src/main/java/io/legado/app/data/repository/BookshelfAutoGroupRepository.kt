@@ -123,9 +123,9 @@ class BookshelfAutoGroupRepository(
                         groupId = newGroupId,
                         groupName = group.name,
                         order = groupDao.maxOrder.plus(1),
-                        enableRefresh = true,
+                        enableRefresh = false,
                         show = true,
-                        bookSort = -1,
+                        bookSort = 3,
                         isPrivate = false,
                     )
                     // Clear any stale bit before reusing a historical group id.

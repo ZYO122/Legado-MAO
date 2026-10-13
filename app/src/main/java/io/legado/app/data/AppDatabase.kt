@@ -344,98 +344,32 @@ abstract class AppDatabase : RoomDatabase() {
             }
 
             override fun onOpen(db: SupportSQLiteDatabase) {
-                // 伴生分组默认隐藏，仅「全部」默认显示；已有数据库不受影响，用户仍可在分组管理中手动开启
+                // 只保留「全部」「更新失败」两个系统分组，默认手动排序、不随分组的开关下拉刷新
                 @Language("sql")
                 val insertBookGroupAllSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdAll}, '全部', -10, 1
+                    insert into book_groups(groupId, groupName, 'order', bookSort, enableRefresh, show) 
+                    select ${BookGroup.IdAll}, '全部', -10, 3, 0, 1
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdAll})
                 """.trimIndent()
                 db.execSQL(insertBookGroupAllSql)
                 @Language("sql")
-                val insertBookGroupLocalSql = """
-                    insert into book_groups(groupId, groupName, 'order', enableRefresh, show) 
-                    select ${BookGroup.IdLocal}, '本地', -9, 0, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdLocal})
-                """.trimIndent()
-                db.execSQL(insertBookGroupLocalSql)
-                @Language("sql")
-                val insertBookGroupTextSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdText}, '小说', -26, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdText})
-                """.trimIndent()
-                db.execSQL(insertBookGroupTextSql)
-                @Language("sql")
-                val insertBookGroupMangaSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdManga}, '漫画', -25, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdManga})
-                """.trimIndent()
-                db.execSQL(insertBookGroupMangaSql)
-                @Language("sql")
-                val insertBookGroupMusicSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdAudio}, '音频', -8, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdAudio})
-                """.trimIndent()
-                db.execSQL(insertBookGroupMusicSql)
-                Language("sql")
-                val insertGroupReading = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdReading}, '在读', -30, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdReading})
-                """.trimIndent()
-                db.execSQL(insertGroupReading)
-                @Language("sql")
-                val insertGroupUnread = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdUnread}, '未读', -29, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdUnread})
-                """.trimIndent()
-                db.execSQL(insertGroupUnread)
-                @Language("sql")
-                val insertGroupReadFinished = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdReadFinished}, '已读', -28, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdReadFinished})
-                """.trimIndent()
-                db.execSQL(insertGroupReadFinished)
-                @Language("sql")
-                val insertGroupReadFinishedUpdate = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdReadFinishedUpdate}, '连载已读', -27, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdReadFinishedUpdate})
-                """.trimIndent()
-                db.execSQL(insertGroupReadFinishedUpdate)
-                @Language("sql")
-                val insertGroupReadFinishedComplete = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdReadFinishedComplete}, '完本已读', -26, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdReadFinishedComplete})
-                """.trimIndent()
-                db.execSQL(insertGroupReadFinishedComplete)
-                @Language("sql")
-                val insertBookGroupNetNoneGroupSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdNetNone}, '网络未分组', -7, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdNetNone})
-                """.trimIndent()
-                db.execSQL(insertBookGroupNetNoneGroupSql)
-                @Language("sql")
-                val insertBookGroupLocalNoneGroupSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdLocalNone}, '本地未分组', -6, 0
-                    where not exists (select * from book_groups where groupId = ${BookGroup.IdLocalNone})
-                """.trimIndent()
-                db.execSQL(insertBookGroupLocalNoneGroupSql)
-                @Language("sql")
                 val insertBookGroupErrorSql = """
-                    insert into book_groups(groupId, groupName, 'order', show) 
-                    select ${BookGroup.IdError}, '更新失败', -1, 0
+                    insert into book_groups(groupId, groupName, 'order', bookSort, enableRefresh, show) 
+                    select ${BookGroup.IdError}, '更新失败', -1, 3, 0, 0
                     where not exists (select * from book_groups where groupId = ${BookGroup.IdError})
                 """.trimIndent()
                 db.execSQL(insertBookGroupErrorSql)
+                // 其余系统分组不再创建；重复安装同一新包名时残留的旧行一并清掉
+                @Language("sql")
+                val deleteRemovedSystemGroupsSql = """
+                    delete from book_groups where groupId in (
+                        ${BookGroup.IdLocal}, ${BookGroup.IdAudio}, ${BookGroup.IdNetNone},
+                        ${BookGroup.IdLocalNone}, ${BookGroup.IdManga}, ${BookGroup.IdText},
+                        ${BookGroup.IdReading}, ${BookGroup.IdUnread}, ${BookGroup.IdReadFinished},
+                        ${BookGroup.IdReadFinishedUpdate}, ${BookGroup.IdReadFinishedComplete}
+                    )
+                """.trimIndent()
+                db.execSQL(deleteRemovedSystemGroupsSql)
                 @Language("sql")
                 val upBookSourceLoginUiSql =
                     "update book_sources set loginUi = null where loginUi = 'null'"

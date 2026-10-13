@@ -478,7 +478,7 @@ fun BookshelfScreen(
             }
         }
     }
-    val currentGroupBookCount by remember { derivedStateOf { uiState.currentGroupBookCount } }
+    val currentGroupBookCount = uiState.currentGroupBookCount
 
     val clearSelection = {
         onIntent(BookshelfIntent.ClearSelection)
@@ -505,7 +505,7 @@ fun BookshelfScreen(
         }
     }
 
-    val currentGroupName by remember { derivedStateOf { uiState.currentGroupName } }
+    val currentGroupName = uiState.currentGroupName
 
     PredictiveBackHandler(enabled = bookGroupStyle == 2 && !isInFolderRoot && !isEditMode) { progress ->
         try {
@@ -539,19 +539,15 @@ fun BookshelfScreen(
     val currentMenuGroupId by remember {
         derivedStateOf { if (uiState.isSearch) uiState.selectedGroupId else currentTabGroupId }
     }
-    val editStickySummary by remember {
-        derivedStateOf {
-            if (uiState.isEditMode) {
-                BookshelfEditStickySummary(
-                    selectedCount = uiState.selectedBookUrls.size,
-                    currentGroupTotalCount = currentGroupBookCount,
-                    groupName = currentGroupName,
-                    showGroupName = uiState.bookGroupStyle != 0
-                )
-            } else {
-                null
-            }
-        }
+    val editStickySummary = if (uiState.isEditMode) {
+        BookshelfEditStickySummary(
+            selectedCount = uiState.selectedBookUrls.size,
+            currentGroupTotalCount = currentGroupBookCount,
+            groupName = currentGroupName,
+            showGroupName = uiState.bookGroupStyle != 0
+        )
+    } else {
+        null
     }
 
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
@@ -916,7 +912,7 @@ fun BookshelfScreen(
         } else {
             uiState.groups.getOrNull(pagerState.settledPage)
         }
-        val pullToRefreshEnabled = (currentGroup?.enableRefresh ?: true) && !isEditMode
+        val pullToRefreshEnabled = (currentGroup?.enableRefresh ?: false) && !isEditMode
 
         Box(Modifier.fillMaxSize()) {
             AppPullToRefresh(
