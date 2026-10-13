@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
@@ -275,9 +274,8 @@ private fun AboutContent(
                     .background(Color.White),
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.scale(1.1f)
+                    painter = painterResource(R.drawable.ic_launcher_cat_avatar),
+                    contentDescription = null
                 )
             }
             Text(
@@ -395,7 +393,7 @@ private fun AboutContent(
                             endActions = {
                                 ValueText("GitHub")
                             },
-                            onClick = { onIntent(AboutIntent.OpenUrl("https://github.com/HapeLee/legado-with-MD3")) },
+                            onClick = { onIntent(AboutIntent.OpenUrl("https://github.com/ZYO122/Legado-MAO")) },
                         )
                     }
 
