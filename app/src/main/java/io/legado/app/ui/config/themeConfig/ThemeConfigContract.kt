@@ -59,6 +59,8 @@ sealed interface ThemeConfigIntent {
     data class SetFontScale(val value: Int) : ThemeConfigIntent
     data class SetShowStatusBar(val visible: Boolean) : ThemeConfigIntent
     data class SetSwipeAnimation(val enabled: Boolean) : ThemeConfigIntent
+    data class SetSplashAnimation(val enabled: Boolean) : ThemeConfigIntent
+    data class SetSplashImage(val path: String) : ThemeConfigIntent
     data class SetShowBottomView(val visible: Boolean) : ThemeConfigIntent
     data class SetUseFloatingBottomBar(val enabled: Boolean) : ThemeConfigIntent
     data class SetUseFloatingBottomBarLiquidGlass(val enabled: Boolean) : ThemeConfigIntent

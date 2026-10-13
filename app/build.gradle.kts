@@ -111,7 +111,6 @@ android {
                 signingConfig = signingConfigs.getByName("myConfig")
             }
             manifestPlaceholders["app_name"] = "@string/app_name"
-            versionNameSuffix = "_debug"
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

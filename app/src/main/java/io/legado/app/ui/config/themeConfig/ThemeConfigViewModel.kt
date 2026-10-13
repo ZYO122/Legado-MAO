@@ -116,6 +116,12 @@ class ThemeConfigViewModel(
             is ThemeConfigIntent.SetSwipeAnimation -> updateAppShell {
                 it.copy(swipeAnimation = intent.enabled)
             }
+            is ThemeConfigIntent.SetSplashAnimation -> updateAppShell {
+                it.copy(splashAnimation = intent.enabled)
+            }
+            is ThemeConfigIntent.SetSplashImage -> updateAppShell {
+                it.copy(splashImage = intent.path)
+            }
             is ThemeConfigIntent.SetShowBottomView -> updateAppShell {
                 it.copy(showBottomView = intent.visible)
             }

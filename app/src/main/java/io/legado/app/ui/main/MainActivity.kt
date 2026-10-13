@@ -149,6 +149,10 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
         @Volatile
         var hasActiveSourceLoginRoute: Boolean = false
 
+        /** 自绘开屏是否已在本次进程（冷启动）播放过 */
+        @Volatile
+        var splashPlayedInProcess: Boolean = false
+
         fun createLauncherIntent(context: Context): Intent =
             MainIntent.createLauncherIntent(context)
 
@@ -879,6 +883,12 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
                     )
                 ) {
                     MainNavigator.navigateBack(this@MainActivity, backStack)
+                }
+                if (configuration.appShell.splashAnimation && !splashPlayedInProcess) {
+                    SplashAnimationOverlay(
+                        customPath = configuration.appShell.splashImage,
+                        onFinished = { splashPlayedInProcess = true },
+                    )
                 }
             }
         }

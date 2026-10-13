@@ -2,6 +2,7 @@ package io.legado.app.ui.config.themeConfig
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -85,6 +86,10 @@ import io.legado.app.ui.widget.components.text.AppText
 import io.legado.app.ui.widget.components.topbar.GlassMediumFlexibleTopAppBar
 import io.legado.app.ui.widget.components.topbar.GlassTopAppBarDefaults
 import io.legado.app.ui.widget.components.topbar.TopBarNavigationButton
+import io.legado.app.utils.FileUtils
+import io.legado.app.utils.launch
+import io.legado.app.utils.SelectImageContract
+import io.legado.app.utils.externalFiles
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -99,6 +104,22 @@ fun ThemeConfigScreen(
     val theme = state.theme
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
     val context = LocalContext.current
+    val pickSplashImage = rememberLauncherForActivityResult(SelectImageContract()) { result ->
+        result.uri?.let { uri ->
+            runCatching {
+                val bytes = context.contentResolver.openInputStream(uri)
+                    ?.use { it.readBytes() }
+                    ?: return@rememberLauncherForActivityResult
+                val ext = (context.contentResolver.getType(uri) ?: "image/png")
+                    .substringAfterLast('/')
+                val file = FileUtils.createFileIfNotExist(
+                    context.externalFiles, "splash", "splash_custom_${System.currentTimeMillis()}.$ext"
+                )
+                file.outputStream().use { it.write(bytes) }
+                onIntent(ThemeConfigIntent.SetSplashImage(file.absolutePath))
+            }
+        }
+    }
     fun updateTheme(transform: (ThemeSettings) -> ThemeSettings) =
         onIntent(ThemeConfigIntent.UpdateTheme(transform))
     val fontFolderState = remember(state.fontFolder) {
@@ -334,6 +355,29 @@ fun ThemeConfigScreen(
                 }
 
                 SplicedColumnGroup(title = stringResource(R.string.main_activity)) {
+                    SwitchSettingItem(
+                        title = stringResource(R.string.splash_animation),
+                        description = stringResource(R.string.splash_animation_summary),
+                        checked = appShell.splashAnimation,
+                        onCheckedChange = {
+                            onIntent(ThemeConfigIntent.SetSplashAnimation(it))
+                        }
+                    )
+                    ClickableSettingItem(
+                        title = stringResource(R.string.splash_image),
+                        description = if (appShell.splashImage.isBlank()) {
+                            stringResource(R.string.splash_image_default)
+                        } else {
+                            stringResource(R.string.splash_image_custom)
+                        },
+                        onClick = { pickSplashImage.launch() }
+                    )
+                    if (appShell.splashImage.isNotBlank()) {
+                        ClickableSettingItem(
+                            title = stringResource(R.string.splash_image_reset),
+                            onClick = { onIntent(ThemeConfigIntent.SetSplashImage("")) }
+                        )
+                    }
                     ClickableSettingItem(
                         title = stringResource(R.string.main_navigation_settings),
                         description = stringResource(R.string.main_navigation_settings_summary),

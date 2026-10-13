@@ -879,6 +879,12 @@
     <string name="change_icon_error">The icon is a vector icon, which was not supported before Android 8.0</string>
     <string name="aloud_config">Speech settings</string>
     <string name="main_activity">Start page</string>
+    <string name="splash_animation">Splash animation</string>
+    <string name="splash_animation_summary">Show a splash image on launch</string>
+    <string name="splash_image">Splash image</string>
+    <string name="splash_image_default">Using the default image</string>
+    <string name="splash_image_custom">Using a custom image (tap to change)</string>
+    <string name="splash_image_reset">Reset to default splash image</string>
     <string name="selectText">Long Tap to Select Text</string>
     <string name="header">Header</string>
     <string name="main_body">Content</string>

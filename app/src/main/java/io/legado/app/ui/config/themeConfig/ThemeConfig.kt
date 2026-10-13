@@ -44,6 +44,8 @@ object ThemeConfig {
     val showStatusBar get() = shell.showStatusBar
     val swipeAnimation get() = shell.swipeAnimation
     val showBottomView get() = shell.showBottomView
+    val splashAnimation get() = shell.splashAnimation
+    val splashImage get() = shell.splashImage
     val tabletInterface get() = shell.tabletInterface
     val labelVisibilityMode get() = shell.labelVisibilityMode
     val defaultHomePage get() = shell.defaultHomePage
