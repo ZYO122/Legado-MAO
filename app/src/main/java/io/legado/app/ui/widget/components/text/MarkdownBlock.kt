@@ -408,7 +408,10 @@ private fun MarkdownHeading(
     )
 
     ProvideTextStyle(headingStyle) {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             node.children.fastForEach { child ->
                 if (child.type == MarkdownTokenTypes.ATX_CONTENT) {
                     MarkdownParagraph(

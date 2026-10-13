@@ -183,6 +183,7 @@ private fun AboutContent(
     val privacyPolicyTitle = stringResource(R.string.about_privacy_policy_title)
     val licenseTitle = stringResource(R.string.about_license_title)
     val disclaimerTitle = stringResource(R.string.about_disclaimer_title)
+    val updateLogTitle = stringResource(R.string.update_log)
 
     val backdrop = rememberBlurBackdrop()
     var blurRadius by remember { mutableFloatStateOf(60f) }
@@ -389,11 +390,8 @@ private fun AboutContent(
                             onClick = { onIntent(AboutIntent.CheckUpdate) },
                         )
                         ArrowPreference(
-                            title = stringResource(R.string.contributors),
-                            endActions = {
-                                ValueText("GitHub")
-                            },
-                            onClick = { onIntent(AboutIntent.OpenUrl("https://github.com/ZYO122/Legado-MAO")) },
+                            title = stringResource(R.string.update_log),
+                            onClick = { onIntent(AboutIntent.ShowMdFile(updateLogTitle, "updateLog.md")) },
                         )
                     }
 
