@@ -6,7 +6,7 @@ on:
       branch:
         description: '要构建的分支'
         required: true
-        default: 'trae/solo-agent-vhkVM3'
+        default: 'main'
 
 permissions:
   contents: write
@@ -44,7 +44,6 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleAppDebug -PenableAbiSplits=false --no-daemon --no-configuration-cache
         env:
-          COMMIT_NUMBER: ${{ github.run_number }}
           APP_VERSION_NAME: debug-${{ github.run_number }}
 
       - name: Check Build Output

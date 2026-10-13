@@ -35,9 +35,10 @@ val versionSuffix = versionProps["VERSION_SUFFIX"]?.toString()?.toInt() ?: 1
 // 正式版即基础版本号；加 -Pbeta 构建测试版，后缀取 version.properties 的 VERSION_SUFFIX（如 3.26.1-Beta.1）
 val projectVersionName =
     if (isBetaBuild) "$baseVersionName-Beta.$versionSuffix" else baseVersionName
+// 只出通用包：ABI 拆分默认关闭，CI 与本地产物一致
 val enableAbiSplits = providers.gradleProperty("enableAbiSplits")
     .map(String::toBoolean)
-    .getOrElse(true)
+    .getOrElse(false)
 
 android {
     // Compose 1.13.0-beta01 的 AAR 元数据要求 compileSdk >= 37.1（android-37.0 会被 checkAarMetadata 拒绝）。
