@@ -473,6 +473,8 @@ fun applyTagGroupRules(
                     BookGroup(
                         groupId = newId,
                         groupName = rule.groupName,
+                        // 标签规则建组也默认不显示：显示位在分组管理里开，不占用 16 个书架分组名额
+                        show = false,
                     )
                 )
                 newId
@@ -528,6 +530,8 @@ fun applyTagGroupRulesForBook(book: Book) {
                     io.legado.app.data.entities.BookGroup(
                         groupId = newId,
                         groupName = rule.groupName,
+                        // 标签规则建组也默认不显示：显示位在分组管理里开，不占用 16 个书架分组名额
+                        show = false,
                     )
                 )
                 newId

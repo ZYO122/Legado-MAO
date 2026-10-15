@@ -28,6 +28,10 @@ data class BookGroup(
 ) : Parcelable {
 
     companion object {
+        /** 分组管理里能同时处于启用（显示在书架分组列表）状态的个数上限。
+         *  创建不限量，只有「显示」受限：下拉列表两列各 8 个。 */
+        const val MaxShownCount = 16
+
         const val IdRoot = -100L
         const val IdAll = -1L
         const val IdLocal = -2L

@@ -27,6 +27,8 @@ class BookGroupMutationRepository(
                 bookSort = group.bookSort,
                 enableRefresh = group.enableRefresh,
                 isPrivate = group.isPrivate,
+                // 新建分组默认不显示：显示位在分组管理里单独开，避免创建就占掉一个书架分组名额
+                show = false,
                 order = groupDao.maxOrder.plus(1),
             )
 

@@ -124,7 +124,8 @@ class BookshelfAutoGroupRepository(
                         groupName = group.name,
                         order = groupDao.maxOrder.plus(1),
                         enableRefresh = false,
-                        show = true,
+                        // AI 自动分组建组同样默认不显示，避免和 16 个书架分组名额冲突
+                        show = false,
                         bookSort = 3,
                         isPrivate = false,
                     )

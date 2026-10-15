@@ -84,6 +84,7 @@ fun GroupManageSheet(
 ) {
     val context = LocalContext.current
     val groups by bookshelfViewModel.allGroupsFlow.collectAsState()
+    val shownGroupCount = groups.count { it.show }
 
     var editingGroup by remember { mutableStateOf<BookGroup?>(null) }
     var isEditing by remember { mutableStateOf(false) }
@@ -128,7 +129,11 @@ fun GroupManageSheet(
     AppModalBottomSheet(
         show = show,
         onDismissRequest = onDismissRequest,
-        title = if (!isEditing) stringResource(R.string.group_manage) else stringResource(R.string.group_edit),
+        title = if (!isEditing) {
+            "${stringResource(R.string.group_manage)}  ($shownGroupCount/${BookGroup.MaxShownCount})"
+        } else {
+            stringResource(R.string.group_edit)
+        },
         startAction = editingGroup?.takeIf {
             isEditing && (it.groupId > 0 || it.groupId == Long.MIN_VALUE)
         }?.let { group ->
@@ -244,8 +249,12 @@ fun GroupManageSheet(
                             title = group.groupName.ifBlank { manageNameInfo.suffix.orEmpty() },
                             subtitle = if (group.groupName.isNotBlank()) manageNameInfo.suffix else null,
                             isEnabled = group.show,
+                            toggleEnabled = group.show ||
+                                    shownGroupCount < BookGroup.MaxShownCount,
                             onEnabledChange = { isChecked ->
-                                viewModel.upGroup(group.copy(show = isChecked))
+                                if (!isChecked || shownGroupCount < BookGroup.MaxShownCount) {
+                                    viewModel.upGroup(group.copy(show = isChecked))
+                                }
                             },
                             onClickEdit = {
                                 editingGroup = group
@@ -295,6 +304,7 @@ private fun LazyGridItemScope.GroupManageGridItem(
     title: String,
     subtitle: String?,
     isEnabled: Boolean,
+    toggleEnabled: Boolean,
     onEnabledChange: (Boolean) -> Unit,
     onClickEdit: () -> Unit,
     reorderIndex: Int,
@@ -368,6 +378,7 @@ private fun LazyGridItemScope.GroupManageGridItem(
                 }
                 TinySwitch(
                     checked = isEnabled,
+                    enabled = toggleEnabled,
                     onCheckedChange = onEnabledChange
                 )
             }
