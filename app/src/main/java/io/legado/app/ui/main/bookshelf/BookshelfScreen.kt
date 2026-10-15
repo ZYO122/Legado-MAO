@@ -29,6 +29,8 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,18 +43,25 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
@@ -87,6 +96,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -102,8 +112,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.legado.app.R
 import io.legado.app.data.entities.BookGroup
@@ -130,7 +143,6 @@ import io.legado.app.ui.widget.components.button.series.ToggleStyle
 import io.legado.app.ui.widget.components.card.NormalCard
 import io.legado.app.ui.widget.components.card.TextCard
 import io.legado.app.ui.widget.components.checkBox.AppCheckbox
-import io.legado.app.ui.widget.components.divider.PillHeaderDivider
 import io.legado.app.ui.widget.components.filePicker.FilePickerSheet
 import io.legado.app.ui.widget.components.icon.AppIcon
 import io.legado.app.ui.widget.components.icon.AppIcons
@@ -521,6 +533,13 @@ fun BookshelfScreen(
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val bookshelfLayoutMode = if (isLandscape) {
+        uiState.settings.bookshelfLayoutModeLandscape
+    } else {
+        uiState.settings.bookshelfLayoutModePortrait
+    }
+    // 列表模式下分组切换挂在标题上；网格模式保留原来的分组 Tab 行
+    val showGroupTabRow = bookGroupStyle == 0 && bookshelfLayoutMode != 0
     val bookshelfFolderLayoutMode = if (isLandscape) {
         uiState.settings.bookshelfFolderLayoutModeLandscape
     } else {
@@ -564,6 +583,23 @@ fun BookshelfScreen(
         }
     }
 
+    // 分组名 + ▾ 当标题：点开就是分组列表（两列各 8 个，只列启用的组）
+    val groupTitleContent: (@Composable () -> Unit)? =
+        if (!isEditMode && !uiState.isLoading && !isShowingFolderRoot && !showGroupTabRow &&
+            !currentGroupName.isNullOrBlank()
+        ) {
+            {
+                BookshelfGroupTitle(
+                    groupName = currentGroupName.orEmpty(),
+                    onClick = {
+                        onIntent(BookshelfIntent.ShowOverlay(BookshelfOverlay.GroupMenu))
+                    }
+                )
+            }
+        } else {
+            null
+        }
+
     AppScaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         contentWindowInsets = WindowInsets(0),
@@ -591,6 +627,9 @@ fun BookshelfScreen(
                 },
                 onClearSearch = { onIntent(BookshelfIntent.SetSearchKey("")) },
                 onExitEditMode = exitEditMode,
+                titleContent = groupTitleContent,
+                // 书架一律单行栏：标题（书架 / 分组名 ▾）与搜索、定位、更多同一行
+                compact = true,
                 actions = {
                     AnimatedVisibility(visible = isEditMode) {
                         TopBarActionButton(
@@ -766,7 +805,7 @@ fun BookshelfScreen(
                     }
                 },
                 bottomContent = {
-                    if (bookGroupStyle == 0 && uiState.groups.isNotEmpty()) {
+                    if (showGroupTabRow && uiState.groups.isNotEmpty()) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -788,119 +827,30 @@ fun BookshelfScreen(
                                 modifier = Modifier.weight(1f)
                             )
 
-                            val showExpandButton = uiState.settings.shouldShowExpandButton
-                            if (showExpandButton) {
-                                Box(modifier = Modifier) {
+                            if (uiState.settings.shouldShowExpandButton) {
+                                Box {
                                     SmallToggleButton(
                                         checked = showGroupMenu,
                                         onCheckedChange = {
                                             if (it) {
-                                                onIntent(BookshelfIntent.ShowOverlay(BookshelfOverlay.GroupMenu))
+                                                onIntent(
+                                                    BookshelfIntent.ShowOverlay(
+                                                        BookshelfOverlay.GroupMenu
+                                                    )
+                                                )
                                             } else {
                                                 onIntent(BookshelfIntent.DismissOverlay)
                                             }
                                         },
                                         style = ToggleStyle.Outlined,
                                         icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                                        contentDescription = stringResource(R.string.group_manage)
+                                        contentDescription = stringResource(R.string.group_select)
                                     )
-                                    RoundDropdownMenu(
-                                        expanded = showGroupMenu,
-                                        onDismissRequest = { onIntent(BookshelfIntent.DismissOverlay) }
-                                    ) { dismiss ->
-                                        uiState.groups.forEachIndexed { index, group ->
-                                            RoundDropdownMenuItem(
-                                                text = group.groupName,
-                                                onClick = {
-                                                    if (uiState.isSearch) {
-                                                        onIntent(BookshelfIntent.ChangeGroup(group.groupId))
-                                                    }
-                                                    scope.launch {
-                                                        pagerState.animateScrollToPage(
-                                                            index
-                                                        )
-                                                    }
-                                                    dismiss()
-                                                },
-                                                trailingIcon = {
-                                                    val isSelected = if (uiState.isSearch) {
-                                                        uiState.selectedGroupId == group.groupId
-                                                    } else {
-                                                        selectedTabIndex == index
-                                                    }
-                                                    if (isSelected) {
-                                                        AppIcon(
-                                                            Icons.Default.Check,
-                                                            null,
-                                                            modifier = Modifier.size(18.dp)
-                                                        )
-                                                    }
-                                                }
-                                            )
-                                        }
-
-                                        if (uiState.isSearch) {
-                                            val allGroup = uiState.allGroups.firstOrNull {
-                                                it.groupId == BookGroup.IdAll
-                                            }
-                                            val hiddenGroups = uiState.allGroups.filter {
-                                                !it.show && it.groupId != BookGroup.IdAll
-                                            }
-
-                                            if (allGroup != null || hiddenGroups.isNotEmpty()) {
-                                                PillHeaderDivider(
-                                                    title = "${stringResource(R.string.all)} / ${
-                                                        stringResource(
-                                                            R.string.hide
-                                                        )
-                                                    }"
-                                                )
-
-                                                allGroup?.let { group ->
-                                                    RoundDropdownMenuItem(
-                                                        text = group.groupName,
-                                                        onClick = {
-                                                            onIntent(BookshelfIntent.ChangeGroup(group.groupId))
-                                                            dismiss()
-                                                        },
-                                                        trailingIcon = {
-                                                            if (uiState.selectedGroupId == group.groupId) {
-                                                                AppIcon(
-                                                                    Icons.Default.Check,
-                                                                    null,
-                                                                    modifier = Modifier.size(18.dp)
-                                                                )
-                                                            }
-                                                        }
-                                                    )
-                                                }
-
-                                                hiddenGroups.forEach { group ->
-                                                    RoundDropdownMenuItem(
-                                                        text = group.groupName,
-                                                        onClick = {
-                                                            onIntent(BookshelfIntent.ChangeGroup(group.groupId))
-                                                            dismiss()
-                                                        },
-                                                        trailingIcon = {
-                                                            if (uiState.selectedGroupId == group.groupId) {
-                                                                AppIcon(
-                                                                    Icons.Default.Check,
-                                                                    null,
-                                                                    modifier = Modifier.size(18.dp)
-                                                                )
-                                                            }
-                                                        }
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         }
                     }
-                }
+                },
             )
         }
     ) { paddingValues ->
@@ -1285,6 +1235,21 @@ fun BookshelfScreen(
         }
     }
 
+    if (showGroupMenu) {
+        BookshelfGroupSelectDialog(
+            groups = uiState.groups,
+            selectedGroupId = currentMenuGroupId,
+            onSelect = { groupId ->
+                onIntent(BookshelfIntent.ChangeGroup(groupId))
+                if (bookGroupStyle == 2) {
+                    onIntent(BookshelfIntent.SetInFolderRoot(false))
+                }
+                onIntent(BookshelfIntent.DismissOverlay)
+            },
+            onDismissRequest = { onIntent(BookshelfIntent.DismissOverlay) }
+        )
+    }
+
     BookshelfOverlays(
         activeOverlay = activeOverlay,
         uiState = uiState,
@@ -1307,6 +1272,8 @@ private fun BookshelfTopBar(
     onClearSearch: () -> Unit,
     onExitEditMode: () -> Unit,
     actions: @Composable RowScope.() -> Unit = {},
+    titleContent: (@Composable () -> Unit)? = null,
+    compact: Boolean = false,
     bottomContent: @Composable ColumnScope.() -> Unit = {}
 ) {
     val searchContentDescription = stringResource(R.string.search)
@@ -1329,6 +1296,8 @@ private fun BookshelfTopBar(
         },
         useCharMode = uiState.isLoading,
         subtitle = uiState.subtitle,
+        titleContent = titleContent,
+        compact = compact,
         scrollBehavior = scrollBehavior,
         actions = {
             TopBarActionButton(
@@ -1831,6 +1800,160 @@ fun BookshelfPage(
                                 }
                             }
                         }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** 顶栏标题即分组选择器：分组名 + ▾，点开是分组列表。 */
+@Composable
+private fun BookshelfGroupTitle(
+    groupName: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button }
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        AppText(
+            text = groupName,
+            style = LegadoTheme.typography.titleLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        AppIcon(
+            imageVector = Icons.Default.ArrowDropDown,
+            contentDescription = null
+        )
+    }
+}
+
+/**
+ * 分组选择：居中弹窗，左右两块各自独立的面板，各 8 个（分组管理里也只有 16 个能启用）。
+ *
+ * 用宽弹窗而不是锚在标题上的菜单：菜单太窄，分组名长的会折行。
+ */
+@Composable
+private fun BookshelfGroupSelectDialog(
+    groups: List<BookGroupUi>,
+    selectedGroupId: Long,
+    onSelect: (Long) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    val visibleGroups = groups.take(BookGroup.MaxShownCount)
+    val columns = listOf(
+        visibleGroups.take(BookGroup.MaxShownCount / 2),
+        visibleGroups.drop(BookGroup.MaxShownCount / 2)
+    ).filter { it.isNotEmpty() }
+    // 两列才铺满宽度；只有一列（启用分组 ≤ 8）时按内容收窄，弹窗自然变小
+    val twoColumns = columns.size > 1
+
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        // usePlatformDefaultWidth = false 时内容不会被自动居中；这里自己占满窗口再居中，
+        // 不依赖 Dialog 的默认摆放，避免别处的行为把它顶掉
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                modifier = Modifier
+                    .then(if (twoColumns) Modifier.fillMaxWidth() else Modifier.width(220.dp))
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(LegadoTheme.colorScheme.surfaceContainer)
+                    .padding(12.dp),
+            ) {
+                AppText(
+                    text = stringResource(R.string.group_select),
+                    style = LegadoTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    columns.forEach { columnGroups ->
+                        GroupPanel(
+                            groups = columnGroups,
+                            selectedGroupId = selectedGroupId,
+                            onSelect = onSelect,
+                            modifier = if (twoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 一列分组。每一项是详情页同款的气泡（卡片底 + 自己那套描边），名字单行不折行。
+ */
+@Composable
+private fun GroupPanel(
+    groups: List<BookGroupUi>,
+    selectedGroupId: Long,
+    onSelect: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(LegadoTheme.colorScheme.surfaceContainerHighest)
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        groups.forEach { group ->
+            val selected = group.groupId == selectedGroupId
+            val bubbleContentColor = if (selected) {
+                LegadoTheme.colorScheme.primary
+            } else {
+                LegadoTheme.colorScheme.onSurfaceVariant
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(group.groupId) }
+                    .padding(horizontal = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                NormalCard(
+                    cornerRadius = 8.dp,
+                    containerColor = LegadoTheme.colorScheme.surfaceContainer,
+                    contentColor = bubbleContentColor,
+                    modifier = Modifier.weight(1f, fill = false),
+                ) {
+                    AppText(
+                        text = group.groupName,
+                        style = LegadoTheme.typography.labelLargeEmphasized,
+                        color = bubbleContentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
+                }
+                if (selected) {
+                    AppIcon(
+                        Icons.Default.Check,
+                        null,
+                        modifier = Modifier.size(16.dp),
                     )
                 }
             }

@@ -40,6 +40,7 @@ import io.legado.app.model.SourceCallBack
 import io.legado.app.service.CacheBookService
 import io.legado.app.ui.config.themeConfig.TagColorPair
 import io.legado.app.utils.GSON
+import io.legado.app.utils.bookshelfLayoutMode
 import io.legado.app.utils.eventBus.FlowEventBus
 import io.legado.app.utils.move
 import io.legado.app.utils.onEachParallel
@@ -638,10 +639,10 @@ class BookshelfViewModel(
         val currentGroupName = currentGroup?.groupName
         val selectedIds = interaction.selectedBookUrls.mapTo(linkedSetOf<Any>()) { it }
         val title = buildTitle(
+            showGroupTabRow = interaction.bookGroupStyle == 0 && context.bookshelfLayoutMode != 0,
             bookGroupStyle = interaction.bookGroupStyle,
             isInFolderRoot = interaction.isInFolderRoot,
             isEditMode = interaction.isEditMode,
-            isSearchMode = selectedBooks.isSearchMode,
             currentGroupName = currentGroupName,
             upBooksCount = internal.upBooksCount
         )
@@ -919,25 +920,20 @@ class BookshelfViewModel(
     }
 
     private fun buildTitle(
+        showGroupTabRow: Boolean,
         bookGroupStyle: Int,
         isInFolderRoot: Boolean,
         isEditMode: Boolean,
-        isSearchMode: Boolean,
         currentGroupName: String?,
         upBooksCount: Int
     ): String {
         val bookshelfTitle = context.getString(R.string.bookshelf)
+        // 网格模式下分组切换在 Tab 行上，标题回到应用名；
+        // 其余情况（列表模式、隐藏标签、分组内）标题本身就是分组选择器
         val baseTitle = when {
-            isSearchMode && bookGroupStyle == 0 -> bookshelfTitle
-            isSearchMode -> currentGroupName ?: bookshelfTitle
-            bookGroupStyle == 1 -> currentGroupName ?: bookshelfTitle
-            bookGroupStyle == 2 -> if (isInFolderRoot) {
-                bookshelfTitle
-            } else {
-                currentGroupName ?: bookshelfTitle
-            }
-
-            else -> bookshelfTitle
+            bookGroupStyle == 2 && isInFolderRoot -> bookshelfTitle
+            showGroupTabRow -> bookshelfTitle
+            else -> currentGroupName ?: bookshelfTitle
         }
         return when {
             isEditMode -> bookshelfTitle

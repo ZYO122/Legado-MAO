@@ -50,6 +50,9 @@ fun GlassMediumFlexibleTopAppBar(
     scrollBehavior: GlassTopAppBarScrollBehavior? = null,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
+    titleContent: (@Composable () -> Unit)? = null,
+    /** 强制单行栏：标题与动作图标同一行，不用可伸缩大标题（标题本身就是入口时用） */
+    compact: Boolean = false,
     bottomContent: @Composable (ColumnScope.() -> Unit)? = null
 ) {
 
@@ -103,9 +106,10 @@ fun GlassMediumFlexibleTopAppBar(
                 // re-shown — e.g. returning from a reader that hid it.
                 MiuixTopAppBar(
                     modifier = Modifier.windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility),
-                    title = title,
+                    // Miuix 的标题只收字符串，自定义标题改从导航图标位渲染
+                    title = if (titleContent == null) title else "",
                     subtitle = subtitleText.orEmpty(),
-                    navigationIcon = navigationIcon,
+                    navigationIcon = { if (titleContent != null) titleContent() else navigationIcon() },
                     actions = {
                         TopBarActionsRow(
                             modifier = Modifier.padding(end = miuixTopBarActionsEndPadding())
@@ -120,16 +124,20 @@ fun GlassMediumFlexibleTopAppBar(
             }
 
             else -> {
-                if (themeSettings.useFlexibleTopAppBar) {
+                if (themeSettings.useFlexibleTopAppBar && !compact) {
                     MediumFlexibleTopAppBar(
                         modifier = Modifier,
                         title = {
-                            AdaptiveAnimatedText(
-                                text = title,
-                                useCharMode = useCharMode,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            if (titleContent != null) {
+                                titleContent()
+                            } else {
+                                AdaptiveAnimatedText(
+                                    text = title,
+                                    useCharMode = useCharMode,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         },
                         subtitle = subtitleText?.let { text ->
                             {
@@ -149,21 +157,25 @@ fun GlassMediumFlexibleTopAppBar(
                     TopAppBar(
                         modifier = Modifier,
                         title = {
-                            Column {
-                                AdaptiveAnimatedText(
-                                    text = title,
-                                    useCharMode = useCharMode,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                subtitleText?.let { text ->
-                                    AnimatedTextLine(
-                                        text = text,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            if (titleContent != null) {
+                                titleContent()
+                            } else {
+                                Column {
+                                    AdaptiveAnimatedText(
+                                        text = title,
+                                        useCharMode = useCharMode,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
+                                    subtitleText?.let { text ->
+                                        AnimatedTextLine(
+                                            text = text,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         },
@@ -173,7 +185,8 @@ fun GlassMediumFlexibleTopAppBar(
                                 TopBarActionsRow { actions() }
                             }
                         },
-                        scrollBehavior = (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
+                        scrollBehavior = if (compact) null
+                        else (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
                         colors = transparentColors
                     )
                 }
