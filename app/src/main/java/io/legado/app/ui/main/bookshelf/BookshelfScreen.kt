@@ -584,6 +584,13 @@ fun BookshelfScreen(
             }
         }
     }
+    val onSearchLongClick = {
+        if (uiState.settings.bookshelfSearchActionDirectToSearch) {
+            onIntent(BookshelfIntent.SetSearchMode(true))
+        } else {
+            onNavigateToSearch(uiState.searchKey.trim())
+        }
+    }
 
     // 分组名 + ▾ 当标题：点开就是分组列表（两列各 8 个，只列启用的组）
     val groupTitleContent: (@Composable () -> Unit)? =
@@ -618,6 +625,7 @@ fun BookshelfScreen(
                 uiState = uiState,
                 scrollBehavior = scrollBehavior,
                 onSearchClick = onSearchClick,
+                onSearchLongClick = onSearchLongClick,
                 onSearchQueryChange = { onIntent(BookshelfIntent.SetSearchKey(it)) },
                 onSearchSubmit = { rawQuery ->
                     rawQuery.trim()
@@ -1266,6 +1274,7 @@ private fun BookshelfTopBar(
     uiState: BookshelfUiState,
     scrollBehavior: GlassTopAppBarScrollBehavior,
     onSearchClick: () -> Unit,
+    onSearchLongClick: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
     onClearSearch: () -> Unit,
@@ -1276,6 +1285,8 @@ private fun BookshelfTopBar(
     bottomContent: @Composable ColumnScope.() -> Unit = {}
 ) {
     val searchContentDescription = stringResource(R.string.search)
+    val filterContentDescription = stringResource(R.string.bookshelf_filter)
+    val searchFirst = uiState.settings.bookshelfSearchActionDirectToSearch
     val exitEditModeDescription = stringResource(R.string.cancel_select)
     GlassMediumFlexibleTopAppBar(
         modifier = Modifier.fillMaxWidth(),
@@ -1301,8 +1312,10 @@ private fun BookshelfTopBar(
         actions = {
             TopBarActionButton(
                 onClick = onSearchClick,
+                onLongClick = onSearchLongClick,
+                onLongClickLabel = if (searchFirst) filterContentDescription else searchContentDescription,
                 imageVector = AppIcons.Search,
-                contentDescription = searchContentDescription
+                contentDescription = if (searchFirst) searchContentDescription else filterContentDescription,
             )
             actions()
         },
