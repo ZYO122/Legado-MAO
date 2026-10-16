@@ -82,6 +82,33 @@ class BookHelpImageFileTest {
     }
 
     @Test
+    fun `chapter images are numbered by their order in the chapter content`() = runBlocking {
+        val chapter = BookChapter(
+            bookUrl = book.bookUrl,
+            url = "https://invalid.example/chapter-1",
+            title = "第1话 开始",
+            index = 0,
+        )
+        val first = "https://invalid.example/page-1.jpg"
+        val second = "https://invalid.example/page-2.jpg"
+        try {
+            BookHelp.getChapterContentFile(book, chapter).apply { parentFile?.mkdirs() }
+                .writeText("<img src=\"$first\"/><img src=\"$second\"/>")
+            BookHelp.writeImage(book, chapter, first, png(Color.RED))
+            BookHelp.writeImage(book, chapter, second, png(Color.BLUE))
+            val firstFile = BookHelp.getImage(book, chapter, first)
+            val secondFile = BookHelp.getImage(book, chapter, second)
+            assertEquals("MAO-001.jpg", firstFile.name)
+            assertEquals("MAO-002.jpg", secondFile.name)
+            assertEquals("MAO-第1话 开始", firstFile.parentFile?.parentFile?.name)
+            assertTrue(firstFile.isFile)
+            assertTrue(secondFile.isFile)
+        } finally {
+            BookHelp.clearCache(book)
+        }
+    }
+
+    @Test
     fun `forced refresh updates duplicate chapter images and preserves explicit download references`() = runBlocking {
         val fresh = png(Color.BLUE)
         val src = "data:image/png;base64,${Base64.encodeToString(fresh, Base64.NO_WRAP)}"
@@ -160,7 +187,7 @@ class BookHelpImageFileTest {
             val legacy = BookHelp.getImage(book, src)
             assertEquals(legacy, BookHelp.getImage(book, chapter, src))
             val (image, lease) = BookHelp.acquireReadingImage(
-                null, book, src, chapterSubject = chapter.getFileName().substringBeforeLast('.'),
+                null, book, src, chapterSubject = chapter.getCacheFolderName(),
             )
             lease.use { assertArrayEquals(bytes, image.readBytes()) }
             val index = java.io.File(java.io.File(image.parentFile, ".downloads"), image.name)

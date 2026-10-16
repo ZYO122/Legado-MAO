@@ -9,8 +9,6 @@ import io.legado.app.domain.model.manga.MangaPageContent
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.model.webBook.WebBook
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.toList
 
 /** Selects where chapter page metadata comes from without leaking that choice into presentation. */
 internal class MangaChapterPageLoader(
@@ -30,9 +28,7 @@ internal class MangaChapterPageLoader(
         retainedChapters[key]?.let { return it.content }
         val content = BookHelp.getContent(book, chapter)
             ?: RemoteChapterContentLoader(application, database).load(book, chapter)
-        val imageUrls = BookHelp.flowImages(chapter, content)
-            .distinctUntilChanged()
-            .toList()
+        val imageUrls = BookHelp.chapterImageUrls(content, chapter)
         if (imageUrls.isEmpty() && !chapter.isVolume) {
             throw NoStackTraceException(application.getString(io.legado.app.R.string.content_empty))
         }
@@ -44,7 +40,7 @@ internal class MangaChapterPageLoader(
                 MangaPageContent(url, index, imageUrls.size)
             },
             isVolume = chapter.isVolume,
-            chapterSubject = chapter.getFileName().substringBeforeLast('.'),
+            chapterSubject = chapter.getCacheFolderName(),
         ).also { if (retain) retainedChapters[key] = LoadedChapter(it) }
     }
 

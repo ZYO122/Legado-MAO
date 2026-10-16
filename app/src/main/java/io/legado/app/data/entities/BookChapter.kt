@@ -163,12 +163,21 @@ data class BookChapter(
         }
     }
 
-    @SuppressLint("DefaultLocale")
-    @Suppress("unused")
-    fun getFileName(suffix: String = "nb"): String {
-        ensureTitleMD5Init()
-        return String.format("%05d-%s.%s", index, titleMD5, suffix)
+    /**
+     * 章节缓存目录名：`MAO-<章节标题>`；标题为空时补「第 N 话」。
+     */
+    fun getCacheFolderName(): String {
+        val cacheTitle = title
+            .replace(AppPattern.fileNameRegex2, " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .take(MAX_CACHE_TITLE_LENGTH)
+        return if (cacheTitle.isEmpty()) "MAO-第${index + 1}话" else "MAO-$cacheTitle"
     }
+
+    /** 正文与「去重标题」标记文件跟章节目录同名：`MAO-第1话 你好啊.nb`。 */
+    @Suppress("unused")
+    fun getFileName(suffix: String = "nb"): String = "${getCacheFolderName()}.$suffix"
 
     @SuppressLint("DefaultLocale")
     @Suppress("unused")
@@ -177,3 +186,6 @@ data class BookChapter(
         return String.format("%05d-%s.ttf", index, titleMD5)
     }
 }
+
+/** 章节目录名与正文文件名里标题的长度上限。 */
+private const val MAX_CACHE_TITLE_LENGTH = 60

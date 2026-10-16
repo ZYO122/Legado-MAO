@@ -143,7 +143,7 @@ data class MangaChapterContent(
     val chapterUrl: String?,
     val pages: List<MangaPageContent>,
     val isVolume: Boolean,
-    /** 章节主体（`BookChapter.getFileName()` 去后缀）；在线原图据此落到 `book_cache/<书>/<主体>/images`。 */
+    /** 章节的缓存目录名（`BookChapter.getCacheFolderName()`）；在线原图据此落到 `book_cache/<书>/<目录>/images`。 */
     val chapterSubject: String,
 )
 

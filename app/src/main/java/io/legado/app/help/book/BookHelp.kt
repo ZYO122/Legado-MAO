@@ -86,6 +86,8 @@ object BookHelp {
     private val imageCleanupRequests = Channel<Unit>(Channel.CONFLATED)
     private val pendingImageCacheMoves = ConcurrentHashMap<File, File>()
     private val locatedChapterImages = LruCache<String, File>(256)
+    /** `src → 章内序号`，键含正文修改时间，正文重下后自动重算。 */
+    private val chapterImageOrders = LruCache<String, ChapterImageOrder>(32)
 
     val cachePath = FileUtils.getPath(downloadDir, cacheFolderName)
 
@@ -200,7 +202,7 @@ object BookHelp {
         val endIndex = book.durChapterIndex + readGateway.currentSettings.preDownloadNum
         // 章节图片按章存在 <章节主体>/images；窗口外章节的图片整目录清理。
         val keepSubjects = appDb.bookChapterDao.getChapterList(book.bookUrl, startIndex, endIndex)
-            .mapTo(hashSetOf()) { it.getFileName().substringBeforeLast('.') }
+            .mapTo(hashSetOf()) { it.getCacheFolderName() }
         val bookDir = downloadDir.getFile(cacheFolderName, book.getFolderName())
         bookDir.listFiles()?.forEach { entry ->
             if (entry.isDirectory && entry.name != cacheImageFolderName &&
@@ -499,12 +501,21 @@ object BookHelp {
                     onlineOnly = false, loadOnlyWifi = false, onDownload = {}, forceRefresh = true,
                 )
             ) return@withContext emptySet()
-            val legacy = getImageFile(bookImageDir(book), src)
-            val copies = legacy.parentFile?.parentFile?.listFiles().orEmpty()
+            val legacy = sharedImageFile(bookImageDir(book), src)
+            val chapterDirs = legacy.parentFile?.parentFile?.listFiles().orEmpty()
                 .filter { it.isDirectory && it.name != cacheImageFolderName }
-                .map { File(File(it, cacheImageFolderName), target.name) }
-                .plus(legacy)
-                .filter { it.isFile && it != target }
+            // 章节副本按目录内的 MAO-00N 命名；无法对应章节时仍按历史同名文件保留。
+            val named = runCatching {
+                val chapters = appDb.bookChapterDao.getChapterList(book.bookUrl)
+                    .associateBy { it.getCacheFolderName() }
+                chapterDirs.mapNotNull { dir ->
+                    chapters[dir.name]?.let { chapter ->
+                        chapterImageFile(book, chapterImageDir(book, chapter), src, chapter)
+                    }
+                }
+            }.getOrDefault(emptyList())
+            val sameName = chapterDirs.map { File(File(it, cacheImageFolderName), target.name) }
+            val copies = (named + sameName + legacy).filter { it.isFile && it != target }
             val refreshed = linkedSetOf(target)
             val context = currentCoroutineContext()
             for (copy in copies) {
@@ -542,11 +553,20 @@ object BookHelp {
         bookSource: BookSource?, book: Book, src: String, loadOnlyWifi: Boolean = false,
         onDownload: () -> Unit = {},
         chapterSubject: String? = null,
+        /** 该图在章内的 1-based 序号与本章图片总数；缺省时按正文顺序定位。 */
+        pageNumber: Int? = null,
+        pageCount: Int? = null,
     ): Pair<File, Closeable> {
         val file = if (chapterSubject == null) {
             getImage(book, src)
         } else {
-            chapterImageFile(book, chapterImageDir(book, chapterSubject), src)
+            chapterImageFile(
+                book = book,
+                dir = chapterImageDir(book, chapterSubject),
+                src = src,
+                order = pageNumber,
+                count = pageCount,
+            )
         }
         val lease = pinImageFile(file)
         try {
@@ -595,12 +615,12 @@ object BookHelp {
         )
     }
 
-    /** 章节缓存目录：book_cache/<书>/<章节名主体>。 */
+    /** 章节缓存目录：book_cache/<书>/MAO-<章节标题>。 */
     private fun getChapterContentDir(book: Book, bookChapter: BookChapter): File =
         downloadDir.getFile(
             cacheFolderName,
             book.getFolderName(),
-            bookChapter.getFileName().substringBeforeLast('.')
+            bookChapter.getCacheFolderName()
         )
 
     /** 章节正文文件：book_cache/<书>/<章节名主体>/<章节文件名>。 */
@@ -621,7 +641,7 @@ object BookHelp {
 
     /** 文本渲染/图片查看/Web 等旧调用方只有 URL，也必须能复用章节下载的原图。 */
     fun getImage(book: Book, src: String): File {
-        val legacy = getImageFile(bookImageDir(book), src)
+        val legacy = sharedImageFile(bookImageDir(book), src)
         if (legacy.isFile) return legacy
         val cached = locatedChapterImages[legacy.absolutePath]
         if (cached?.isFile == true) return cached
@@ -641,17 +661,76 @@ object BookHelp {
     }
 
     fun getImage(book: Book, bookChapter: BookChapter, src: String): File =
-        chapterImageFile(book, chapterImageDir(book, bookChapter), src)
+        chapterImageFile(book, chapterImageDir(book, bookChapter), src, bookChapter)
 
-    private fun chapterImageFile(book: Book, dir: File, src: String): File {
-        val current = getImageFile(dir, src)
-        val legacy = getImageFile(bookImageDir(book), src)
+    /**
+     * 章节图片路径。序号优先取链路上报的 [order]（漫画页自带页码），
+     * 否则按正文里 `<img>` 的先后推算；两者都拿不到时退回共享目录的 URL 命名。
+     */
+    private fun chapterImageFile(
+        book: Book,
+        dir: File,
+        src: String,
+        chapter: BookChapter? = null,
+        order: Int? = null,
+        count: Int? = null,
+    ): File {
+        val resolved = if (order != null) {
+            order to (count ?: order)
+        } else {
+            chapter?.let { chapterImageOrder(book, it) }
+                ?.let { cached -> cached.orders[src]?.let { it to cached.count } }
+        }
+        val current = if (resolved == null) {
+            sharedImageFile(dir, src)
+        } else {
+            File(dir, chapterImageName(src, resolved.first, resolved.second))
+        }
+        val legacy = sharedImageFile(bookImageDir(book), src)
         // 历史原图及其 .online/.downloads 索引一起保留，不能搬走共享章或活动租约的文件。
         return if (!current.isFile && legacy.isFile) legacy else current
     }
 
-    private fun getImageFile(dir: File, src: String): File =
+    /** `MAO-001.jpg`；宽度按本章图片总数取，同一章内文件名排序即阅读顺序。 */
+    private fun chapterImageName(src: String, order: Int, count: Int): String {
+        val width = max(3, count.toString().length)
+        return "MAO-${order.toString().padStart(width, '0')}.${getImageSuffix(src)}"
+    }
+
+    /** 非章节图片（本地书内嵌图、封面、Web）仍按 URL 的 md5 落在共享目录。 */
+    private fun sharedImageFile(dir: File, src: String): File =
         File(dir, "${MD5Utils.md5Encode16(src)}.${getImageSuffix(src)}")
+
+    private data class ChapterImageOrder(val orders: Map<String, Int>, val count: Int)
+
+    /**
+     * 章节正文里的图片顺序（相邻重复只算一张）。漫画页与缓存命名使用同一份顺序，
+     * 从两个入口调用时才能指向同一个文件。
+     */
+    fun chapterImageUrls(content: String, chapter: BookChapter): List<String> {
+        val urls = ArrayList<String>()
+        var previous: String? = null
+        for (m in AppPattern.imgPattern.findAll(content)) {
+            val src = m.groupValues[1].takeIf { it.isNotEmpty() } ?: continue
+            val url = NetworkUtils.getAbsoluteURL(chapter.url, src)
+            // 相邻重复只算一张，漫画页列表与缓存命名必须用同一份顺序。
+            if (url == previous) continue
+            urls += url
+            previous = url
+        }
+        return urls
+    }
+
+    /** 正文重下后正文文件时间变化，缓存键随之失效并重新解析。 */
+    private fun chapterImageOrder(book: Book, chapter: BookChapter): ChapterImageOrder {
+        val contentFile = cachedChapterContentFile(book, chapter)
+        val key = "${contentFile.absolutePath}:${contentFile.lastModified()}"
+        chapterImageOrders.get(key)?.let { return it }
+        val urls = getContent(book, chapter)?.let { chapterImageUrls(it, chapter) }.orEmpty()
+        val orders = HashMap<String, Int>(urls.size)
+        urls.forEachIndexed { position, url -> orders.putIfAbsent(url, position + 1) }
+        return ChapterImageOrder(orders, urls.size).also { chapterImageOrders.put(key, it) }
+    }
 
     private fun bookImageDir(book: Book): File =
         downloadDir.getFile(cacheFolderName, book.getFolderName(), cacheImageFolderName)

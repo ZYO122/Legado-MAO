@@ -1,6 +1,7 @@
 package io.legado.app.help.book
 
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.HighlightTagRule
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -19,6 +20,43 @@ class BookExtensionsTest {
         assertEquals(listOf("收藏", "奇幻", "连载"), book.getDisplayTagList())
         assertEquals("奇幻,连载", book.kind)
         assertEquals("收藏,奇幻", book.customTag)
+    }
+
+    @Test
+    fun chapterCacheFolderName_usesChapterTitle() {
+        assertEquals(
+            "MAO-序章 一二三四五六",
+            BookChapter(bookUrl = "book", title = "序章 一二三四五六", index = 0).getCacheFolderName(),
+        )
+        assertEquals(
+            "MAO-第12话 你好啊",
+            BookChapter(bookUrl = "book", title = "第12话 你好啊", index = 11).getCacheFolderName(),
+        )
+        // 没有标题时补「第 N 话」。
+        assertEquals(
+            "MAO-第12话",
+            BookChapter(bookUrl = "book", title = "", index = 11).getCacheFolderName(),
+        )
+        // 文件名非法字符换空格，连续空白压成一个。
+        assertEquals(
+            "MAO-休刊通知：下期休刊 恢复时间 另行通知",
+            BookChapter(
+                bookUrl = "book",
+                title = "休刊通知：下期休刊/恢复时间\n另行通知",
+                index = 20,
+            ).getCacheFolderName(),
+        )
+    }
+
+    @Test
+    fun chapterCacheFileName_followsTheChapterFolderName() {
+        val chapter = BookChapter(bookUrl = "book", title = "第1话 你好啊", index = 0)
+        assertEquals("MAO-第1话 你好啊.nb", chapter.getFileName())
+        assertEquals("MAO-第1话 你好啊.nr", chapter.getFileName("nr"))
+        assertEquals(
+            "MAO-第12话.nb",
+            BookChapter(bookUrl = "book", title = "", index = 11).getFileName(),
+        )
     }
 
     @Test
