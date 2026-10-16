@@ -2407,15 +2407,15 @@ class ReadBookViewModel(
         }
     }
 
-    fun refreshImage(src: String) {
-        refreshImages(setOf(src))
+    fun refreshImage(src: String, chapterIndex: Int = -1) {
+        refreshImages(mapOf(src to chapterIndex))
     }
 
     /**
      * Re-fetch the supplied inline images. Theme changes use this same path as the
      * reader's explicit “refresh image” action so source-side JS is evaluated again.
      */
-    fun refreshImages(sources: Set<String>) {
+    fun refreshImages(sources: Map<String, Int>) {
         if (sources.isEmpty()) return
         viewModelScope.launch {
             val refreshed = refreshImageFiles(sources)
@@ -2426,24 +2426,27 @@ class ReadBookViewModel(
     }
 
     /** Performs the file-cache half of image refresh before a renderer redraws it. */
-    suspend fun refreshImageFiles(sources: Set<String>): Set<String> = withContext(IO) {
+    suspend fun refreshImageFiles(sources: Map<String, Int>): Set<String> = withContext(IO) {
         val book = ReadBook.book ?: return@withContext emptySet()
         buildSet {
-            sources.forEach { source ->
+            sources.forEach { (source, chapterIndex) ->
                 val refreshed = runCatching {
-                    ImageProvider.refreshImage(book, source, ReadBook.bookSource)
+                    ImageProvider.refreshImage(
+                        book, source, ReadBook.bookSource,
+                        ImageProvider.chapterOf(book, chapterIndex),
+                    )
                 }.getOrDefault(false)
                 if (refreshed) add(source)
             }
         }
     }
 
-    fun saveImage(src: String?) {
+    fun saveImage(src: String?, chapterIndex: Int = -1) {
         src ?: return
         val book = ReadBook.book ?: return
 
         execute {
-            val image = BookHelp.getImage(book, src)
+            val image = ImageProvider.imageFile(book, src, ImageProvider.chapterOf(book, chapterIndex))
             val byteArray = image.readBytes()
             val success = ImageSaveUtils.saveImageToGallery(
                 context,

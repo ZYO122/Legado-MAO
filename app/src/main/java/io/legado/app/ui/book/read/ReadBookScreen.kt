@@ -586,6 +586,7 @@ fun ReadBookScreen(
         show = photoSheet != null,
         src = photoSheet?.src ?: "",
         sourceOrigin = photoSheet?.sourceOrigin,
+        chapterIndex = photoSheet?.chapterIndex ?: -1,
         onDismissRequest = dismissSheet,
     )
     val bookmarkSheet = state.activeSheet as? ReadBookSheet.Bookmark

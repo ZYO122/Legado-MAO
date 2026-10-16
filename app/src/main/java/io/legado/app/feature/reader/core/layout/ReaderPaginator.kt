@@ -652,6 +652,7 @@ internal class ReaderPaginationSession(
             source = image.source,
             action = image.action,
             chapterPosition = image.chapterPosition,
+            chapterIndex = config.chapterIndex,
         )
         columnRows += ReaderLayoutRow(
             rowElementStart,
@@ -947,6 +948,7 @@ internal class ReaderPaginationSession(
                             source = item.source,
                             action = item.action,
                             chapterPosition = item.chapterPosition,
+                            chapterIndex = config.chapterIndex,
                             // 行内图必须带标记：绘制期按位图长宽比重新算几何（旧 ImageColumn）。
                             inline = true,
                         )

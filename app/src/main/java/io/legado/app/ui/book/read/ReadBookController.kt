@@ -175,6 +175,13 @@ class ReadBookController(
     fun cachedReaderImage(element: ReaderElement.Image): android.graphics.Bitmap? =
         readerImageCache.get(readerImageCacheKey(element))?.takeUnless(android.graphics.Bitmap::isRecycled)
 
+    private fun readerWindowImages(window: ReaderPageWindow): List<ReaderElement.Image> =
+        listOfNotNull(window.previous, window.current, window.next, window.nextPlus)
+            .asSequence()
+            .flatMap { page -> page.elements.asSequence() }
+            .filterIsInstance<ReaderElement.Image>()
+            .toList()
+
     private fun activeReaderImageKeys(window: ReaderPageWindow): Set<String> =
         listOfNotNull(window.previous, window.current, window.next, window.nextPlus)
             .asSequence()
@@ -253,23 +260,14 @@ class ReadBookController(
      * before the affected pages are invalidated, so no placeholder frame is shown.
      */
     private fun refreshInlineImagesThenReload() {
-        val sources = _readerPageWindow.value
-            .let { window ->
-                listOfNotNull(
-                    window.previous,
-                    window.current,
-                    window.next,
-                    window.nextPlus
-                )
-            }
-            .asSequence()
-            .flatMap { page -> page.elements.asSequence() }
-            .filterIsInstance<ReaderElement.Image>()
-            .map(ReaderElement.Image::source)
-            .toSet()
+        val sources = readerWindowImages(_readerPageWindow.value)
         activity.lifecycleScope.launch {
             if (sources.isNotEmpty()) {
-                replaceReaderImages(viewModel.refreshImageFiles(sources))
+                replaceReaderImages(
+                    viewModel.refreshImageFiles(
+                        sources.associate { it.source to it.chapterIndex }
+                    )
+                )
             }
             if (viewModel.isInitFinish) ReadBook.loadContent(resetPageOffset = false)
         }
@@ -293,6 +291,7 @@ class ReadBookController(
                     src = element.source,
                     width = element.bounds.width.toInt().coerceAtLeast(1),
                     height = element.bounds.height.toInt().coerceAtLeast(1),
+                    chapter = ImageProvider.chapterOf(book, element.chapterIndex),
                 ).takeUnless(android.graphics.Bitmap::isRecycled)?.also { bitmap ->
                     readerImageCache.put(key, bitmap)
                 }
@@ -616,7 +615,7 @@ class ReadBookController(
 
     fun onComposeReaderElementLongPress(element: ReaderElement, x: Float, y: Float): Boolean {
         if (element !is ReaderElement.Image) return false
-        onImageLongPress(x, y, element.source)
+        onImageLongPress(x, y, element)
         return true
     }
 
@@ -674,7 +673,14 @@ class ReadBookController(
         composeImageClickAt = now
         composeImageDoubleClick = if (debounce) !composeImageDoubleClick else false
         return when (readSettingsGateway.currentSettings.clickImgWay) {
-            "1" -> { viewModel.onIntent(ReadBookIntent.ShowSheet(ReadBookSheet.Photo(image.source))); true }
+            "1" -> {
+                viewModel.onIntent(
+                    ReadBookIntent.ShowSheet(
+                        ReadBookSheet.Photo(image.source, chapterIndex = image.chapterIndex)
+                    )
+                )
+                true
+            }
             "2" -> if (!debounce && ReadBook.book?.isOnLineTxt == true) {
                 image.action?.takeIf(String::isNotBlank)?.let { clickImg(it, image.source); true }
                     ?: oldClickImg(image.source)
@@ -1876,7 +1882,8 @@ class ReadBookController(
 
     val pageAnim: Int get() = ReadBook.pageAnim()
 
-    fun onImageLongPress(x: Float, y: Float, src: String) {
+    fun onImageLongPress(x: Float, y: Float, element: ReaderElement.Image) {
+        val src = element.source
         val anchor = activity.window.decorView
         anchor.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         popupAction.setItems(
@@ -1889,9 +1896,13 @@ class ReadBookController(
         )
         popupAction.onActionClick = {
             when (it) {
-                "show" -> viewModel.onIntent(ReadBookIntent.ShowSheet(ReadBookSheet.Photo(src)))
-                "refresh" -> viewModel.refreshImage(src)
-                "save" -> viewModel.saveImage(src)
+                "show" -> viewModel.onIntent(
+                    ReadBookIntent.ShowSheet(
+                        ReadBookSheet.Photo(src, chapterIndex = element.chapterIndex)
+                    )
+                )
+                "refresh" -> viewModel.refreshImage(src, element.chapterIndex)
+                "save" -> viewModel.saveImage(src, element.chapterIndex)
                 "menu" -> toggleMenu()
             }
             popupAction.dismiss()

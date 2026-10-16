@@ -1256,6 +1256,8 @@ sealed interface ReadBookSheet {
     data class Photo(
         val src: String,
         val sourceOrigin: String? = null,
+        /** 图片所属章节序号，图片缓存按章节定位；-1 表示未知。 */
+        val chapterIndex: Int = -1,
     ) : ReadBookSheet
 }
 

@@ -6,7 +6,9 @@ import android.util.Size
 import androidx.collection.LruCache
 import io.legado.app.R
 import io.legado.app.constant.AppLog.putDebug
+import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
+import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
 import io.legado.app.domain.gateway.OtherSettingsGateway
@@ -128,22 +130,45 @@ object ImageProvider {
     }
 
     /**
+     * 章节序号 → 章节实体。渲染链路只带章节序号，图片缓存路径需要章节本身。
+     * 键含 bookUrl，切书后不会串。
+     */
+    private val chapterCache = LruCache<Pair<String, Int>, BookChapter>(32)
+
+    fun chapterOf(book: Book, chapterIndex: Int): BookChapter? {
+        if (chapterIndex < 0) return null
+        val key = book.bookUrl to chapterIndex
+        chapterCache.get(key)?.let { return it }
+        return appDb.bookChapterDao.getChapter(book.bookUrl, chapterIndex)
+            ?.also { chapterCache.put(key, it) }
+    }
+
+    /** 章节图缓存文件；epub/pdf/mobi 的书内嵌图仍走共享目录，本地 txt 与在线书的章节插图按章节存。 */
+    fun imageFile(book: Book, src: String, chapter: BookChapter?): File =
+        if (chapter != null && !book.isEpub && !book.isPdf && !book.isMobi) {
+            BookHelp.getImage(book, chapter, src)
+        } else {
+            BookHelp.getImage(book, src)
+        }
+
+    /**
      *缓存网络图片和epub图片
      */
     suspend fun cacheImage(
         book: Book,
         src: String,
-        bookSource: BookSource?
+        bookSource: BookSource?,
+        chapter: BookChapter? = null,
     ): File {
         return withContext(IO) {
-            val vFile = BookHelp.getImage(book, src)
-            if (!BookHelp.isImageExist(book, src)) {
+            val vFile = imageFile(book, src, chapter)
+            if (!vFile.isFile) {
                 val inputStream = when {
                     book.isEpub -> EpubFile.getImage(book, src)
                     book.isPdf -> PdfFile.getImage(book, src)
                     book.isMobi -> MobiFile.getImage(book, src)
                     else -> {
-                        BookHelp.saveImage(bookSource, book, src)
+                        BookHelp.saveImage(bookSource, book, src, chapter)
                         null
                     }
                 }
@@ -159,12 +184,17 @@ object ImageProvider {
     }
 
     /** 显式刷新必须绕过 URL 查找复用；每份已更新原图的位图都需要重新解码。 */
-    suspend fun refreshImage(book: Book, src: String, bookSource: BookSource?): Boolean = withContext(IO) {
+    suspend fun refreshImage(
+        book: Book,
+        src: String,
+        bookSource: BookSource?,
+        chapter: BookChapter? = null,
+    ): Boolean = withContext(IO) {
         if (book.isEpub || book.isPdf || book.isMobi) {
-            val file = BookHelp.getImage(book, src)
+            val file = imageFile(book, src, chapter)
             bitmapLruCache.remove(file.absolutePath)
             file.delete()
-            cacheImage(book, src, bookSource).isFile
+            cacheImage(book, src, bookSource, chapter).isFile
         } else {
             val refreshed = BookHelp.refreshImageCopies(bookSource, book, src)
             refreshed.forEach { bitmapLruCache.remove(it.absolutePath) }
@@ -178,9 +208,10 @@ object ImageProvider {
     suspend fun getImageSize(
         book: Book,
         src: String,
-        bookSource: BookSource?
+        bookSource: BookSource?,
+        chapter: BookChapter? = null,
     ): Size {
-        val file = cacheImage(book, src, bookSource)
+        val file = cacheImage(book, src, bookSource, chapter)
         val op = BitmapFactory.Options()
         // inJustDecodeBounds如果设置为true,仅仅返回图片实际的宽和高,宽和高是赋值给opts.outWidth,opts.outHeight;
         op.inJustDecodeBounds = true
@@ -203,14 +234,15 @@ object ImageProvider {
         book: Book,
         src: String,
         width: Int,
-        height: Int? = null
+        height: Int? = null,
+        chapter: BookChapter? = null,
     ): Bitmap {
         //src为空白时 可能被净化替换掉了 或者规则失效
         if (book.getUseReplaceRule(otherSettingsGateway.currentSettings.replaceEnableDefault) && src.isBlank()) {
             book.setUseReplaceRule(false)
             appCtx.toastOnUi(R.string.error_image_url_empty)
         }
-        val vFile = BookHelp.getImage(book, src)
+        val vFile = imageFile(book, src, chapter)
         if (!vFile.exists()) return errorBitmap
         //epub文件提供图片链接是相对链接，同时阅读多个epub文件，缓存命中错误
         //bitmapLruCache的key同一改成缓存文件的路径

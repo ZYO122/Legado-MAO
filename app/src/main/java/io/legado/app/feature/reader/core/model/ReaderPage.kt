@@ -264,6 +264,8 @@ sealed interface ReaderElement {
         val source: String,
         val action: String?,
         val chapterPosition: Int = 0,
+        /** 图片所属章节在书中的序号，图片缓存据此落到章节目录；-1 表示未知。 */
+        val chapterIndex: Int = -1,
         /**
          * 文字嵌入（行内图），对照旧 View `TextChapterLayout` 的 `ImageColumn`：**宽恒为一个
          * 字符格**，高按实际加载到的位图长宽比换算，竖直居中于行盒且允许高于当前行。

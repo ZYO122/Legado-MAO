@@ -14,7 +14,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.request.RequestOptions
 import io.legado.app.R
-import io.legado.app.help.book.BookHelp
 import io.legado.app.help.glide.ImageLoader
 import io.legado.app.help.glide.OkHttpModelLoader
 import io.legado.app.model.BookCover
@@ -31,6 +30,7 @@ fun PhotoSheet(
     show: Boolean,
     src: String,
     sourceOrigin: String? = null,
+    chapterIndex: Int = -1,
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -50,7 +50,9 @@ fun PhotoSheet(
                     } else {
                         // Try to load from local file
                         val file = ReadBook.book?.let { book ->
-                            BookHelp.getImage(book, src)
+                            ImageProvider.imageFile(
+                                book, src, ImageProvider.chapterOf(book, chapterIndex),
+                            )
                         }
                         if (file?.exists() == true) {
                             ImageLoader.load(ctx, file)
