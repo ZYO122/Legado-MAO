@@ -34,6 +34,8 @@ class CoverInterceptor(
             source, book, data, request.extras[CoverExtras.LoadOnlyWifi] == true,
             request.extras[CoverExtras.MangaFileTransferStarted] ?: {},
             request.extras[CoverExtras.MangaChapterSubject],
+            request.extras[CoverExtras.MangaPageNumber],
+            request.extras[CoverExtras.MangaPageCount],
         )
     },
 ) : Interceptor {

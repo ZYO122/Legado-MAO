@@ -1991,6 +1991,8 @@ internal fun MangaReaderItemUi.Page.imageRequest(
             extras[CoverExtras.SourceOrigin] = settings.sourceOrigin
             extras[CoverExtras.MangaBookUrl] = bookUrl
             extras[CoverExtras.MangaChapterSubject] = chapterSubject
+            extras[CoverExtras.MangaPageNumber] = pageIndex + 1
+            extras[CoverExtras.MangaPageCount] = pageCount
             extras[CoverExtras.MangaFileOwner] = fileOwner
             extras[CoverExtras.MangaFileTransferStarted] = onFileTransfer
             extras[CoverExtras.MangaAspectRatio] = onAspectRatio
@@ -2035,6 +2037,8 @@ private fun MangaReaderItemUi.Page.backgroundColorRequest(
         extras[CoverExtras.SourceOrigin] = sourceOrigin
         extras[CoverExtras.MangaBookUrl] = bookUrl
         extras[CoverExtras.MangaChapterSubject] = chapterSubject
+        extras[CoverExtras.MangaPageNumber] = pageIndex + 1
+        extras[CoverExtras.MangaPageCount] = pageCount
         extras[CoverExtras.MangaFileOwner] = fileOwner
     }
     .listener(onSuccess = { _, result ->
