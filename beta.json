@@ -1,0 +1,49 @@
+{
+  "tag_name": "3.26.2-Beta.1",
+  "name": "Pre-release 3.26.2-Beta.1",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 书架：再次长按搜索按钮收起筛选\n* 书架：支持标签来源设置和搜索按钮长按\n* 分屏：平板、折叠屏支持分屏，外观设置控制\n* web：保留当前服务状态，接口错误返回 JSON\n* 资源：内置默认数据与 web 资源改用 APK 路径\n* web：处理 Legado Reader 插件的重复书籍\n* 音色池：添加音色的搜索框不再越筛越小\n* 音色池：导入确认页可选来源引擎包名\n* 音色池：兼容 TTS Server 导出的第二种层级\n* 音色：角色补音改为随机，音色被删自动重挑\n* 朗读：准备还在跑时 play() 不再重起一次\n* 朗读：切下一章不再取消脚下的准备作业\n* 支持听书与阅读不同书籍\n* 朗读：分配覆盖层出错不再带走整章朗读准备\n* 朗读：常挂弹层的当前章每次重组都重读\n* 朗读：翻页模式下点朗读从当前页开始\n* 阅读器：整图也带上 src 尾随 JSON 里的 click\n* 阅读器：恢复滑动翻页对斜划的响应\n* 阅读器：支持阅读时闪烁效果\n",
+  "prerelease": true,
+  "created_at": "2026-10-16T03:56:28Z",
+  "assets": [
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.1/MAO-3.26.2-Beta.1-A.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-16T03:39:58Z",
+      "download_count": 0,
+      "id": 646029234,
+      "name": "MAO-3.26.2-Beta.1-A.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/646029234"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.1/MAO-3.26.2-Beta.1-B.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-16T03:39:58Z",
+      "download_count": 0,
+      "id": 646029238,
+      "name": "MAO-3.26.2-Beta.1-B.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/646029238"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.1/MAO-3.26.2-Beta.1.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-16T03:39:58Z",
+      "download_count": 0,
+      "id": 646029237,
+      "name": "MAO-3.26.2-Beta.1.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/646029237"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.1/mapping.txt",
+      "content_type": "text/plain",
+      "created_at": "2026-10-16T03:39:58Z",
+      "download_count": 0,
+      "id": 646029235,
+      "name": "mapping.txt",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/646029235"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "tag_name": "3.26.1",
+  "name": "Release 3.26.1",
+  "body": "### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 书架：分组选择改为居中卡片，新增书籍快速定位\n* 固定书籍类型默认开启\n* 书架布局默认值改为手动排序 / 升序 / 列表\n* 分组管理：新建分组默认不显示，启用上限 16\n* 书籍信息：支持自定义子标签（Book.subTag，DB 132→133）\n",
+  "prerelease": false,
+  "created_at": "2026-10-16T03:56:08Z",
+  "assets": [
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.1/MAO-3.26.1-A.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-15T11:35:55Z",
+      "download_count": 0,
+      "id": 643665986,
+      "name": "MAO-3.26.1-A.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/643665986"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.1/MAO-3.26.1-B.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-15T11:35:55Z",
+      "download_count": 0,
+      "id": 643665981,
+      "name": "MAO-3.26.1-B.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/643665981"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.1/MAO-3.26.1.apk",
+      "content_type": "application/vnd.android.package-archive",
+      "created_at": "2026-10-15T11:35:55Z",
+      "download_count": 0,
+      "id": 643665978,
+      "name": "MAO-3.26.1.apk",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/643665978"
+    },
+    {
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.1/mapping.txt",
+      "content_type": "text/plain",
+      "created_at": "2026-10-15T11:35:55Z",
+      "download_count": 0,
+      "id": 643665979,
+      "name": "mapping.txt",
+      "state": "uploaded",
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/643665979"
+    }
+  ]
+}
