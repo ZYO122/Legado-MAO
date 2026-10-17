@@ -19,6 +19,7 @@ import io.legado.app.domain.usecase.GetReadingProgressUseCase
 import io.legado.app.domain.usecase.UploadReadingProgressUseCase
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.LocalMangaChapters
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.help.book.readSimulating
@@ -263,6 +264,9 @@ class MangaReaderDataRepository(
     )
 
     private fun localBookExists(book: Book): Boolean = runCatching {
-        LocalBook.getBookInputStream(book)
+        // 目录导入的漫画没有可打开的输入流，按目录存在判断
+        if (LocalMangaChapters.isDirectory(book.bookUrl)) return@runCatching true
+        LocalBook.getBookInputStream(book).close()
+        true
     }.isSuccess
 }

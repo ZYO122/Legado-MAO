@@ -313,6 +313,8 @@ fun ImportBookRouteScreen(
                 }
 
                 is ImportBookEffect.ShowToast -> context.toastOnUi(effect.message)
+
+                is ImportBookEffect.ConfirmAddArchive -> pendingSingleAddBook = effect.item
             }
         }
     }

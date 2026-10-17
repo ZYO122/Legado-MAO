@@ -144,7 +144,7 @@ fun BookInfoRouteScreen(
                             effect.inBookshelf
                         )
 
-                        !effect.book.isLocal && effect.book.isImage && showMangaUi -> {
+                        effect.book.isImage && showMangaUi -> {
                             onOpenMangaReader(
                                 effect.book.bookUrl,
                                 effect.inBookshelf,

@@ -24,6 +24,7 @@ import io.legado.app.exception.TocEmptyException
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
+import io.legado.app.help.book.LocalMangaChapters
 import io.legado.app.help.book.addType
 import io.legado.app.help.book.archiveName
 import io.legado.app.help.book.cacheLocalUri
@@ -33,6 +34,7 @@ import io.legado.app.help.book.getLocalUri
 import io.legado.app.help.book.getRemoteUrl
 import io.legado.app.help.book.isArchive
 import io.legado.app.help.book.isEpub
+import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isMobi
 import io.legado.app.help.book.isPdf
 import io.legado.app.help.book.isUmd
@@ -146,6 +148,10 @@ object LocalBook {
                 MobiFile.getChapterList(book)
             }
 
+            book.isImage -> {
+                imageChapterList(book)
+            }
+
             else -> {
                 TextFile.getChapterList(book)
             }
@@ -177,6 +183,29 @@ object LocalBook {
         book.totalChapterNum = list.size
         book.latestChapterTime = System.currentTimeMillis()
         return list
+    }
+
+    /**
+     * 本地漫画（zip/cbz 或目录）的目录：按图片所在目录分章，与漫画阅读器同一套规则。
+     * 只列条目名，不解压。
+     */
+    private fun imageChapterList(book: Book): ArrayList<BookChapter> {
+        val paths = kotlin.runCatching {
+            LocalMangaChapters.imagePaths(book.bookUrl, book.originName)
+        }.onFailure {
+            AppLog.put("读取本地漫画目录失败\n${it.localizedMessage}", it)
+        }.getOrDefault(emptyList())
+        val groups = LocalMangaChapters.group(paths, book.name)
+        return ArrayList(
+            groups.keys.mapIndexed { index, title ->
+                BookChapter(
+                    bookUrl = book.bookUrl,
+                    url = "local-manga://chapter/$index",
+                    title = title,
+                    index = index,
+                )
+            }
+        )
     }
 
     fun getContent(book: Book, chapter: BookChapter): String? {

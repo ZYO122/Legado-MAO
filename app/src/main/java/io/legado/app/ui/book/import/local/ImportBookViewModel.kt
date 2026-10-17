@@ -111,6 +111,9 @@ sealed interface ImportBookEffect {
     data class ShowImportArchiveDialog(val fileDoc: FileDoc, val fileName: String) : ImportBookEffect
     data class ShowToastRes(val resId: Int) : ImportBookEffect
     data class ShowToast(val message: String) : ImportBookEffect
+
+    /** 压缩包不能逐本勾选批量导入：点一下直接问要不要加进书架。 */
+    data class ConfirmAddArchive(val item: ImportBook) : ImportBookEffect
 }
 
 class ImportBookViewModel(
@@ -614,6 +617,9 @@ class ImportBookViewModel(
         when {
             item.isDir -> navigateNext(item.file)
             item.isOnBookShelf -> onImportedFileClick(item.file)
+            item.name.matches(archiveFileRegex) ->
+                _effects.tryEmit(ImportBookEffect.ConfirmAddArchive(item))
+
             else -> toggleSelection(item.selectionId)
         }
     }

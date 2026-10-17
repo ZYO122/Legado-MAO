@@ -342,7 +342,8 @@ object LibArchiveUtils {
                     continue
                 }
 
-                if (filter != null && filter.invoke(fileName))
+                // filter 为空表示取名（之前这里直接把它们全漏了，调用方拿到的永远是空列表）
+                if (filter == null || filter.invoke(fileName))
                     fileNames.add(fileName)
 
 
