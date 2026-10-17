@@ -90,6 +90,7 @@ import io.legado.app.ui.widget.components.AppFloatingActionButtonMenu
 import io.legado.app.ui.widget.components.AppTextField
 import io.legado.app.ui.widget.components.FabMenuItem
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
+import io.legado.app.ui.widget.components.alert.ChapterRangeDialog
 import io.legado.app.ui.widget.components.button.series.MediumTonalButton
 import io.legado.app.ui.widget.components.button.series.SmallTonalButton
 import io.legado.app.ui.widget.components.card.GlassCard
@@ -194,13 +195,14 @@ private fun BookshelfManageScreen(
     var customEpisodeExportNameInput by remember { mutableStateOf(state.exportConfig.episodeExportFileName) }
     var exportFileNameInput by remember { mutableStateOf(state.exportConfig.bookExportFileName.orEmpty()) }
     var exportCharsetInput by remember { mutableStateOf(state.exportConfig.exportCharset) }
+    var showExportChapterRangeDialog by remember { mutableStateOf(false) }
     var isSearchMode by remember { mutableStateOf(false) }
     var searchKey by remember { mutableStateOf("") }
     // 选中集合由 ViewModel 持有：切分组、进详情再返回都不清空，因此可以跨分组多选
     val selectedBookUrls: Set<String> = state.selectedBookUrls
     var deleteOriginalBookFile by remember { mutableStateOf(state.deleteBookOriginal) }
-    val exportBookPathKey = remember { "exportBookPath" }
-    val exportTypes = remember { arrayListOf("txt", "epub") }
+    val exportBookPathKey = remember { ExportBookPathCacheKey }
+    val exportTypes = remember { arrayListOf("txt", "epub", "zip") }
     val commonCharsets = remember { listOf("UTF-8", "GBK", "GB2312", "GB18030", "Big5", "UTF-16") }
     val focusRequester = remember { FocusRequester() }
     val exportFolderText = stringResource(R.string.export_folder)
@@ -213,6 +215,11 @@ private fun BookshelfManageScreen(
     val noGroupText = stringResource(R.string.no_group)
     val exportFileNameHintText = stringResource(R.string.export_file_name_template_hint)
     val exportFileNameHelpText = stringResource(R.string.export_file_name_template_help)
+    val exportChapterRangeText = stringResource(R.string.export_chapter_range)
+    val rangeAllText = stringResource(R.string.export_chapter_range_all)
+    val rangeBetweenText = stringResource(R.string.export_chapter_range_between)
+    val rangeFromText = stringResource(R.string.export_chapter_range_from)
+    val rangeToText = stringResource(R.string.export_chapter_range_to)
     val userGroups = remember(state.groupList) { state.groupList.filter { it.groupId > 0L } }
 
     val groupNameResolver: (Book) -> String = remember(userGroups, noGroupText) {
@@ -307,7 +314,7 @@ private fun BookshelfManageScreen(
             return@rememberLauncherForActivityResult
         }
         pendingBooks.forEach { book ->
-            startExport(context, dirPath, book, state.exportConfig.exportType)
+            startExport(context, dirPath, book.bookUrl, state.exportConfig.exportTypeName(exportTypes))
         }
     }
 
@@ -344,7 +351,7 @@ private fun BookshelfManageScreen(
             showCustomExportDialog = true
         } else {
             books.forEach { book ->
-                startExport(context, path, book, state.exportConfig.exportType)
+                startExport(context, path, book.bookUrl, state.exportConfig.exportTypeName(exportTypes))
             }
         }
     }
@@ -1092,6 +1099,17 @@ private fun BookshelfManageScreen(
                             })
                     }
                     item {
+                        TinyClickableSettingItem(
+                            title = exportChapterRangeText,
+                            description = state.exportConfig.chapterRangeDescription(
+                                rangeAllText,
+                                rangeBetweenText,
+                                rangeFromText,
+                                rangeToText,
+                            ),
+                            onClick = { showExportChapterRangeDialog = true })
+                    }
+                    item {
                         TinySwitchSettingItem(
                             title = "替换净化",
                             checked = state.exportConfig.exportUseReplace,
@@ -1237,6 +1255,19 @@ private fun BookshelfManageScreen(
         },
         dismissText = stringResource(android.R.string.cancel),
         onDismiss = { showCharsetDialog = false }
+    )
+
+    ChapterRangeDialog(
+        show = showExportChapterRangeDialog,
+        title = exportChapterRangeText,
+        initialStart = state.exportConfig.exportChapterStart,
+        initialEnd = state.exportConfig.exportChapterEnd,
+        allowUnlimited = true,
+        onConfirm = { start, end ->
+            viewModel.dispatch(BookshelfManageScreenIntent.SetExportChapterRange(start, end))
+            showExportChapterRangeDialog = false
+        },
+        onDismissRequest = { showExportChapterRangeDialog = false },
     )
 
     AppLogSheet(
@@ -1761,17 +1792,19 @@ private fun statusText(status: BatchChangeSourcePreviewStatus): String {
     }
 }
 
-private fun startExport(
-    context: android.content.Context,
-    path: String,
-    book: Book,
-    exportTypeIndex: Int
-) {
-    val exportType = if (exportTypeIndex == 1) "epub" else "txt"
-    context.startService<ExportBookService> {
-        action = IntentAction.start
-        putExtra("bookUrl", book.bookUrl)
-        putExtra("exportType", exportType)
-        putExtra("exportPath", path)
+/** 缓存目录的说明文案：两端都不限时显示「全部章节」。 */
+private fun BookshelfManageScreenExportConfig.chapterRangeDescription(
+    allText: String,
+    betweenText: String,
+    fromText: String,
+    toText: String,
+): String {
+    val start = exportChapterStart
+    val end = exportChapterEnd
+    return when {
+        start == null && end == null -> allText
+        start != null && end != null -> betweenText.format(start, end)
+        start != null -> fromText.format(start)
+        else -> toText.format(end)
     }
 }

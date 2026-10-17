@@ -124,6 +124,20 @@ class Phase2SettingsMappingTest {
     }
 
     @Test
+    fun `书籍导出设置目录选择写读映射`() {
+        val base = BookExportSettings()
+        assertRoundTrips(
+            samples = listOf(
+                base,
+                base.copy(exportChapterStart = 3, exportChapterEnd = 20),
+                base.copy(exportChapterStart = 5),
+                base.copy(exportChapterEnd = 88),
+            ),
+            toPrefMap = BookExportSettings::toPrefMap,
+            fromPreferences = Preferences::toBookExportSettings,
+        )
+    }
+    @Test
     fun `封面设置写读映射覆盖每个布尔字段`() {
         val base = CoverSettings(
             textColor = 0xFF112233.toInt(),

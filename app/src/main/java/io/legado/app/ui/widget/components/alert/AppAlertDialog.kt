@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.LegadoTheme.composeEngine
@@ -43,6 +44,8 @@ fun AppAlertDialog(
     confirmEnabled: Boolean = true,
     dismissText: String = "取消",
     onDismiss: (() -> Unit)? = null,
+    /** 标题居中（表单类弹窗与输入框中线对齐时用）。 */
+    titleCenter: Boolean = false,
 ) {
     if (ThemeResolver.isMiuixEngine(composeEngine)) {
         WindowDialog(
@@ -105,7 +108,21 @@ fun AppAlertDialog(
                 titleContentColor = LegadoTheme.colorScheme.onSurface,
                 textContentColor = LegadoTheme.colorScheme.onSurfaceVariant,
                 tonalElevation = AlertDialogDefaults.TonalElevation,
-                title = title?.let { { ProvideAppDensity { Text(text = it) } } },
+                title = title?.let { titleText ->
+                    {
+                        ProvideAppDensity {
+                            Text(
+                                text = titleText,
+                                modifier = if (titleCenter) {
+                                    Modifier.fillMaxWidth()
+                                } else {
+                                    Modifier
+                                },
+                                textAlign = if (titleCenter) TextAlign.Center else null,
+                            )
+                        }
+                    }
+                },
                 text = {
                     ProvideAppDensity {
                         Column(

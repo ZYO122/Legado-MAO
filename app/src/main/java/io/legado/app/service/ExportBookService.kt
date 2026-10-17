@@ -24,6 +24,7 @@ import io.legado.app.domain.gateway.TranslationSettingsGateway
 import io.legado.app.domain.model.settings.BookExportSettings
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
+import io.legado.app.help.book.BookCacheArchive
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.getExportFileName
@@ -56,6 +57,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -90,6 +92,10 @@ class ExportBookService : BaseService(), KoinComponent {
         val exportMsg = ConcurrentHashMap<String, String>()
         private val _exportBookUpdateFlow = MutableSharedFlow<String>(extraBufferCapacity = 64)
         val exportBookUpdateFlow = _exportBookUpdateFlow.asSharedFlow()
+
+        /** 每本书导出结束（成功/失败）时发一次：bookUrl to 结果文案。 */
+        private val _exportFinishedFlow = MutableSharedFlow<Pair<String, String>>(extraBufferCapacity = 16)
+        val exportFinishedFlow = _exportFinishedFlow.asSharedFlow()
     }
 
     data class ExportConfig(
@@ -248,6 +254,8 @@ class ExportBookService : BaseService(), KoinComponent {
                                 exportConfig.epubSize
                             ).export(exportConfig.path, book)
                         }
+                    } else if (exportConfig.type == "zip") {
+                        exportZip(exportConfig.path, book)
                     } else {
                         exportTxt(exportConfig.path, book)
                         // Also export translation if cache exists
@@ -264,6 +272,7 @@ class ExportBookService : BaseService(), KoinComponent {
                 } finally {
                     exportProgress.remove(bookUrl)
                     notifyExportBookChanged(bookUrl)
+                    _exportFinishedFlow.tryEmit(bookUrl to exportMsg[bookUrl].orEmpty())
                 }
             }
         }
@@ -288,6 +297,43 @@ class ExportBookService : BaseService(), KoinComponent {
         val index: Int,
         val src: String
     )
+
+    /** 缓存目录：1-based 起止章，null 表示该端不限。 */
+    private fun exportChapterInRange(chapter: BookChapter): Boolean {
+        val number = chapter.index + 1
+        currentExportSettings.exportChapterStart?.let { if (number < it) return false }
+        currentExportSettings.exportChapterEnd?.let { if (number > it) return false }
+        return true
+    }
+
+    /**
+     * 导出缓存 zip：压缩包内一章一个目录、图片平铺在该目录下（见 [BookCacheArchive]），
+     * 没缓存的章节只留空目录，因此可以直接当作漫画导入。
+     */
+    private suspend fun exportZip(path: String, book: Book) {
+        exportMsg.remove(book.bookUrl)
+        notifyExportBookChanged(book.bookUrl)
+        val fileDoc = FileDoc.fromDir(path)
+        val filename = book.getExportFileName("zip", currentExportSettings.bookExportFileName)
+        fileDoc.find(filename)?.delete()
+        val chapters = appDb.bookChapterDao.getChapterList(book.bookUrl)
+            .filter(::exportChapterInRange)
+        val bookDoc = fileDoc.createFileIfNotExist(filename)
+        // 返回的是有缓存的章节数：范围内一章缓存都没有时不留下空包
+        val written = bookDoc.openOutputStream().getOrThrow().use { output ->
+            BookCacheArchive.write(book, chapters, output) { processed ->
+                exportProgress[book.bookUrl] = processed
+                notifyExportBookChanged(book.bookUrl)
+            }
+        }
+        if (written == 0) {
+            bookDoc.delete()
+            throw NoStackTraceException(getString(R.string.export_no_cached_chapter))
+        }
+        if (currentExportSettings.exportToWebDav) {
+            AppWebDav.exportWebDav(bookDoc.uri, filename)
+        }
+    }
 
     private suspend fun exportTxt(path: String, book: Book) {
         exportMsg.remove(book.bookUrl)
@@ -385,7 +431,7 @@ class ExportBookService : BaseService(), KoinComponent {
             appDb.bookChapterDao.getChapterList(book.bookUrl).forEach { chapter ->
                 emit(chapter)
             }
-        }.mapAsync(threads) { chapter ->
+        }.filter(::exportChapterInRange).mapAsync(threads) { chapter ->
             getExportData(book, chapter, contentProcessor, useReplace, source)
         }.collectIndexed { index, result ->
             notifyExportBookChanged(book.bookUrl)
@@ -652,7 +698,7 @@ class ExportBookService : BaseService(), KoinComponent {
             appDb.bookChapterDao.getChapterList(book.bookUrl).forEach { chapter ->
                 emit(chapter)
             }
-        }.mapAsyncIndexed(threads) { index, chapter ->
+        }.filter(::exportChapterInRange).mapAsyncIndexed(threads) { index, chapter ->
             val content = when (source) {
                 ContentSource.Original -> BookHelp.getContent(book, chapter)
                 ContentSource.Translation -> translationCacheRepository.readTranslation(book, chapter, targetLanguage)

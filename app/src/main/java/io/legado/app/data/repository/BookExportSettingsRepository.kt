@@ -40,6 +40,8 @@ internal fun Preferences.toBookExportSettings() = BookExportSettings(
     exportType = compatDsInt(PreferKey.exportType) ?: 0,
     exportPictureFile = compatDsBoolean(PreferKey.exportPictureFile) ?: false,
     parallelExportBook = compatDsBoolean(PreferKey.parallelExportBook) ?: false,
+    exportChapterStart = compatDsInt(PreferKey.exportChapterStart),
+    exportChapterEnd = compatDsInt(PreferKey.exportChapterEnd),
 )
 
 internal fun BookExportSettings.toPrefMap(): Map<String, Any?> = mapOf(
@@ -53,4 +55,6 @@ internal fun BookExportSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.exportType to exportType,
     PreferKey.exportPictureFile to exportPictureFile,
     PreferKey.parallelExportBook to parallelExportBook,
+    PreferKey.exportChapterStart to exportChapterStart,
+    PreferKey.exportChapterEnd to exportChapterEnd,
 )

@@ -88,7 +88,9 @@ data class BookshelfManageScreenExportConfig(
     val exportType: Int = 0,
     val exportCharset: String = "UTF-8",
     val bookExportFileName: String? = null,
-    val episodeExportFileName: String = ""
+    val episodeExportFileName: String = "",
+    val exportChapterStart: Int? = null,
+    val exportChapterEnd: Int? = null,
 ) {
     val isCustomEpubExportEnabled: Boolean
         get() = enableCustomExport && exportType == 1
@@ -182,6 +184,7 @@ sealed interface BookshelfManageScreenIntent {
     data class SetExportCharset(val charset: String) : BookshelfManageScreenIntent
     data class SetBookExportFileName(val fileName: String?) : BookshelfManageScreenIntent
     data class SetEpisodeExportFileName(val fileName: String) : BookshelfManageScreenIntent
+    data class SetExportChapterRange(val start: Int?, val end: Int?) : BookshelfManageScreenIntent
 }
 
 sealed interface BookshelfManageScreenEffect {
@@ -361,6 +364,12 @@ class BookshelfManageScreenViewModel(
 
             is BookshelfManageScreenIntent.SetEpisodeExportFileName -> {
                 updateExportSetting { it.copy(episodeExportFileName = intent.fileName) }
+            }
+
+            is BookshelfManageScreenIntent.SetExportChapterRange -> {
+                updateExportSetting {
+                    it.copy(exportChapterStart = intent.start, exportChapterEnd = intent.end)
+                }
             }
         }
     }
@@ -565,6 +574,8 @@ class BookshelfManageScreenViewModel(
                     exportCharset = settings.exportCharset,
                     bookExportFileName = settings.bookExportFileName,
                     episodeExportFileName = settings.episodeExportFileName,
+                    exportChapterStart = settings.exportChapterStart,
+                    exportChapterEnd = settings.exportChapterEnd,
                 )
             )
         }

@@ -93,6 +93,8 @@ object PreferKey {
     const val exportNoChapterName = "exportNoChapterName"
     const val exportType = "exportType"
     const val exportPictureFile = "exportPictureFile"
+    const val exportChapterStart = "exportChapterStart"
+    const val exportChapterEnd = "exportChapterEnd"
     const val chineseConverterType = "chineseConverterType"
     const val launcherIcon = "launcherIcon"
     const val textSelectAble = "selectText"

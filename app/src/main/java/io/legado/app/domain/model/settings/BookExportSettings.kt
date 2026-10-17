@@ -11,4 +11,7 @@ data class BookExportSettings(
     val exportType: Int = 0,
     val exportPictureFile: Boolean = false,
     val parallelExportBook: Boolean = false,
+    /** 缓存目录：起始章/结束章（1-based），null 表示该端不限。 */
+    val exportChapterStart: Int? = null,
+    val exportChapterEnd: Int? = null,
 )
