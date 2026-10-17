@@ -1,5 +1,7 @@
 package io.legado.app.ui.book.cache.manage
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,9 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,14 +47,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.legado.app.R
 import io.legado.app.data.entities.BookGroup
+import io.legado.app.ui.book.manage.ExportBookPathCacheKey
+import io.legado.app.ui.book.manage.exportFolderPathOf
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.adaptiveContentPadding
 import io.legado.app.ui.widget.components.AppFloatingActionButton
 import io.legado.app.ui.widget.components.AppScaffold
+import io.legado.app.ui.widget.components.AppTextField
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
+import io.legado.app.ui.widget.components.alert.ChapterRangeDialog
 import io.legado.app.ui.widget.components.button.series.SmallTonalButton
 import io.legado.app.ui.widget.components.card.NormalCard
 import io.legado.app.ui.widget.components.card.TextCard
+import io.legado.app.ui.widget.components.filePicker.FilePickerSheet
 import io.legado.app.ui.widget.components.icon.AppIcon
 import io.legado.app.ui.widget.components.icon.AppIcons
 import io.legado.app.ui.widget.components.lazylist.FastScrollLazyColumn
@@ -64,6 +73,7 @@ import io.legado.app.ui.widget.components.text.AppText
 import io.legado.app.ui.widget.components.topbar.DynamicTopAppBar
 import io.legado.app.ui.widget.components.topbar.GlassTopAppBarDefaults
 import io.legado.app.ui.widget.components.topbar.TopBarActionButton
+import io.legado.app.utils.ACache
 import io.legado.app.utils.toastOnUi
 import org.koin.androidx.compose.koinViewModel
 
@@ -109,6 +119,11 @@ private fun BookCacheManageScreen(
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
     var pendingDeleteBook by remember { mutableStateOf<BookCacheBookItem?>(null) }
     var pendingDeleteChapter by remember { mutableStateOf<Pair<BookCacheBookItem, BookCacheChapterItem>?>(null) }
+    var pendingExportBookUrl by remember { mutableStateOf<String?>(null) }
+    var showExportFolderPicker by remember { mutableStateOf(false) }
+    var showExportPathInput by remember { mutableStateOf(false) }
+    var exportPathInput by remember { mutableStateOf("") }
+    var rangeBook by remember { mutableStateOf<BookCacheBookItem?>(null) }
     var isSearchMode by remember { mutableStateOf(false) }
     var searchKey by remember { mutableStateOf("") }
     var selectedGroupId by remember { mutableStateOf(BookGroup.IdAll) }
@@ -144,6 +159,27 @@ private fun BookCacheManageScreen(
     val notBookshelfSectionEmptyText = stringResource(R.string.cache_empty_not_in_bookshelf)
     val allGroupText = stringResource(R.string.all)
     val noGroupText = stringResource(R.string.net_no_group)
+    val cacheDirectoryText = stringResource(R.string.cache_directory)
+
+    fun startCacheZipExport(path: String) {
+        val bookUrl = pendingExportBookUrl ?: return
+        pendingExportBookUrl = null
+        ACache.get().put(ExportBookPathCacheKey, path)
+        onIntent(BookCacheManageIntent.ExportCacheZip(bookUrl, path))
+    }
+
+    // 导出文件夹与书架导出共用 ACache 里的同一个上次选择
+    val exportDirLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let(::exportFolderPathOf)?.let(::startCacheZipExport)
+    }
+
+    /** 点「导出 zip」先让用户选目标目录（系统选择器或手动输入），不静默开导。 */
+    fun exportBookCacheZip(bookUrl: String) {
+        pendingExportBookUrl = bookUrl
+        showExportFolderPicker = true
+    }
     val groupOptions = remember(state.groups, allGroupText, noGroupText) {
         listOf(
             BookGroup.IdAll to allGroupText,
@@ -254,7 +290,9 @@ private fun BookCacheManageScreen(
                     },
                     onIntent = onIntent,
                     onDeleteBook = { pendingDeleteBook = it },
-                    onDeleteChapter = { book, chapter -> pendingDeleteChapter = book to chapter }
+                    onDeleteChapter = { book, chapter -> pendingDeleteChapter = book to chapter },
+                    onExportZip = { exportBookCacheZip(it.bookUrl) },
+                    onSelectChapterRange = { rangeBook = it },
                 )
                 if (selectedGroupId == BookGroup.IdAll) {
                     cacheSection(
@@ -270,7 +308,9 @@ private fun BookCacheManageScreen(
                         onDeleteBook = { pendingDeleteBook = it },
                         onDeleteChapter = { book, chapter ->
                             pendingDeleteChapter = book to chapter
-                        }
+                        },
+                        onExportZip = { exportBookCacheZip(it.bookUrl) },
+                        onSelectChapterRange = { rangeBook = it },
                     )
                 }
             }
@@ -300,6 +340,71 @@ private fun BookCacheManageScreen(
         },
         onDismiss = { pendingDeleteChapter = null }
     )
+
+    // 导出 zip 的目标目录：先弹选择（系统选择器 / 手动输入路径），选完才开导
+    FilePickerSheet(
+        show = showExportFolderPicker,
+        onDismissRequest = {
+            showExportFolderPicker = false
+            pendingExportBookUrl = null
+        },
+        title = stringResource(R.string.select_folder),
+        onSelectSysDir = {
+            showExportFolderPicker = false
+            exportDirLauncher.launch(null)
+        },
+        onManualInput = {
+            showExportFolderPicker = false
+            exportPathInput = ACache.get().getAsString(ExportBookPathCacheKey).orEmpty()
+            showExportPathInput = true
+        },
+    )
+
+    AppAlertDialog(
+        show = showExportPathInput,
+        onDismissRequest = {
+            showExportPathInput = false
+            pendingExportBookUrl = null
+        },
+        title = stringResource(R.string.export_folder),
+        content = {
+            AppTextField(
+                value = exportPathInput,
+                onValueChange = { exportPathInput = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(R.string.export_folder),
+                singleLine = true,
+            )
+        },
+        confirmText = stringResource(android.R.string.ok),
+        onConfirm = {
+            val path = exportPathInput.trim()
+            showExportPathInput = false
+            if (path.isNotEmpty()) startCacheZipExport(path)
+        },
+        dismissText = stringResource(android.R.string.cancel),
+        onDismiss = {
+            showExportPathInput = false
+            pendingExportBookUrl = null
+        },
+    )
+
+    // 缓存选择：章号按目录里的序号填，确认后缓存这个区间
+    rangeBook?.let { book ->
+        ChapterRangeDialog(
+            show = true,
+            title = cacheDirectoryText,
+            initialStart = 1,
+            initialEnd = book.totalCount.takeIf { it > 0 },
+            onConfirm = { start, end ->
+                if (start != null && end != null) {
+                    onIntent(BookCacheManageIntent.CacheChapterRange(book.bookUrl, start, end))
+                    rangeBook = null
+                }
+            },
+            onDismissRequest = { rangeBook = null },
+        )
+    }
 }
 
 /**
@@ -325,6 +430,8 @@ private fun LazyListScope.cacheSection(
     onIntent: (BookCacheManageIntent) -> Unit,
     onDeleteBook: (BookCacheBookItem) -> Unit,
     onDeleteChapter: (BookCacheBookItem, BookCacheChapterItem) -> Unit,
+    onExportZip: (BookCacheBookItem) -> Unit,
+    onSelectChapterRange: (BookCacheBookItem) -> Unit,
 ) {
     item(key = "$title-header") {
         AppText(
@@ -354,6 +461,8 @@ private fun LazyListScope.cacheSection(
                     onToggleExpanded = { onToggleExpanded(bookUrl) },
                     onIntent = onIntent,
                     onDeleteBook = onDeleteBook,
+                    onExportZip = onExportZip,
+                    onSelectChapterRange = onSelectChapterRange,
                     modifier = Modifier.animateItem()
                 )
             }
@@ -396,6 +505,8 @@ private fun BookCacheBookCard(
     onToggleExpanded: () -> Unit,
     onIntent: (BookCacheManageIntent) -> Unit,
     onDeleteBook: (BookCacheBookItem) -> Unit,
+    onExportZip: (BookCacheBookItem) -> Unit,
+    onSelectChapterRange: (BookCacheBookItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val arrowRotation by animateFloatAsState(
@@ -522,6 +633,32 @@ private fun BookCacheBookCard(
                     onClick = { onDeleteBook(item) },
                     icon = Icons.Default.Delete,
                     contentDescription = stringResource(R.string.delete_book_cache, item.name)
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SmallTonalButton(
+                    onClick = { onExportZip(item) },
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.UploadFile,
+                    text = stringResource(R.string.export_cache_zip),
+                    contentDescription = stringResource(
+                        R.string.a11y_export_book_cache_zip,
+                        item.name
+                    )
+                )
+                SmallTonalButton(
+                    onClick = { onSelectChapterRange(item) },
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.FormatListNumbered,
+                    text = stringResource(R.string.cache_directory),
+                    contentDescription = stringResource(
+                        R.string.a11y_select_book_cache_range,
+                        item.name
+                    )
                 )
             }
         }

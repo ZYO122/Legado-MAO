@@ -19,6 +19,8 @@ import io.legado.app.model.CacheBookModel
 import io.legado.app.model.cache.CacheBookDownloadState
 import io.legado.app.model.cache.CacheChapterProgress
 import io.legado.app.model.cache.CacheChapterProgressPhase
+import io.legado.app.service.ExportBookService
+import io.legado.app.ui.book.manage.startExport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -91,6 +93,12 @@ sealed interface BookCacheManageIntent {
     data class ToggleBookExpanded(val bookUrl: String) : BookCacheManageIntent
     data class DeleteBookCache(val bookUrl: String) : BookCacheManageIntent
     data class DownloadChapter(val bookUrl: String, val chapterIndex: Int) : BookCacheManageIntent
+    /** 缓存选择：按目录里的 1-based 起止章缓存。 */
+    data class CacheChapterRange(val bookUrl: String, val start: Int, val end: Int) :
+        BookCacheManageIntent
+
+    /** 把这本书的缓存导出为 zip（目标目录已在 UI 选定）。 */
+    data class ExportCacheZip(val bookUrl: String, val path: String) : BookCacheManageIntent
     data class StopChapterDownload(val bookUrl: String, val chapterIndex: Int) : BookCacheManageIntent
     data class DeleteChapterCache(
         val bookUrl: String,
@@ -127,6 +135,7 @@ class BookCacheManageViewModel(
     private val bookReloadJobs = hashMapOf<String, Job>()
     private val chapterLoadJobs = hashMapOf<String, Job>()
     private val pendingDownloadRefreshBookUrls = ConcurrentHashMap.newKeySet<String>()
+    private val pendingExportBookUrls = ConcurrentHashMap.newKeySet<String>()
     @Volatile
     private var pendingDownloadSummaryRefresh = false
 
@@ -144,6 +153,12 @@ class BookCacheManageViewModel(
                 intent.bookUrl,
                 intent.chapterIndex
             )
+            is BookCacheManageIntent.CacheChapterRange -> cacheChapterRange(
+                intent.bookUrl,
+                intent.start,
+                intent.end,
+            )
+            is BookCacheManageIntent.ExportCacheZip -> exportCacheZip(intent.bookUrl, intent.path)
             is BookCacheManageIntent.StopChapterDownload -> stopChapterDownload(
                 intent.bookUrl,
                 intent.chapterIndex,
@@ -214,6 +229,14 @@ class BookCacheManageViewModel(
         viewModelScope.launch {
             CacheBook.queueChangedFlow.collect { bookUrl ->
                 scheduleRuntimeStatusRefresh(bookUrl)
+            }
+        }
+        // 导出成功/失败都给一句提示：服务的通知不一定看得到
+        viewModelScope.launch {
+            ExportBookService.exportFinishedFlow.collect { (bookUrl, message) ->
+                if (pendingExportBookUrls.remove(bookUrl)) {
+                    _effects.tryEmit(BookCacheManageEffect.ShowMessage(message.ifBlank { "导出结束" }))
+                }
             }
         }
         viewModelScope.launch {
@@ -820,6 +843,34 @@ class BookCacheManageViewModel(
         }.onFinally {
             scheduleImmediateRuntimeStatusRefresh(bookUrl)
         }
+    }
+
+    /**
+     * 缓存选择：把目录里的 1-based 起止章转成缓存下标区间，越界收敛到本书章节范围。
+     */    private fun cacheChapterRange(bookUrl: String, start: Int, end: Int) {
+        execute {
+            val total = repository.getChapterCount(bookUrl)
+            val last = (total - 1).coerceAtLeast(0)
+            val from = (start - 1).coerceIn(0, last)
+            val to = (end - 1).coerceIn(0, last)
+            cacheBookChaptersUseCase.executeRange(bookUrl, from, to)
+        }.onSuccess { count ->
+            if (count > 0) {
+                _effects.tryEmit(BookCacheManageEffect.ShowMessage("已加入缓存队列: $count 章"))
+            } else {
+                _effects.tryEmit(BookCacheManageEffect.ShowMessage("没有可缓存的章节"))
+            }
+        }.onError {
+            _effects.tryEmit(BookCacheManageEffect.ShowMessage("加入缓存队列失败\n${it.localizedMessage}"))
+        }.onFinally {
+            scheduleImmediateRuntimeStatusRefresh(bookUrl)
+        }
+    }
+
+    /** 导出 zip：交给导出服务，结果由 [ExportBookService.exportFinishedFlow] 回报。 */
+    private fun exportCacheZip(bookUrl: String, path: String) {
+        pendingExportBookUrls.add(bookUrl)
+        startExport(context, path, bookUrl, "zip")
     }
 
     private fun stopChapterDownload(bookUrl: String, chapterIndex: Int) {
