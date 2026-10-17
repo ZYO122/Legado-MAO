@@ -1177,12 +1177,14 @@ abstract class BaseReadAloudService : BaseService(),
      */
     private fun setTimer(minute: Int) {
         synchronized(finishChapterTimerLock) { chapterQuota = null }
+        sessionStore.updateTimerChapters(0)
         timeMinute = minute
         doDs()
     }
 
     private fun addTimer() {
         synchronized(finishChapterTimerLock) { chapterQuota = null }
+        sessionStore.updateTimerChapters(0)
         timeMinute = PlaybackTimer.addIncrement(timeMinute)
         doDs()
     }
@@ -1194,9 +1196,11 @@ abstract class BaseReadAloudService : BaseService(),
      * 换章不算取消。用户改用分钟模式时才交给 [setTimer] 一起清。
      */
     private fun setTimerChapters(chapters: Int) {
+        val quota = PlaybackTimer.normalizeChapters(chapters).takeIf { it > 0 }
         synchronized(finishChapterTimerLock) {
-            chapterQuota = PlaybackTimer.normalizeChapters(chapters).takeIf { it > 0 }
+            chapterQuota = quota
         }
+        sessionStore.updateTimerChapters(quota ?: 0)
     }
 
     /**
@@ -1814,6 +1818,7 @@ abstract class BaseReadAloudService : BaseService(),
             }
             if (decision.remainingChapters != null) {
                 chapterQuota = decision.remainingChapters
+                sessionStore.updateTimerChapters(decision.remainingChapters ?: 0)
             }
             when (decision.action) {
                 ChapterCompletionAction.STOP -> {
@@ -1859,6 +1864,7 @@ abstract class BaseReadAloudService : BaseService(),
             finishChapterAtIndex = NO_FINISH_CHAPTER
             chapterQuota = null
         }
+        sessionStore.updateTimerChapters(0)
     }
 
     private fun clearFinishChapterTimerIfChapterChanged(chapterIndex: Int) {
