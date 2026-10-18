@@ -68,7 +68,6 @@ import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.History
@@ -647,24 +646,6 @@ fun BookshelfScreen(
                             onClick = { onIntent(BookshelfIntent.SelectAllVisible) },
                             imageVector = Icons.Default.SelectAll,
                             contentDescription = stringResource(R.string.select_all)
-                        )
-                    }
-                    AnimatedVisibility(visible = isEditMode) {
-                        TopBarActionButton(
-                            onClick = { onIntent(BookshelfIntent.InvertVisibleSelection) },
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.revert_selection)
-                        )
-                    }
-                    AnimatedVisibility(visible = isEditMode) {
-                        TopBarActionButton(
-                            onClick = {
-                                if (selectedBookUrls.isNotEmpty()) {
-                                    onIntent(BookshelfIntent.ShowOverlay(BookshelfOverlay.BatchDownloadConfirmDialog))
-                                }
-                            },
-                            imageVector = Icons.Default.Download,
-                            contentDescription = stringResource(R.string.action_download)
                         )
                     }
                     AnimatedVisibility(visible = isEditMode) {
