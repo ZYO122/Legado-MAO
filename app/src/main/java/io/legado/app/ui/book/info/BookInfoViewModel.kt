@@ -240,6 +240,7 @@ class BookInfoViewModel(
         execute {
             privateContentGateway.setBooksPrivate(setOf(bookUrl), target)
         }.onSuccess {
+            currentBook?.isPrivate = target
             bookPrivateFlow.value = target
             showMessage(
                 context.getString(

@@ -452,7 +452,10 @@ data class Book(
 
     fun save() {
         applyTagGroupRulesForBook(this)
-        if (appDb.bookDao.has(bookUrl)) {
+        // 私密标记只由 PrivateContentRepository 维护，整行更新不能把它写回默认值
+        val storedPrivate = appDb.bookDao.getPrivateMark(bookUrl)
+        if (storedPrivate != null) {
+            isPrivate = storedPrivate
             appDb.bookDao.update(this)
         } else {
             appDb.bookDao.insert(this)

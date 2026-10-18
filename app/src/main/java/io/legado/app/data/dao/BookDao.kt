@@ -796,6 +796,9 @@ interface BookDao {
     @Query("select exists(select 1 from books where bookUrl = :bookUrl)")
     fun has(bookUrl: String): Boolean
 
+    @Query("select isPrivate from books where bookUrl = :bookUrl")
+    fun getPrivateMark(bookUrl: String): Boolean?
+
     @Query("select exists(select 1 from books where name = :name and author = :author)")
     fun has(name: String, author: String): Boolean
 
