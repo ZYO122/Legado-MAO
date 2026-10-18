@@ -25,6 +25,7 @@ import io.legado.app.domain.gateway.OtherSettingsGateway
 import io.legado.app.domain.gateway.ReadSettingsGateway
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.RuleBigDataHelp
+import io.legado.app.help.source.getBookType
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.ui.book.info.HighlightedTag
 import io.legado.app.utils.FileDoc
@@ -328,6 +329,11 @@ fun Book.clearType() {
 }
 
 fun Book.isType(@BookType.Type bookType: Int): Boolean = type and bookType > 0
+
+fun Book.applySourceType(source: BookSource) {
+    removeAllBookType()
+    addType(source.getBookType())
+}
 
 fun Book.upType() {
     if (type < 8) {

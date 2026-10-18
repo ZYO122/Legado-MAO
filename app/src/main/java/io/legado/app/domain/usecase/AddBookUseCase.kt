@@ -5,6 +5,7 @@ import io.legado.app.data.repository.BookRepository
 import io.legado.app.data.repository.BookSourceRepository
 import io.legado.app.domain.gateway.OtherSettingsGateway
 import io.legado.app.domain.gateway.ReadSettingsGateway
+import io.legado.app.help.book.applySourceType
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.utils.NetworkUtils
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +53,9 @@ class AddBookUseCase(
                 bookUrl = bookUrl,
                 origin = bookSource.bookSourceUrl,
                 originName = bookSource.bookSourceName
-            )
+            ).apply {
+                applySourceType(bookSource)
+            }
 
             kotlin.runCatching {
                 val bookInfo = WebBook.getBookInfoAwait(bookSource, book)

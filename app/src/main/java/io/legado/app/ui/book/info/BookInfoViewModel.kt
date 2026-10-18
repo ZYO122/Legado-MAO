@@ -53,6 +53,7 @@ import io.legado.app.exception.NoBooksDirException
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.addType
+import io.legado.app.help.book.applySourceType
 import io.legado.app.help.book.getDisplayTagList
 import io.legado.app.help.book.getExportFileName
 import io.legado.app.help.book.getSubTagList
@@ -346,6 +347,9 @@ class BookInfoViewModel(
             // 私密标记与书籍信息一次取回：先确定是否私密，再发布书籍。
             // 分开查会先渲染真实书名/封面、再切成锁定态，既闪烁又泄漏。
             val isPrivate = privateContentGateway.isBookPrivate(bookUrl)
+            val prefetchedSource = origin
+                ?.takeUnless { it == BookType.localTag }
+                ?.let { bookSourceRepository.getBookSource(it) }
             val fallback = if (!name.isNullOrBlank() && !author.isNullOrBlank()) {
                 Book(
                     bookUrl = bookUrl,
@@ -354,6 +358,7 @@ class BookInfoViewModel(
                     origin = origin ?: BookType.localTag,
                     coverUrl = coverPath
                 ).apply {
+                    prefetchedSource?.let { applySourceType(it) }
                     addType(BookType.notShelf)
                 }
             } else {
@@ -376,8 +381,8 @@ class BookInfoViewModel(
                     }
                 }
             }
-            book to isPrivate
-        }.onSuccess { (book, isPrivate) ->
+            Triple(book, isPrivate, prefetchedSource)
+        }.onSuccess { (book, isPrivate, prefetchedSource) ->
             // 先落私密状态再发布书籍：第一帧就已经是最终形态，没有中间态
             bookPrivateFlow.value = isPrivate
             privateLockedByEntryFlow.value = isPrivate
@@ -398,7 +403,8 @@ class BookInfoViewModel(
             val source = if (book.isLocal) {
                 null
             } else {
-                bookSourceRepository.getBookSource(book.origin)
+                prefetchedSource?.takeIf { it.bookSourceUrl == book.origin }
+                    ?: bookSourceRepository.getBookSource(book.origin)
             }
             upBook(book, source)
         }.onError {

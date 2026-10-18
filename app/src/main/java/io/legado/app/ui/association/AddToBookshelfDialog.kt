@@ -18,6 +18,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSource
 import io.legado.app.databinding.DialogAddToBookshelfBinding
 import io.legado.app.exception.NoStackTraceException
+import io.legado.app.help.book.applySourceType
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.ui.main.MainActivity
@@ -162,7 +163,9 @@ class AddToBookshelfDialog() : BaseDialogFragment(R.layout.dialog_add_to_bookshe
                     bookUrl = bookUrl,
                     origin = source.bookSourceUrl,
                     originName = source.bookSourceName
-                )
+                ).apply {
+                    applySourceType(source)
+                }
                 WebBook.getBookInfoAwait(source, book)
             }.getOrNull()
         }
