@@ -1,49 +1,49 @@
 {
-  "tag_name": "3.26.2-Beta.4",
-  "name": "Pre-release 3.26.2-Beta.4",
-  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 私密：详情页下拉刷新不再清除单本私密标记\n* 书架：多选工具栏移除反选与下载缓存按钮\n* 朗读/多角色：保留用户编辑，按配置朗读章标题旁白\n* read-aloud：章标题跟着正文旁白一起退备用音色\n* cast：别名跟着记忆涨跌、简介跟着更新，认得出是谁写的才动\n* cast：AI 分配角色窗口里直接换当前模型\n* cast：一趟分配跑完把角色记忆与人物列表收敛到一起\n* read-aloud：开多角色朗读时章标题由旁白念\n* read-aloud：关掉多角色朗读时旁白不再顶替引擎默认发音人\n* 笔记优化\n* 共享元素动画开关\n* 发现点击问题\n* reader：图片点击问题\n* reader：九宫格的一些问题\n* 换源卡住\n",
+  "tag_name": "3.26.2-Beta.5",
+  "name": "Pre-release 3.26.2-Beta.5",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* read-aloud：段落恢复时保留停顿\n* reader：西文断行时保留行末空格\n* 阅读器：书源详情弹层改纵向布局\n* 搜索：正则搜索加超时保护，结果缓存按查询收敛\n* reader：角色胶囊与整串标点不再把一行顶出空洞\n* read-aloud：段落间隔不再重建本章合成任务，纯符号段不再被跳过\n",
   "prerelease": true,
-  "created_at": "2026-10-18T23:01:11Z",
+  "created_at": "2026-10-20T02:25:07Z",
   "assets": [
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.4/MAO-3.26.2-Beta.4-A.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.5/MAO-3.26.2-Beta.5-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-18T23:19:50Z",
+      "created_at": "2026-10-20T02:44:17Z",
       "download_count": 0,
-      "id": 654717618,
-      "name": "MAO-3.26.2-Beta.4-A.apk",
+      "id": 658073106,
+      "name": "MAO-3.26.2-Beta.5-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/654717618"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/658073106"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.4/MAO-3.26.2-Beta.4-B.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.5/MAO-3.26.2-Beta.5-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-18T23:19:50Z",
+      "created_at": "2026-10-20T02:44:17Z",
       "download_count": 0,
-      "id": 654717616,
-      "name": "MAO-3.26.2-Beta.4-B.apk",
+      "id": 658073105,
+      "name": "MAO-3.26.2-Beta.5-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/654717616"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/658073105"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.4/MAO-3.26.2-Beta.4.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.5/MAO-3.26.2-Beta.5.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-18T23:19:50Z",
+      "created_at": "2026-10-20T02:44:17Z",
       "download_count": 0,
-      "id": 654717619,
-      "name": "MAO-3.26.2-Beta.4.apk",
+      "id": 658073103,
+      "name": "MAO-3.26.2-Beta.5.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/654717619"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/658073103"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.4/mapping.txt",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.5/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-10-18T23:19:50Z",
+      "created_at": "2026-10-20T02:44:17Z",
       "download_count": 0,
-      "id": 654717617,
+      "id": 658073104,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/654717617"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/658073104"
     }
   ]
 }
