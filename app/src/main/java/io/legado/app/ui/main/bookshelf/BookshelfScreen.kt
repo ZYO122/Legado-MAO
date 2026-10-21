@@ -50,7 +50,9 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -105,6 +107,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -113,8 +116,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -1847,7 +1852,7 @@ private fun BookshelfGroupTitle(
 }
 
 /**
- * 分组选择：居中弹窗，左右两块各自独立的面板，各 8 个（分组管理里也只有 16 个能启用）。
+ * 分组选择：居中弹窗，分组按数量均分成两列（最多 16 个，即 8+8），气泡铺满列宽。
  *
  * 用宽弹窗而不是锚在标题上的菜单：菜单太窄，分组名长的会折行。
  */
@@ -1859,12 +1864,36 @@ private fun BookshelfGroupSelectDialog(
     onDismissRequest: () -> Unit
 ) {
     val visibleGroups = groups.take(BookGroup.MaxShownCount)
-    val columns = listOf(
-        visibleGroups.take(BookGroup.MaxShownCount / 2),
-        visibleGroups.drop(BookGroup.MaxShownCount / 2)
-    ).filter { it.isNotEmpty() }
-    // 两列才铺满宽度；只有一列（启用分组 ≤ 8）时按内容收窄，弹窗自然变小
+    // 按实际数量均分两列（8→4+4、10→5+5），固定 8/剩余会让右列留下大片空档
+    val perColumn = ((visibleGroups.size + 1) / 2).coerceAtLeast(1)
+    val columns = visibleGroups.chunked(perColumn).filter { it.isNotEmpty() }
     val twoColumns = columns.size > 1
+    val titleText = stringResource(R.string.group_select)
+    val titleStyle = LegadoTheme.typography.titleMedium
+    val bubbleTextStyle = LegadoTheme.typography.labelLargeEmphasized
+    val density = LocalDensity.current
+    val textMeasurer = rememberTextMeasurer()
+    val (bubbleWidth, singleColumnWidth) = remember(
+        visibleGroups, titleText, titleStyle, bubbleTextStyle, density
+    ) {
+        with(density) {
+            val maxDialogWidth = 320.dp.roundToPx()
+            val chrome = 4.dp.roundToPx() + 16.dp.roundToPx() +
+                    12.dp.roundToPx() + 24.dp.roundToPx()
+            val twoCharWidth = textMeasurer.measure("两字", bubbleTextStyle).size.width
+            val longestTitleWidth = visibleGroups.maxOfOrNull {
+                textMeasurer.measure(it.groupName, bubbleTextStyle).size.width
+            } ?: 0
+            val bubble = minOf(
+                maxOf(twoCharWidth, longestTitleWidth) + 16.dp.roundToPx(),
+                maxDialogWidth - chrome
+            )
+            val titleWidth = textMeasurer.measure(titleText, titleStyle).size.width
+            val dialogWidth = maxOf(bubble + chrome, titleWidth + 24.dp.roundToPx())
+                .coerceAtMost(maxDialogWidth)
+            bubble.toDp() to dialogWidth.toDp()
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -1880,14 +1909,17 @@ private fun BookshelfGroupSelectDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .then(if (twoColumns) Modifier.fillMaxWidth() else Modifier.width(220.dp))
+                    .then(
+                        if (twoColumns) Modifier.widthIn(max = 360.dp).fillMaxWidth()
+                        else Modifier.width(singleColumnWidth)
+                    )
                     .clip(RoundedCornerShape(24.dp))
                     .background(LegadoTheme.colorScheme.surfaceContainer)
                     .padding(12.dp),
             ) {
                 AppText(
-                    text = stringResource(R.string.group_select),
-                    style = LegadoTheme.typography.titleMedium,
+                    text = titleText,
+                    style = titleStyle,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -1896,7 +1928,8 @@ private fun BookshelfGroupSelectDialog(
                     modifier = Modifier
                         .heightIn(max = 420.dp)
                         .verticalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     columns.forEach { columnGroups ->
                         GroupPanel(
@@ -1904,6 +1937,7 @@ private fun BookshelfGroupSelectDialog(
                             selectedGroupId = selectedGroupId,
                             onSelect = onSelect,
                             modifier = if (twoColumns) Modifier.weight(1f) else Modifier.fillMaxWidth(),
+                            bubbleWidth = if (twoColumns) null else bubbleWidth,
                         )
                     }
                 }
@@ -1921,13 +1955,14 @@ private fun GroupPanel(
     selectedGroupId: Long,
     onSelect: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    bubbleWidth: Dp? = null,
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(LegadoTheme.colorScheme.surfaceContainerHighest)
             .padding(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         groups.forEach { group ->
             val selected = group.groupId == selectedGroupId
@@ -1938,7 +1973,10 @@ private fun GroupPanel(
             }
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .then(
+                        if (bubbleWidth == null) Modifier.fillMaxWidth()
+                        else Modifier.wrapContentWidth()
+                    )
                     .clickable { onSelect(group.groupId) }
                     .padding(horizontal = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1948,7 +1986,11 @@ private fun GroupPanel(
                     cornerRadius = 8.dp,
                     containerColor = LegadoTheme.colorScheme.surfaceContainer,
                     contentColor = bubbleContentColor,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = if (bubbleWidth == null) {
+                        Modifier.weight(1f)
+                    } else {
+                        Modifier.width(bubbleWidth)
+                    },
                 ) {
                     AppText(
                         text = group.groupName,
@@ -1965,6 +2007,8 @@ private fun GroupPanel(
                         null,
                         modifier = Modifier.size(16.dp),
                     )
+                } else {
+                    Spacer(modifier = Modifier.size(16.dp))
                 }
             }
         }
