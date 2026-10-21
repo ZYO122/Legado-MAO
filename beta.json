@@ -1,49 +1,49 @@
 {
   "tag_name": "3.26.2-Beta.6",
   "name": "Pre-release 3.26.2-Beta.6",
-  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 书架：分组选择弹窗按内容收缩，最低两字\n* 阅读器：仿真折页补上弯折月牙与纸背底色，修背景图下的异色带\n* 设置：其他设置新增「阻止书源打开内置浏览器」开关\n* 朗读：重做听书音色面板，引擎默认音色可单独选，选中即起播\n* 朗读：当前章合成完再预合成下一章，修 HTTP 朗读抢占导致的断流卡顿\n* 关于页：检测更新弹窗的更新按钮移到底部常驻，更新日志可选中复制\n",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 书架：分组选择弹窗均分两列并铺满气泡\n* 阅读器：仿真折页补上弯折月牙与纸背底色，修背景图下的异色带\n* 设置：其他设置新增「阻止书源打开内置浏览器」开关\n* 朗读：重做听书音色面板，引擎默认音色可单独选，选中即起播\n* 朗读：当前章合成完再预合成下一章，修 HTTP 朗读抢占导致的断流卡顿\n* 关于页：检测更新弹窗的更新按钮移到底部常驻，更新日志可选中复制\n",
   "prerelease": true,
-  "created_at": "2026-10-21T02:46:45Z",
+  "created_at": "2026-10-21T05:31:23Z",
   "assets": [
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.6/MAO-3.26.2-Beta.6-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-21T03:06:58Z",
+      "created_at": "2026-10-21T05:53:07Z",
       "download_count": 0,
-      "id": 661194848,
+      "id": 661508291,
       "name": "MAO-3.26.2-Beta.6-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661194848"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661508291"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.6/MAO-3.26.2-Beta.6-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-21T03:06:58Z",
+      "created_at": "2026-10-21T05:53:07Z",
       "download_count": 0,
-      "id": 661194844,
+      "id": 661508283,
       "name": "MAO-3.26.2-Beta.6-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661194844"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661508283"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.6/MAO-3.26.2-Beta.6.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-10-21T03:06:58Z",
+      "created_at": "2026-10-21T05:53:07Z",
       "download_count": 0,
-      "id": 661194846,
+      "id": 661508290,
       "name": "MAO-3.26.2-Beta.6.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661194846"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661508290"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.6/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-10-21T03:06:58Z",
+      "created_at": "2026-10-21T05:53:07Z",
       "download_count": 0,
-      "id": 661194847,
+      "id": 661508286,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661194847"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/661508286"
     }
   ]
 }
