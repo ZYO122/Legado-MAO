@@ -125,13 +125,17 @@ class ReadBookDomainSplitBoundaryTest {
      *   （+4，意图入口与状态投影只能在 VM，弹层定位必须走 `findSheet`）；
      * - 新增 `SourceEditHandled` 意图分支（+2，回填清理，同样只能落在 VM）。
      *
+     * 关联书籍位置（上游 `35b863526`）在 `syncFromReadBook` 投影表加 `chapterPayable`
+     * 及其 import 共 2 行（判定本体在 `ReaderChapterInput.isPayable`，不占 VM 行）；
+     * 合并前基线是 2750，加完正好 2752，未再抬高上限。
+     *
      * 上一档 2748：2026-10 由 2745 放宽 3 行，两条新增都属本注释已列出的合法接线，
      * 没有新的域回流，因此只抬数字、不摘 delegate：
      * - 顶栏按钮可配置：在意图 `when` 里加 `SaveTitleBarActionConfig` 分支转发
      *   （+2，意图入口只能在 VM，读写与默认按钮全在 `ReadButtonConfigDelegate`）；
      * - 同上：在 `ReadMenuConfig` 投影表加 `titleBarActions`
      *   （+1，一个字段一行，沿用 `titleBarButtons` / `bottomBarButtons` 的既有投影）。
-     * 回溯（上一档）：界面优化（`ba128d4c5`）`OpenReadAloudSubPage` 分支（+2）；
+     * 再上一档：界面优化（`ba128d4c5`）`OpenReadAloudSubPage` 分支（+2）；
      * 字号兼容（`45d842b73`）`buildStyleConfig()` 投影表加 `titleSizeRelative`（+1）。
      *
      * VM 里合法保留、逐行摘不掉的接线类型：
