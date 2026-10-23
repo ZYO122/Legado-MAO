@@ -482,6 +482,7 @@ private fun BookInfoScreenContent(
                                             RelatedBooksBanner(
                                                 title = module.title,
                                                 books = module.books,
+                                                showMore = module.resolvedUrl.isNotBlank(),
                                                 onBookClick = { book, _ ->
                                                     onIntent(BookInfoIntent.RelatedBookClick(book))
                                                 },
@@ -2093,6 +2094,7 @@ private fun RelatedBooksBanner(
     books: ImmutableList<SearchBook>,
     onBookClick: (SearchBook, String?) -> Unit,
     onMoreClick: () -> Unit,
+    showMore: Boolean = true,
 ) {
     Column(
         modifier = Modifier
@@ -2112,11 +2114,13 @@ private fun RelatedBooksBanner(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
-                SmallTonalButton(
-                    onClick = onMoreClick,
-                    icon = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = stringResource(R.string.a11y_related_books_more, title),
-                )
+                if (showMore) {
+                    SmallTonalButton(
+                        onClick = onMoreClick,
+                        icon = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.a11y_related_books_more, title),
+                    )
+                }
             }
         }
         BannerModule(
