@@ -136,7 +136,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 133,
+    version = 134,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -281,6 +281,10 @@ val appDb by lazy {
         AutoMigration(from = 131, to = 132),
         // books 新增 subTag 列：用户维护的子标签，只在详情页标签里展示，默认 NULL = 无子标签。
         AutoMigration(from = 132, to = 133),
+        // highlight_rules 新增边框三列：颜色可空（null = 不描边），粗细默认 1、圆角默认 4，
+        // 老规则三列取默认值，读回来不描边、与旧行为逐字节等价。本地 133 已随 3.26.1
+        // 发布（subTag），故边框三列走 133 → 134。
+        AutoMigration(from = 133, to = 134),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
