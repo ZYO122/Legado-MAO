@@ -1195,6 +1195,8 @@ fun MainActivity.mainEntryProvider(
         val bookUrl = route.bookUrl
         if (bookUrl != null) {
             VideoPlayerScreen(bookUrl = bookUrl, onBack = onNavigateBack)
+        } else {
+            LaunchedEffect(Unit) { onNavigateBack() }
         }
     }
 
