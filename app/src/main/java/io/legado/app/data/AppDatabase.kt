@@ -373,7 +373,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val deleteRemovedSystemGroupsSql = """
                     delete from book_groups where groupId in (
                         ${BookGroup.IdLocal}, ${BookGroup.IdAudio}, ${BookGroup.IdNetNone},
-                        ${BookGroup.IdLocalNone}, ${BookGroup.IdManga}, ${BookGroup.IdText},
+                        ${BookGroup.IdLocalNone}, ${BookGroup.IdManga}, ${BookGroup.IdVideo}, ${BookGroup.IdText},
                         ${BookGroup.IdReading}, ${BookGroup.IdUnread}, ${BookGroup.IdReadFinished},
                         ${BookGroup.IdReadFinishedUpdate}, ${BookGroup.IdReadFinishedComplete}
                     )
