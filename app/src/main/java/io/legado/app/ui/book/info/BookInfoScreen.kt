@@ -26,6 +26,8 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -407,7 +409,7 @@ private fun BookInfoScreenContent(
                                         onKindClick = onOpenExplore,
                                         onCoverClick = { onIntent(BookInfoIntent.CoverClick) },
                                         onCoverLongClick = { onIntent(BookInfoIntent.CoverLongClick) },
-                                        onAuthorClick = { onIntent(BookInfoIntent.AuthorClick(it)) },
+                                        onAuthorClick = { longClick, author -> onIntent(BookInfoIntent.AuthorClick(longClick, author)) },
                                         onBookNameClick = { onIntent(BookInfoIntent.BookNameClick(it)) },
                                         onOriginClick = { onIntent(BookInfoIntent.OriginClick) },
                                         onNetworkCoverLoadError = {
@@ -694,7 +696,7 @@ private fun BookInfoLockedContent(
                 onKindClick = { _, _ -> },
                 onCoverClick = {},
                 onCoverLongClick = {},
-                onAuthorClick = {},
+                onAuthorClick = { _, _ -> },
                 onBookNameClick = {},
                 onOriginClick = {},
                 onNetworkCoverLoadError = {},
@@ -1133,6 +1135,7 @@ private fun BookInfoOverflowMenu(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BookInfoHeader(
     book: BookInfoBookUi,
@@ -1142,7 +1145,7 @@ private fun BookInfoHeader(
     onKindClick: (String, String) -> Unit,
     onCoverClick: () -> Unit,
     onCoverLongClick: () -> Unit,
-    onAuthorClick: (Boolean) -> Unit,
+    onAuthorClick: (Boolean, String?) -> Unit,
     onBookNameClick: (Boolean) -> Unit,
     onOriginClick: () -> Unit,
     onNetworkCoverLoadError: () -> Unit,
@@ -1315,14 +1318,35 @@ private fun BookInfoHeader(
                                 )
                             }
                         }
-                        book.realAuthor.takeIf { it.isNotBlank() }?.let { author ->
+                        val authorLabels = remember(book.realAuthor) {
+                            book.realAuthor.split(",", "，")
+                                .map { it.trim() }
+                                .filter { it.isNotBlank() }
+                        }
+                        if (authorLabels.size > 1) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                authorLabels.forEach { author ->
+                                    AnimatedTextLine(
+                                        text = author,
+                                        style = LegadoTheme.typography.bodyLarge,
+                                        color = LegadoTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.combinedClickable(
+                                            onClick = { onAuthorClick(false, author) },
+                                            onLongClick = { onAuthorClick(true, author) }
+                                        )
+                                    )
+                                }
+                            }
+                        } else {
                             AnimatedTextLine(
-                                text = stringResource(R.string.author_show, author),
+                                text = stringResource(R.string.author_show, book.realAuthor),
                                 style = LegadoTheme.typography.bodyLarge,
                                 color = LegadoTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.combinedClickable(
-                                    onClick = { onAuthorClick(false) },
-                                    onLongClick = { onAuthorClick(true) }
+                                    onClick = { onAuthorClick(false, null) },
+                                    onLongClick = { onAuthorClick(true, null) }
                                 )
                             )
                         }
