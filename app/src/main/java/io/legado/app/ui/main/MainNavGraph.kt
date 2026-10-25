@@ -1191,7 +1191,9 @@ fun MainActivity.mainEntryProvider(
         )
     }
 
-    entry<MainRouteVideoPlay> { route ->
+    entry<MainRouteVideoPlay>(
+        metadata = readerEntryMetadata(configuration.appShell.predictiveBackEnabled)
+    ) { route ->
         val bookUrl = route.bookUrl
         if (bookUrl == null) {
             LaunchedEffect(Unit) { onNavigateBack() }
