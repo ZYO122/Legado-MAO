@@ -1529,8 +1529,8 @@ fun MainActivity.mainEntryProvider(
             onNavigateToBookInfo = { name, author, bookUrl, origin, coverPath ->
                 onNavigateToRoute(MainRouteBookInfo(name, author, bookUrl, origin, coverPath))
             },
-            onNavigateToExploreShow = { title, sourceUrl, exploreUrl ->
-                onNavigateToRoute(MainRouteExploreShow(title, sourceUrl, exploreUrl))
+            onNavigateToExploreShow = { title, sourceUrl, exploreUrl, usePageParamFallback ->
+                onNavigateToRoute(MainRouteExploreShow(title, sourceUrl, exploreUrl, usePageParamFallback))
             },
             onOpenCharacterDetail = { bookUrl, characterId ->
                 onNavigateToRoute(MainRouteBookCharacterDetail(bookUrl, characterId))
@@ -1779,9 +1779,9 @@ fun MainActivity.mainEntryProvider(
     entry<MainRouteExploreShow> { route ->
         val exploreViewModel = koinViewModel<ExploreShowViewModel>()
 
-        LaunchedEffect(route.sourceUrl, route.exploreUrl, exploreViewModel) {
+        LaunchedEffect(route.sourceUrl, route.exploreUrl, route.usePageParamFallback, exploreViewModel) {
             exploreViewModel.onIntent(
-                ExploreShowIntent.InitData(route.sourceUrl, route.exploreUrl)
+                ExploreShowIntent.InitData(route.sourceUrl, route.exploreUrl, route.usePageParamFallback)
             )
         }
 
