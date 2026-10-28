@@ -233,14 +233,14 @@ object Backup {
         }
         currentCoroutineContext().ensureActive()
         if (!BackupConfig.backupIgnoreReadConfig) {
-            readStyleGateway.exportConfigsJson().let {
-                FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.configFileName)
-                    .writeText(it)
-            }
-            readStyleGateway.exportShareConfigJson().let {
-                FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
-                    .writeText(it)
-            }
+            val configsJson = readStyleGateway.exportConfigsJson()
+            FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.configFileName)
+                .writeText(configsJson)
+            val shareConfigJson = readStyleGateway.exportShareConfigJson()
+            FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
+                .writeText(shareConfigJson)
+            // 排版只记文件名与路径，背景图/字体文件不跟着进包的话，换机恢复出来是空白背景与默认字体。
+            backupReadStyleAssets(collectReadStyleAssetRefs(configsJson, shareConfigJson))
             // 段评气泡包跟着阅读样式一起备份：bubble.json + 包内的字体/图片。
             backupBubblePackages(backupPath)
         }
@@ -315,7 +315,11 @@ object Backup {
         val zipFileName = getNowZipFileName()
         val paths = (
             backupFileNames.map { File(backupPath, it) }.filter(File::isFile) +
-                listOfNotNull(File(backupPath, bubblePackagesDirName).takeIf { it.isDirectory })
+                listOfNotNull(
+                    File(backupPath, bubblePackagesDirName).takeIf { it.isDirectory },
+                    File(backupPath, "bg").takeIf { it.isDirectory },
+                    File(backupPath, "font").takeIf { it.isDirectory },
+                )
             )
             .map { it.absolutePath }
         FileUtils.delete(zipFilePath)
@@ -383,6 +387,39 @@ object Backup {
             AppLog.put("备份段评气泡出错\n${error.localizedMessage}", error)
         }
     }
+
+    private fun backupReadStyleAssets(refs: ReadStyleAssetRefs) {
+        refs.backgrounds.forEach { copyAssetTo(File(backupPath, "bg"), it, "bg") }
+        refs.fonts.forEach { copyAssetTo(File(backupPath, "font"), it, "font") }
+    }
+
+    private fun copyAssetTo(targetDir: File, reference: String, fallbackDir: String) {
+        val source = readStyleAssetFile(reference, fallbackDir) ?: return
+        val target = File(targetDir, source.name)
+        if (target.isFile) return
+        targetDir.mkdirs()
+        runCatching {
+            source.copyTo(target)
+        }.onFailure {
+            target.delete()
+            AppLog.put("备份阅读背景/字体失败 $reference\n${it.localizedMessage}", it)
+        }
+    }
+
+    private fun readStyleAssetFile(reference: String, fallbackDir: String): File? {
+        // content:// 指向用户自带的外部文件（字体文件夹、相册），不归应用管，不打包也不改写。
+        if (reference.isContentScheme()) return null
+        val path = if (reference.startsWith("file://", ignoreCase = true)) {
+            reference.toUri().path ?: return null
+        } else {
+            reference
+        }
+        FileUtils.resolveAssetFile(path)?.takeIf(File::isFile)?.let { return it }
+        val name = FileUtils.getName(path)
+        if (name.isBlank()) return null
+        return File(FileUtils.getPath(appCtx.externalFiles, fallbackDir, name)).takeIf(File::isFile)
+    }
+
     private suspend fun writeListToJson(list: List<Any>, fileName: String, path: String) {
         currentCoroutineContext().ensureActive()
         withContext(IO) {
