@@ -51,7 +51,8 @@ object LegacyReaderImageOptionsResolver : ReaderImageOptionsResolver {
             },
             action = action,
             // 书源显式给的数量或从显示文本里读到的数字。
-            reviewCount = review?.count,
+            // 旧行为只认正数：0 与非法文本都不算评论数。
+            reviewCount = review?.count?.takeIf { it > 0 },
             reviewText = review?.text,
             reviewStatus = review?.status,
             reviewColor = review?.color,

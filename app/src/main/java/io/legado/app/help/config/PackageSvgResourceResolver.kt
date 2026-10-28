@@ -81,7 +81,12 @@ internal class PackageSvgResourceResolver(
         val bold = fontWeight >= 600
         val italic = fontStyle.contains("italic", ignoreCase = true) ||
             fontStyle.contains("oblique", ignoreCase = true)
-        val style = (if (bold) Typeface.BOLD else 0) or (if (italic) Typeface.ITALIC else 0)
+        val style = when {
+            bold && italic -> Typeface.BOLD_ITALIC
+            bold -> Typeface.BOLD
+            italic -> Typeface.ITALIC
+            else -> Typeface.NORMAL
+        }
         return runCatching { Typeface.create(base, style) }.getOrDefault(base)
     }
 

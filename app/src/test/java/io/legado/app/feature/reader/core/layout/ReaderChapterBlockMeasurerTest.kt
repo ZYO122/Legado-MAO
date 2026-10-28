@@ -769,7 +769,10 @@ class ReaderChapterBlockMeasurerTest {
             .filterIsInstance<ReaderMeasuredInlineItem.Review>().single()
         assertEquals(0, review.count)
         assertEquals(
-            ReaderReviewBubbleMetrics.widthPx(0f, ReaderReviewBubbleMetrics.heightPx(10f)),
+            ReaderReviewBubbleMetrics.widthPx(
+                ReaderReviewBubbleMetrics.heightPx(10f),
+                style.reviewBubbleAspectRatio,
+            ),
             review.widthPx,
             0.01f,
         )

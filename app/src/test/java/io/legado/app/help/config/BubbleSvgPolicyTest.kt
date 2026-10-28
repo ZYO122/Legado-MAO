@@ -9,14 +9,15 @@ class BubbleSvgPolicyTest {
     private val plainSvg = """
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
           <path d="M4 4h56v56H4z" fill="none" stroke="${'$'}{color}"/>
-          <text x="32" y="32" font-family="asset://font">${'$'}{num}</text>
+          <image href="asset://paw" x="0" y="0" width="64" height="64"/>
+          <text x="32" y="32">${'$'}{num}</text>
         </svg>
     """.trimIndent()
 
     @Test
     fun acceptsPlainTemplateAndCollectsPackageReferences() {
         BubbleSvgPolicy.validate(plainSvg)
-        assertEquals(setOf("asset://font"), BubbleSvgPolicy.packageReferences(plainSvg))
+        assertEquals(setOf("asset://paw"), BubbleSvgPolicy.packageReferences(plainSvg))
     }
 
     @Test
