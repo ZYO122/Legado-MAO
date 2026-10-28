@@ -62,6 +62,7 @@ import io.legado.app.utils.FileUtils
 import io.legado.app.utils.GSON
 import io.legado.app.utils.LogUtils
 import io.legado.app.utils.compress.ZipUtils
+import io.legado.app.utils.externalFiles
 import io.legado.app.utils.fromJsonArray
 import io.legado.app.utils.getPrefString
 import io.legado.app.utils.isContentScheme
@@ -347,21 +348,17 @@ object Restore : KoinComponent {
             AppLog.put("恢复封面规则出错\n${it.localizedMessage}", it)
         }
         if (!BackupConfig.ignoreReadConfig) {
+            // 先把背景图与字体文件落回应用私有目录，json 里的引用随后按目录里实际存在的文件改写。
+            restoreReadStyleAssets(path)
             //恢复阅读界面配置
-            File(path, ReadBookConfig.configFileName).takeIf {
-                it.exists()
-            }?.runCatching {
-                FileUtils.copyFileAtomic(this, ReadBookConfig.configFilePath)
-            }?.onFailure {
-                AppLog.put("恢复阅读界面出错\n${it.localizedMessage}", it)
-            }
-            File(path, ReadBookConfig.shareConfigFileName).takeIf {
-                it.exists()
-            }?.runCatching {
-                FileUtils.copyFileAtomic(this, ReadBookConfig.shareConfigFilePath)
-            }?.onFailure {
-                AppLog.put("恢复阅读界面出错\n${it.localizedMessage}", it)
-            }
+            restoreReadStyleConfig(
+                backupFile = File(path, ReadBookConfig.configFileName),
+                targetPath = ReadBookConfig.configFilePath,
+            )
+            restoreReadStyleConfig(
+                backupFile = File(path, ReadBookConfig.shareConfigFileName),
+                targetPath = ReadBookConfig.shareConfigFilePath,
+            )
             // 两个文件都落地后再整体重读：分开重读会让 shareConfig 的兜底
             // （configList[5]）取到还没被覆盖的旧列表。refresh 顺带发布 state。
             get<ReadStyleGateway>().refresh()
@@ -447,6 +444,67 @@ object Restore : KoinComponent {
         } finally {
             staging.deleteRecursively()
         }
+    }
+
+    /** 同名覆盖：备份里的那份就是恢复后应有的样子。旧备份没有这两个目录时什么都不做。 */
+    private fun restoreReadStyleAssets(backupDir: String) {
+        copyAssetDir(File(backupDir, "bg"), FileUtils.getPath(appCtx.externalFiles, "bg"))
+        copyAssetDir(File(backupDir, "font"), FileUtils.getPath(appCtx.externalFiles, "font"))
+    }
+
+    private fun copyAssetDir(sourceDir: File, targetPath: String) {
+        val files = sourceDir.listFiles()?.filter(File::isFile).orEmpty()
+        if (files.isEmpty()) return
+        val targetDir = File(targetPath)
+        targetDir.mkdirs()
+        files.forEach { file ->
+            runCatching {
+                file.copyTo(File(targetDir, file.name), overwrite = true)
+            }.onFailure {
+                AppLog.put("恢复阅读背景/字体出错 ${file.name}\n${it.localizedMessage}", it)
+            }
+        }
+    }
+
+    private fun restoreReadStyleConfig(backupFile: File, targetPath: String) {
+        if (!backupFile.exists()) return
+        runCatching {
+            FileUtils.writeTextAtomic(
+                targetPath,
+                rewriteReadStyleAssetRefs(
+                    json = backupFile.readText(),
+                    resolveBackground = ::restoredBackgroundPath,
+                    resolveFont = ::restoredFontPath,
+                ),
+            )
+        }.onFailure {
+            AppLog.put("恢复阅读界面出错\n${it.localizedMessage}", it)
+        }
+    }
+
+    private fun restoredBackgroundPath(reference: String): String? {
+        val name = restoredAssetName(reference)
+        if (name.isBlank()) return null
+        val path = FileUtils.getPath(appCtx.externalFiles, "bg", name)
+        return path.takeIf(FileUtils::exist)
+    }
+
+    private fun restoredFontPath(reference: String): String? {
+        val name = restoredAssetName(reference)
+        if (name.isBlank()) return null
+        val path = FileUtils.getPath(appCtx.externalFiles, "font", name)
+        if (!FileUtils.exist(path)) return null
+        return Uri.fromFile(File(path)).toString()
+    }
+
+    /** content:// 引用指向用户自带的外部文件，取不到文件名就保持原值。 */
+    private fun restoredAssetName(reference: String): String {
+        val path = if (reference.startsWith("file://", ignoreCase = true)) {
+            reference.toUri().path.orEmpty()
+        } else {
+            reference
+        }
+        return FileUtils.getName(path)
     }
 
     private fun localBookLocationStatus(bookUrl: String): LocalBookLocationStatus {
