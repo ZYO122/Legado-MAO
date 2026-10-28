@@ -206,6 +206,8 @@ object PreferKey {
     const val swipeToAddBookmark = "swipeToAddBookmark"
     const val bookmarkBadgeImage = "bookmarkBadgeImage"
     const val bookmarkBadgeSize = "bookmarkBadgeSize"
+    const val reviewBubbleStyle = "reviewBubbleStyle"
+    const val paragraphBubblePackage = "paragraphBubblePackage"
     const val volumeKeyPage = "volumeKeyPage"
     const val volumeKeyPageOnPlay = "volumeKeyPageOnPlay"
     const val mouseWheelPage = "mouseWheelPage"

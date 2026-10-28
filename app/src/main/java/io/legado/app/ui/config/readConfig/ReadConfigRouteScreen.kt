@@ -11,6 +11,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ReadConfigRouteScreen(
     onBackClick: () -> Unit,
+    onNavigateToBubblePackages: () -> Unit,
     viewModel: ReadConfigViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
@@ -30,5 +31,6 @@ fun ReadConfigRouteScreen(
         state = state,
         onIntent = viewModel::onIntent,
         onBackClick = onBackClick,
+        onNavigateToBubblePackages = onNavigateToBubblePackages,
     )
 }

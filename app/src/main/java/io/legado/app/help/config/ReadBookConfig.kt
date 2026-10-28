@@ -70,6 +70,10 @@ object ReadBookConfig {
     val comicStyleSelect get() = readSettings.comicStyleSelect
     val shareLayout get() = readSettings.shareLayout
     val textFullJustify get() = readSettings.textFullJustify
+    /** 段评气泡样式：`source` 跟随书源图，`package` 由当前气泡包自绘。 */
+    val reviewBubbleStyle get() = readSettings.reviewBubbleStyle
+    /** 当前段评气泡包目录名；空值用内置包。 */
+    val reviewBubblePackage get() = readSettings.reviewBubblePackage
     val textBottomJustify get() = readSettings.textBottomJustify
     val hideStatusBar get() = readSettings.hideStatusBar
     val hideNavigationBar get() = readSettings.hideNavigationBar
