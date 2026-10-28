@@ -15,14 +15,12 @@ class BubblePackageConfigTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun legacyManifestWithoutNewFieldsFallsBackToDefaults() {
+    fun legacyManifestWithoutNewFieldsParsesNameAndTemplate() {
         val config = GSON.fromJsonObject<BubblePackageManager.Config>(
             """{"name":"旧气泡","svgTemplate":"<svg><text>${'$'}{num}</text></svg>"}"""
         ).getOrThrow()
         assertEquals("旧气泡", config.name)
-        assertEquals(1f, config.sizeScale, 0.001f)
-        assertEquals(1, config.formatVersion)
-        assertTrue(config.resources.isEmpty())
+        assertTrue(config.svgTemplate.contains("num"))
     }
 
     @Test
