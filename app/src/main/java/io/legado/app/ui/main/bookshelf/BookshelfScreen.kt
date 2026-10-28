@@ -88,7 +88,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -458,28 +457,18 @@ fun BookshelfScreen(
             }
     }
 
-    val currentTabGroupId by remember {
-        derivedStateOf {
-            uiState.groups.getOrNull(pagerState.settledPage)?.groupId ?: BookGroup.IdAll
-        }
+    // 不能用 remember { derivedStateOf { … } }：uiState 是普通参数、pagerState 又会被
+    // key(groupOrderKey) 重建，闭包会把首帧的两个实例固定下来，分组勾选就永远停在首帧那一页。
+    val currentTabGroupId = uiState.groups.getOrNull(pagerState.settledPage)?.groupId
+        ?: BookGroup.IdAll
+    val searchGroupExists = uiState.allGroups.any { it.groupId == uiState.selectedGroupId }
+    val currentGroupId = if (uiState.isSearch && searchGroupExists) {
+        uiState.selectedGroupId
+    } else {
+        currentTabGroupId
     }
-    val searchGroupExists by remember {
-        derivedStateOf { uiState.allGroups.any { it.groupId == uiState.selectedGroupId } }
-    }
-    val currentGroupId by remember {
-        derivedStateOf {
-            if (uiState.isSearch && searchGroupExists) {
-                uiState.selectedGroupId
-            } else {
-                currentTabGroupId
-            }
-        }
-    }
-    val isUsingStandaloneSearchGroup by remember {
-        derivedStateOf {
-            uiState.isSearch && uiState.groups.none { it.groupId == currentGroupId }
-        }
-    }
+    val isUsingStandaloneSearchGroup =
+        uiState.isSearch && uiState.groups.none { it.groupId == currentGroupId }
     val isShowingFolderRoot =
         bookGroupStyle == 2 && isInFolderRoot && !isUsingStandaloneSearchGroup
     LaunchedEffect(scrollToTopRequest) {
@@ -561,9 +550,7 @@ fun BookshelfScreen(
     } else {
         uiState.settings.bookshelfFolderLayoutListPortrait
     }
-    val currentMenuGroupId by remember {
-        derivedStateOf { if (uiState.isSearch) uiState.selectedGroupId else currentTabGroupId }
-    }
+    val currentMenuGroupId = if (uiState.isSearch) uiState.selectedGroupId else currentTabGroupId
     val editStickySummary = if (uiState.isEditMode) {
         BookshelfEditStickySummary(
             selectedCount = uiState.selectedBookUrls.size,
