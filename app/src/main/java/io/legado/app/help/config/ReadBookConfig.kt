@@ -25,7 +25,14 @@ import java.util.UUID
 object ReadBookConfig {
     private lateinit var configStore: ReadStyleConfigStore
     private lateinit var readSettingsGateway: ReadSettingsGateway
-    private val readSettings get() = readSettingsGateway.currentSettings
+
+    /** 初始化前（单测或极早的调用）回退默认值，不抛 lateinit 异常。 */
+    private val readSettings: ReadSettings
+        get() = if (::readSettingsGateway.isInitialized) {
+            readSettingsGateway.currentSettings
+        } else {
+            ReadSettings()
+        }
 
     internal fun initialize(
         configStore: ReadStyleConfigStore,
