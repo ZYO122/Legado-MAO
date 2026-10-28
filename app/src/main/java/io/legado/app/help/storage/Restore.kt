@@ -38,6 +38,7 @@ import io.legado.app.data.entities.readRecord.ReadRecordIdentity
 import io.legado.app.data.entities.readRecord.ReadRecordSession
 import io.legado.app.data.repository.ReadRecordRepository
 import io.legado.app.domain.gateway.AppLocaleGateway
+import io.legado.app.domain.gateway.ReadSettingsGateway
 import io.legado.app.domain.gateway.ReadStyleGateway
 import io.legado.app.data.repository.HttpTtsRepository
 import io.legado.app.data.entities.ReadAloudVoiceEntity
@@ -47,6 +48,7 @@ import io.legado.app.help.book.isLocal
 import io.legado.app.help.readaloud.speech.HttpTtsCatalogParser
 import io.legado.app.help.book.upType
 import io.legado.app.help.config.AppConfigStore
+import io.legado.app.help.config.BubblePackageManager
 import io.legado.app.help.config.LocalConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.config.SettingsWriter
@@ -67,6 +69,7 @@ import io.legado.app.utils.isJsonArray
 import io.legado.app.utils.isUri
 import io.legado.app.utils.openInputStream
 import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -77,6 +80,7 @@ import org.xmlpull.v1.XmlPullParserFactory
 import splitties.init.appCtx
 import java.io.File
 import java.io.FileInputStream
+import java.util.UUID
 
 /**
  * 恢复
@@ -386,6 +390,14 @@ object Restore : KoinComponent {
             }
         }
 
+        // 恢复段评气泡包：备份里是整棵 bubblePackages/ 目录，走目录事务整体替换。
+        val bubbleDir = File(path, Backup.bubblePackagesDirName)
+        if (bubbleDir.isDirectory) {
+            runCatching { restoreBubblePackageTree(bubbleDir) }.onFailure {
+                AppLog.put("恢复段评气泡出错\n${it.localizedMessage}", it)
+            }
+        }
+
         appCtx.toastOnUi(R.string.restore_success)
         withContext(Main) {
             delay(100)
@@ -394,6 +406,46 @@ object Restore : KoinComponent {
                 LauncherIconHelp.changeIcon(appCtx.getPrefString(PreferKey.launcherIcon))
             }
             ThemeConfigStore.applyDayNight(appCtx)
+        }
+    }
+
+    /**
+     * 目录式恢复：把备份里的包拷进 `rootDir` 同分区的暂存树，再由
+     * [BubblePackageManager.replacePackageTree] 整棵替换。事务失败会回滚旧树；
+     * 任何一包清单不合格都整体拒绝，不会留下半套包。
+     */
+    private suspend fun restoreBubblePackageTree(sourceDir: File) = withContext(IO) {
+        val parentDir = BubblePackageManager.rootDir.parentFile
+            ?: error("bubble package root has no parent")
+        parentDir.mkdirs()
+        val staging = File(parentDir, ".bubblePackages.restore-${UUID.randomUUID()}")
+            .apply { mkdirs() }
+        try {
+            sourceDir.listFiles()
+                ?.filter { it.isDirectory && !it.name.startsWith('.') }
+                ?.forEach { dir ->
+                    check(dir.copyRecursively(File(staging, dir.name), overwrite = true)) {
+                        "failed to stage ${dir.name}"
+                    }
+                }
+            if (staging.listFiles().isNullOrEmpty()) {
+                AppLog.put("恢复段评气泡：备份里没有可恢复的包")
+                return@withContext
+            }
+            BubblePackageManager.replacePackageTree(staging)
+            val activeDir = BubblePackageManager.activeDirName()
+            if (activeDir != BubblePackageManager.BUILTIN_DIR_NAME &&
+                !File(BubblePackageManager.rootDir, activeDir).exists()
+            ) {
+                get<ReadSettingsGateway>().update {
+                    it.copy(
+                        reviewBubbleStyle = "source",
+                        reviewBubblePackage = BubblePackageManager.BUILTIN_DIR_NAME,
+                    )
+                }
+            }
+        } finally {
+            staging.deleteRecursively()
         }
     }
 

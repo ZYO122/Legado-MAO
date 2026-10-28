@@ -15,6 +15,7 @@ import io.legado.app.help.AppWebDav
 import io.legado.app.help.DirectLinkUpload
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.config.AppConfigStore
+import io.legado.app.help.config.BubblePackageManager
 import io.legado.app.help.config.LocalConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.config.ThemeConfigStore
@@ -63,6 +64,9 @@ object Backup {
     val zipFilePath = "${appCtx.externalFiles.absolutePath}${File.separator}tmp_backup.zip"
 
     private const val TAG = "Backup"
+
+    /** 段评气泡包在备份里的目录名：整棵 `bubblePackages/` 树跟着备份走。 */
+    const val bubblePackagesDirName = "bubblePackages"
 
     private val backupFileNames by lazy {
         arrayOf(
@@ -237,6 +241,8 @@ object Backup {
                 FileUtils.createFileIfNotExist(backupPath + File.separator + ReadBookConfig.shareConfigFileName)
                     .writeText(it)
             }
+            // 段评气泡包跟着阅读样式一起备份：bubble.json + 包内的字体/图片。
+            backupBubblePackages(backupPath)
         }
         if (!BackupConfig.backupIgnoreThemeConfig) {
             GSON.toJson(ThemeConfigStore.configList).let {
@@ -307,10 +313,11 @@ object Backup {
 
         currentCoroutineContext().ensureActive()
         val zipFileName = getNowZipFileName()
-        val paths = backupFileNames
-            .map { File(backupPath, it) }
-            .filter(File::isFile)
-            .map(File::getAbsolutePath)
+        val paths = (
+            backupFileNames.map { File(backupPath, it) }.filter(File::isFile) +
+                listOfNotNull(File(backupPath, bubblePackagesDirName).takeIf { it.isDirectory })
+            )
+            .map { it.absolutePath }
         FileUtils.delete(zipFilePath)
         FileUtils.delete(zipFilePath.replace("tmp_", ""))
         val backupFileName = if (backupSettingsGateway.currentSettings.onlyLatestBackup) {
@@ -356,6 +363,26 @@ object Backup {
         }
     }
 
+    /**
+     * 段评气泡包不在 [backupFileNames] 那批 json 里，备份里保留整棵 `bubblePackages/` 目录。
+     * 只装本地包：内置实体目录、temp、隐藏目录一律不进。
+     */
+    private suspend fun backupBubblePackages(backupPath: String) = withContext(IO) {
+        val target = File(backupPath, bubblePackagesDirName)
+        runCatching {
+            FileUtils.delete(target)
+            val dirs = BubblePackageManager.localPackageDirs()
+            if (dirs.isEmpty()) return@withContext
+            target.mkdirs()
+            dirs.forEach { dir ->
+                check(dir.copyRecursively(File(target, dir.name), overwrite = true)) {
+                    "failed to copy ${dir.name}"
+                }
+            }
+        }.onFailure { error ->
+            AppLog.put("备份段评气泡出错\n${error.localizedMessage}", error)
+        }
+    }
     private suspend fun writeListToJson(list: List<Any>, fileName: String, path: String) {
         currentCoroutineContext().ensureActive()
         withContext(IO) {
