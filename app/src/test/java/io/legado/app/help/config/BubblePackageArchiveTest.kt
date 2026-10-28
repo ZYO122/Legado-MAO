@@ -54,6 +54,21 @@ class BubblePackageArchiveTest {
         )
     }
 
+    @Test
+    fun detectsManifestFromStream() {
+        val bubbleZip = zip("stream.zip", "pack/bubble.json" to "{}")
+        assertTrue(bubbleZip.inputStream().use(BubblePackageArchive::containsManifest))
+        val bookZip = zip("books.zip", "bookshelf.json" to "[]")
+        assertFalse(bookZip.inputStream().use(BubblePackageArchive::containsManifest))
+    }
+
+    @Test
+    fun treatsBrokenZipAsNonPackage() {
+        val broken = temporaryFolder.newFile("broken.zip").apply { writeText("not a zip") }
+        assertFalse(broken.inputStream().use(BubblePackageArchive::containsManifest))
+        assertFalse(BubblePackageArchive.isBubblePackage(broken))
+    }
+
     @Test(expected = Exception::class)
     fun rejectsMissingManifest() {
         val zip = zip("manifestless.zip", "assets/a.png" to "x")

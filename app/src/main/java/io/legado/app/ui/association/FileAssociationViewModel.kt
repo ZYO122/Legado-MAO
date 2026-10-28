@@ -28,20 +28,32 @@ class FileAssociationViewModel(application: Application) : BaseAssociationViewMo
                 val fileName = fileDoc.name
                 if (fileName.matches(AppPattern.archiveFileRegex)) {
                     // 气泡包也是 zip：先看里面有没有 bubble.json，是就按气泡包导入，不再当书籍压缩包拆。
-                    val zipFile = fileDoc.asFile() ?: runCatching {
-                        val temp = FileUtils.createFileIfNotExist(
-                            File(ArchiveUtils.TEMP_PATH),
-                            "bubble_${System.currentTimeMillis()}.zip"
-                        )
-                        fileDoc.openInputStream().getOrThrow().use { input ->
-                            temp.outputStream().use { output -> input.copyTo(output) }
+                    // content:// 拿不到真实文件时只读条目名判断，不给普通书籍 zip 多做一次整包落盘。
+                    val zipFile = fileDoc.asFile()
+                    val isBubblePackage = if (zipFile != null) {
+                        BubblePackageArchive.isBubblePackage(zipFile)
+                    } else {
+                        fileDoc.openInputStream().getOrNull()
+                            ?.use(BubblePackageArchive::containsManifest) == true
+                    }
+                    if (isBubblePackage) {
+                        val packageZip = zipFile ?: runCatching {
+                            val temp = FileUtils.createFileIfNotExist(
+                                File(ArchiveUtils.TEMP_PATH),
+                                "bubble_${System.currentTimeMillis()}.zip"
+                            )
+                            fileDoc.openInputStream().getOrThrow().use { input ->
+                                temp.outputStream().use { output -> input.copyTo(output) }
+                            }
+                            temp
+                        }.getOrNull()
+                        if (packageZip != null) {
+                            BubblePackageManager.importZip(packageZip)
+                            successLive.postValue(
+                                "bubblePackage" to packageZip.toUri().toString()
+                            )
+                            return@execute
                         }
-                        temp
-                    }.getOrNull()
-                    if (zipFile != null && BubblePackageArchive.isBubblePackage(zipFile)) {
-                        BubblePackageManager.importZip(zipFile)
-                        successLive.postValue("bubblePackage" to zipFile.toUri().toString())
-                        return@execute
                     }
                     ArchiveUtils.deCompress(fileDoc, ArchiveUtils.TEMP_PATH) {
                         it.matches(bookFileRegex)

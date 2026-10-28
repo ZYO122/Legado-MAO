@@ -3,8 +3,10 @@ package io.legado.app.help.config
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.util.Locale
 import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 internal data class ExtractedBubblePackage(
     val manifestFile: File,
@@ -21,13 +23,25 @@ internal object BubblePackageArchive {
     private const val MAX_MANIFEST_BYTES = 512L * 1024L
     private const val MAX_COMPRESSION_RATIO = 250L
 
-    /** 这个 zip 是不是气泡包：根目录带 `bubble.json` 就是。 */
+    /** 这个 zip 是不是气泡包：带着 `bubble.json` 就是。 */
     fun isBubblePackage(zipFile: File): Boolean = runCatching {
         if (!zipFile.isFile) return false
-        ZipFile(zipFile).use { zip ->
-            zip.entries().asSequence().any { entry ->
-                !entry.isDirectory && entry.name.substringAfterLast('/') == MANIFEST_NAME
-            }
+        zipFile.inputStream().use(::containsManifest)
+    }.getOrDefault(false)
+
+    /**
+     * 只看条目名、不读数据：压缩包里有没有 [MANIFEST_NAME]。
+     *
+     * 系统文件关联分派靠它把气泡包和「正好也是 zip 的书/备份」区分开，
+     * 不必先把整包落盘再判断。
+     */
+    fun containsManifest(input: InputStream): Boolean = runCatching {
+        ZipInputStream(input.buffered()).use { zip ->
+            generateSequence { runCatching { zip.nextEntry }.getOrNull() }
+                .any { entry ->
+                    !entry.isDirectory &&
+                        entry.name.substringAfterLast('/') == MANIFEST_NAME
+                }
         }
     }.getOrDefault(false)
 
