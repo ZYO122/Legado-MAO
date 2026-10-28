@@ -64,6 +64,7 @@ import io.legado.app.ui.book.audio.AudioPlayScreenContent
 import io.legado.app.ui.book.audio.AudioPlayViewModel
 import io.legado.app.ui.book.bookmark.AllBookmarkRouteScreen
 import io.legado.app.ui.book.cache.manage.BookCacheManageRouteScreen
+import io.legado.app.ui.book.cache.manage.CacheMaintenanceRouteScreen
 import io.legado.app.ui.book.explore.ExploreShowIntent
 import io.legado.app.ui.book.explore.ExploreShowRouteScreen
 import io.legado.app.ui.book.explore.ExploreShowViewModel
@@ -789,7 +790,10 @@ fun MainActivity.mainEntryProvider(
     }
 
     entry<MainRouteSettingsDownloadCache> {
-        DownloadCacheConfigRouteScreen(onBackClick = { onNavigateBack() })
+        DownloadCacheConfigRouteScreen(
+            onBackClick = { onNavigateBack() },
+            onNavigateToMaintenance = { onNavigateToRoute(MainRouteCacheMaintenance) },
+        )
     }
 
     entry<MainRouteSettingsTranslation> {
@@ -851,6 +855,12 @@ fun MainActivity.mainEntryProvider(
 
     entry<MainRouteBookCacheManage> {
         BookCacheManageRouteScreen(
+            onBackClick = { onNavigateBack() }
+        )
+    }
+
+    entry<MainRouteCacheMaintenance> {
+        CacheMaintenanceRouteScreen(
             onBackClick = { onNavigateBack() }
         )
     }
