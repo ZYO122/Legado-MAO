@@ -32,6 +32,18 @@ data class ParsedImageSource(
 }
 
 object ImageSourceOptions {
+    private const val MAX_CACHE_ENTRIES = 512
+    private const val MAX_CACHED_SOURCE_LENGTH = 4096
+
+    private val parseCacheLock = Any()
+    private val parseCache = object : LinkedHashMap<String, ParsedImageSource>(
+        MAX_CACHE_ENTRIES, 0.75f, true
+    ) {
+        override fun removeEldestEntry(
+            eldest: MutableMap.MutableEntry<String, ParsedImageSource>?
+        ): Boolean = size > MAX_CACHE_ENTRIES
+    }
+
     private val optionSeparator = Regex(
         "\\s*,\\s*(?=\\{|&#(?:x0*7b|0*123);)",
         RegexOption.IGNORE_CASE
@@ -40,6 +52,20 @@ object ImageSourceOptions {
 
     fun parse(raw: String?): ParsedImageSource? {
         val value = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        // 一张图会在识段评、量尺寸、取数与渲染里被反复解析；内嵌 base64 SVG 的 src
+        // 可以到几百 KB，缓存它只会白占内存，所以只缓存短 src。
+        if (value.length > MAX_CACHED_SOURCE_LENGTH) return parseUncached(value)
+        synchronized(parseCacheLock) {
+            parseCache[value]?.let { return it }
+        }
+        return parseUncached(value).also { parsed ->
+            synchronized(parseCacheLock) {
+                parseCache[value] = parsed
+            }
+        }
+    }
+
+    private fun parseUncached(value: String): ParsedImageSource {
         optionSeparator.findAll(value).toList().asReversed().forEach { separator ->
             val optionText = decodeHtmlEntities(
                 value.substring(separator.range.last + 1).trim()
