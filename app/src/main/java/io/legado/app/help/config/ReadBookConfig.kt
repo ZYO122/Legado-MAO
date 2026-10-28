@@ -10,6 +10,7 @@ import io.legado.app.constant.ReadTipType
 import io.legado.app.data.entities.HighlightRule
 import io.legado.app.data.repository.ReadStyleConfigStore
 import io.legado.app.domain.gateway.ReadSettingsGateway
+import io.legado.app.domain.model.settings.ReadSettings
 import io.legado.app.model.ReadSessionState
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonObject
