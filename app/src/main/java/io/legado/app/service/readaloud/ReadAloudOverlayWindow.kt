@@ -290,5 +290,3 @@ internal fun shouldShowExternalCapsule(
     selectedSource: PlaybackCapsuleSource? = null,
 ): Boolean =
     enabled && !appVisible && permissionGranted && ownerSource == selectedSource
-
-
