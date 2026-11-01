@@ -4,10 +4,12 @@ import android.app.Application
 import android.graphics.Bitmap
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
-import io.legado.app.ui.theme.AppTheme
-import io.legado.app.domain.model.settings.AppUiConfiguration
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import io.legado.app.domain.model.settings.AppUiConfiguration
+import io.legado.app.ui.theme.AppTheme
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap

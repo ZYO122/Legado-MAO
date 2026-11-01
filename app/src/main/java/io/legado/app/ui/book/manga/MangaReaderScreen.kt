@@ -35,7 +35,6 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -118,6 +117,7 @@ import io.legado.app.ui.book.manga.config.MangaPageScaleType
 import io.legado.app.ui.book.manga.config.MangaScrollMode
 import io.legado.app.ui.book.manga.config.MangaWidePageMode
 import io.legado.app.ui.book.manga.config.MangaZoomStartPosition
+import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
 import io.legado.app.ui.widget.components.button.series.MediumOutlinedButton
 import io.legado.app.ui.widget.components.changeSource.ChangeSourceSheet
@@ -1628,7 +1628,7 @@ private fun MangaReaderItem(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (item.loading) CircularProgressIndicator()
-                AppText(item.message, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AppText(item.message, color = LegadoTheme.colorScheme.onSurfaceVariant)
                 item.retryChapterIndex?.let { chapterIndex ->
                     MediumOutlinedButton(
                         onClick = { onIntent(MangaReaderIntent.RetryChapter(chapterIndex)) },
@@ -1672,8 +1672,8 @@ private fun MangaReaderItem(
                 }
                 AppText(
                     "$topLabel：",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleMedium,
+                    color = LegadoTheme.colorScheme.onSurfaceVariant,
+                    style = LegadoTheme.typography.titleMedium,
                 )
                 AppText(
                     topChapter ?: stringResource(
@@ -1683,16 +1683,16 @@ private fun MangaReaderItem(
                             R.string.manga_reader_no_next_chapter
                         }
                     ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge,
+                    color = LegadoTheme.colorScheme.onSurface,
+                    style = LegadoTheme.typography.titleLarge,
                     maxLines = 5,
                     overflow = TextOverflow.Ellipsis,
                 )
                 AppText(
                     "$bottomLabel：",
                     modifier = Modifier.padding(top = 18.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleMedium,
+                    color = LegadoTheme.colorScheme.onSurfaceVariant,
+                    style = LegadoTheme.typography.titleMedium,
                 )
                 AppText(
                     bottomChapter ?: stringResource(
@@ -1702,8 +1702,8 @@ private fun MangaReaderItem(
                             R.string.manga_reader_no_next_chapter
                         }
                     ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.titleLarge,
+                    color = LegadoTheme.colorScheme.onSurface,
+                    style = LegadoTheme.typography.titleLarge,
                     maxLines = 5,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1711,7 +1711,7 @@ private fun MangaReaderItem(
                     CircularProgressIndicator()
                 }
                 item.statusMessage?.let { message ->
-                    AppText(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    AppText(message, color = LegadoTheme.colorScheme.onSurfaceVariant)
                 }
                 item.retryChapterIndex?.let { chapterIndex ->
                     MediumOutlinedButton(
@@ -2132,7 +2132,7 @@ private fun MangaImageLoadOverlay(
                     AppText(
                         text = "$progress%",
                         color = Color.White,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = LegadoTheme.typography.labelLarge,
                     )
                 }
             }
