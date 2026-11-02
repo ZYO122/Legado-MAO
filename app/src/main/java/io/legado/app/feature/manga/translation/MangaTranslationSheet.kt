@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Layers
@@ -19,18 +18,16 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.legado.app.R
-import io.legado.app.domain.model.AiReasoningLevel
 import io.legado.app.domain.model.manga.MangaComposition
 import io.legado.app.domain.model.manga.MangaLocalOcrEngine
 import io.legado.app.domain.model.manga.MangaLocator
 import io.legado.app.domain.model.manga.MangaOcrModelPhase
 import io.legado.app.domain.model.manga.MangaOcrModelState
-import io.legado.app.domain.model.manga.MangaTranslateEngine
 import io.legado.app.domain.model.manga.MangaTranslationStage
-import io.legado.app.ui.ai.AiReasoningModeButton
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.SplicedColumnGroup
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
+import io.legado.app.ui.widget.components.button.series.MediumOutlinedButton
 import io.legado.app.ui.widget.components.button.series.MediumTonalButton
 import io.legado.app.ui.widget.components.button.series.SmallOutlinedButton
 import io.legado.app.ui.widget.components.button.series.SmallPlainButton
@@ -73,21 +70,29 @@ fun MangaTranslationSheet(
         show = state.open && !diagnostics,
         title = stringResource(R.string.manga_translation_title),
         startAction = {
-            MediumTonalButton(onClick = { diagnostics = true }, icon = Icons.Default.BugReport,
-                contentDescription = stringResource(R.string.feature_manga_translation_diagnostics))
+            if (state.settings.composition in setOf(MangaComposition.SMART, MangaComposition.PATCH))
+                MediumTonalButton(
+                    onClick = { onIntent(MangaTranslationIntent.Recompose(chapter = true)) },
+                    enabled = state.loaded && !state.busy && state.chapterPages > 0,
+                    icon = Icons.Default.Layers,
+                    contentDescription = stringResource(R.string.manga_translation_recompose_chapter),
+                )
         },
         endAction = {
-            if (state.settings.composition != MangaComposition.AI_PAGE &&
-                state.settings.textEngine == MangaTranslateEngine.AI) AiReasoningModeButton(
-                level = AiReasoningLevel.fromStorage(state.settings.reasoningLevel),
-                enabled = state.loaded && !state.busy,
-                onLevelChange = { level ->
-                    onIntent(MangaTranslationIntent.ChangeSettings {
-                        it.copy(
-                            reasoningLevel = level.storageValue
+            MediumTonalButton(
+                onClick = {
+                    onIntent(
+                        MangaTranslationIntent.Translate(
+                            chapter = true, force = state.chapterTranslated
                         )
-                    })
+                    )
                 },
+                enabled = state.loaded && !state.busy && state.chapterPages > 0,
+                icon = Icons.Default.Translate,
+                contentDescription = stringResource(
+                    if (state.chapterTranslated) R.string.feature_manga_translation_retry_chapter
+                    else R.string.manga_translation_chapter, state.chapterPages
+                ),
             )
         },
         onDismissRequest = { onIntent(MangaTranslationIntent.Close) }) {
@@ -173,7 +178,6 @@ fun MangaTranslationSheet(
                 )
             }
             if (state.loaded && !state.busy) {
-                val settings = state.settings
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -188,6 +192,10 @@ fun MangaTranslationSheet(
                         stringResource(R.string.manga_translation_global_settings),
                         onClick = onOpenGlobalSettings
                     )
+                    TinyClickableSettingItem(
+                        stringResource(R.string.feature_manga_translation_diagnostics),
+                        onClick = { diagnostics = true }
+                    )
 
                     if (!state.useGlobalSettings) MangaTranslationOptions(state, onIntent)
 
@@ -196,26 +204,7 @@ fun MangaTranslationSheet(
                         onClick = { glossary = true }
                     )
 
-
-                    MediumTonalButton(
-                        onClick = { onIntent(MangaTranslationIntent.Translate(chapter = true, force = state.chapterTranslated)) },
-                        enabled = state.chapterPages > 0,
-                        icon = Icons.Default.Translate,
-                        modifier = Modifier.fillMaxWidth(), text = stringResource(
-                            if (state.chapterTranslated) R.string.feature_manga_translation_retry_chapter else R.string.manga_translation_chapter, state.chapterPages
-                        )
-                    )
-                    if (settings.composition in setOf(
-                            MangaComposition.SMART, MangaComposition.PATCH
-                        )
-                    ) MediumTonalButton(
-                        onClick = { onIntent(MangaTranslationIntent.Recompose(chapter = true)) },
-                        enabled = state.chapterPages > 0,
-                        icon = Icons.Default.Layers,
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(R.string.manga_translation_recompose_chapter)
-                    )
-                    MediumTonalButton(
+                    MediumOutlinedButton(
                         onClick = { clearConfirmation = true },
                         modifier = Modifier.fillMaxWidth(),
                         icon = Icons.Default.Delete,

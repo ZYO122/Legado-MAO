@@ -222,7 +222,7 @@ internal fun MangaTranslationOptions(
             ) { value ->
                 onIntent(MangaTranslationIntent.ChangeSettings { it.copy(retryCount = value.toInt()) })
             }
-            if (state.globalMode && !pageEdit && aiEngine) DropdownListSettingItem(
+            if (!pageEdit && aiEngine) DropdownListSettingItem(
                 stringResource(R.string.ai_thinking_mode), settings.reasoningLevel,
                 displayEntries = arrayOf(
                     R.string.ai_thinking_off,

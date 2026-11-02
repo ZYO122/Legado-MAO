@@ -129,7 +129,7 @@ class MangaTranslationSheetTest {
         compose.onNodeWithText(app.getString(R.string.manga_translation_title)).assertIsDisplayed()
         compose.onNodeWithText(app.getString(R.string.manga_translation_reasoning_parameters, "{\"thinking\":{\"type\":\"disabled\"}}"))
             .assertDoesNotExist()
-        compose.onNodeWithContentDescription(app.getString(R.string.feature_manga_translation_diagnostics)).performClick()
+        compose.onNodeWithText(app.getString(R.string.feature_manga_translation_diagnostics)).performScrollTo().performClick()
         compose.onNodeWithText(app.getString(R.string.manga_translation_reasoning_parameters, "{\"thinking\":{\"type\":\"disabled\"}}"))
             .performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(app.getString(R.string.manga_translation_reasoning_disable_ignored)).performScrollTo().assertIsDisplayed()
@@ -141,13 +141,13 @@ class MangaTranslationSheetTest {
         compose.onNodeWithText(app.getString(R.string.manga_translation_current)).assertDoesNotExist()
         compose.onNodeWithText(app.getString(R.string.manga_translation_retry_current)).assertDoesNotExist()
         compose.onNodeWithText(app.getString(R.string.manga_translation_recompose)).assertDoesNotExist()
-        compose.onNodeWithText(app.getString(R.string.manga_translation_recompose_chapter)).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(app.getString(R.string.manga_translation_recompose_chapter)).performClick()
         assertTrue(intents.any { it is MangaTranslationIntent.Recompose })
         compose.onNodeWithText(app.getString(R.string.manga_translation_composition)).performScrollTo().performClick()
         compose.onNodeWithText(app.getString(R.string.manga_translation_ai_page)).performClick()
         compose.onNodeWithContentDescription(app.getString(R.string.ai_thinking_mode)).assertDoesNotExist()
         compose.onNodeWithText(app.getString(R.string.manga_translation_image_model)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(app.getString(R.string.manga_translation_chapter, 8)).performScrollTo().performClick()
+        compose.onNodeWithContentDescription(app.getString(R.string.manga_translation_chapter, 8)).performClick()
         assertTrue(intents.any { it is MangaTranslationIntent.Translate })
     }
 
@@ -227,18 +227,15 @@ class MangaTranslationSheetTest {
 
     private fun reasoningControl() {
         val app = RuntimeEnvironment.getApplication().also { it.injectAsAppCtx() }
-        val state = mutableStateOf(MangaTranslationUiState(open = true, loaded = true, useGlobalSettings = true))
+        val state = mutableStateOf(MangaTranslationUiState(open = true, loaded = true))
         compose.setContent { CompositionLocalProvider(LocalInspectionMode provides true) { AppTheme(AppUiConfiguration()) {
             MangaTranslationSheet(state.value) { intent ->
                 if (intent is MangaTranslationIntent.ChangeSettings) state.value = state.value.copy(settings = intent.transform(state.value.settings))
             }
         } } }
-        compose.onNodeWithContentDescription(app.getString(R.string.ai_thinking_mode)).performClick()
-        compose.onNodeWithText(app.getString(R.string.ai_thinking_off)).assertIsDisplayed()
-        compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.SetProgress)).performSemanticsAction(SemanticsActions.SetProgress) {
-            it(AiReasoningLevel.LOW.ordinal.toFloat())
-        }
-        compose.onNodeWithText(app.getString(R.string.ai_reasoning_level_low)).assertIsDisplayed()
+        // 顶栏不再有思考模式按钮，强度选项回到基础设置组内。
+        compose.onNodeWithText(app.getString(R.string.ai_thinking_mode)).performScrollTo().performClick()
+        compose.onNodeWithText(app.getString(R.string.ai_reasoning_level_low)).performClick()
         compose.runOnIdle { assertTrue(state.value.settings.reasoningLevel == AiReasoningLevel.LOW.storageValue) }
     }
 
@@ -319,9 +316,9 @@ class MangaTranslationSheetTest {
         compose.onNodeWithText(app.getString(R.string.manga_translation_advanced)).performScrollTo().performClick()
         compose.onNodeWithText(app.getString(R.string.manga_ai_geometry_diagnostics)).performScrollTo().performClick()
         assertTrue(state.value.settings.geometryDiagnostics)
-        // The preview moved into the diagnostics sheet, which the sheet's top bar opens.
-        compose.onNodeWithContentDescription(app.getString(R.string.feature_manga_translation_diagnostics)).performClick()
-        compose.onNodeWithText(app.getString(R.string.manga_ai_geometry_preview)).performScrollTo().performClick()
+        // The preview lives in the diagnostics sheet, opened from the settings entry.
+        compose.onNodeWithText(app.getString(R.string.feature_manga_translation_diagnostics)).performScrollTo().performClick()
+        compose.onNodeWithText(app.getString(R.string.manga_ai_geometry_preview)).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText(app.getString(R.string.manga_ai_geometry_legend)).performScrollTo().assertIsDisplayed()
     }
     @Test fun `compact AI detail and diagnostic controls preserve published page`() = aiGeometryControls()
