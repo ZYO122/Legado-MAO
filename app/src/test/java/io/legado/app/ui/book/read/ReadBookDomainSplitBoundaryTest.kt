@@ -117,7 +117,14 @@ class ReadBookDomainSplitBoundaryTest {
      * 行数只作粗棘轮：散落在 VM 的域内状态比总行数更能说明边界是否干净，各域另受
      * `域状态不回流进 ReadBookViewModel` 守卫约束。
      *
-     * 当前上限 2752：2026-10 由 2748 放宽 4 行，来源是弹层重构（上游 `aef93c63b`，本地
+     * 当前上限 2766：本地 2752 之后新增 14 行，两条都属本注释已列出的合法接线，
+     * 没有新的域回流，因此只抬数字、不摘 delegate：
+     * - 长按重新翻译（#2526）：`retranslateCurrentChapter()` 的任务占位拦截与状态更新
+     *   （+13，`_effects` / `_uiState` 只有 VM 能碰，占位判定本体在 `TranslationManager`）；
+     * - 富文本链接导航（#2521）：`openInternalBookLink` 一行转发（+1，Screen 的意图入口
+     *   只能在 VM；目标解析与跳转本体在 `ReadBookmarkNavigateDelegate.navigateToInternalLink`）。
+     *
+     * 上一档 2752：由 2748 放宽 4 行，来源是弹层重构（上游 `aef93c63b`，本地
      * 解决冲突时保留 `Photo.chapterIndex` 定制）。四条新增同属本注释已列出的合法接线，
      * 没有新的域回流，因此只抬数字、不摘 delegate：
      * - 改源结果改为按 `pendingEditedSource` 回填：意图 `when` 里 `SourceEditResult`
@@ -173,14 +180,14 @@ class ReadBookDomainSplitBoundaryTest {
      * （TocViewModel 自持 flow）。
      */
     @Test
-    fun `ReadBookViewModel 不超过 2752 行`() {
+    fun `ReadBookViewModel 不超过 2766 行`() {
         val lineCount = mainSourceFile("io/legado/app/ui/book/read/ReadBookViewModel.kt")
             .readLines().size
         assertTrue(
-            "ReadBookViewModel 涨到了 $lineCount 行，超过上限 2752。\n" +
+            "ReadBookViewModel 涨到了 $lineCount 行，超过上限 2766。\n" +
                 "新功能请摘成 io/legado/app/ui/book/read/ 下的 XxxDelegate，" +
                 "并在本测试的 DOMAINS 里加一条边界。",
-            lineCount <= 2752,
+            lineCount <= 2766,
         )
     }
 

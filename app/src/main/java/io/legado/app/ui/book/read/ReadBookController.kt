@@ -73,11 +73,12 @@ import io.legado.app.model.analyzeRule.AnalyzeRule
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setChapter
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setCoroutineContext
 import io.legado.app.model.analyzeRule.AnalyzeUrl.Companion.paramPattern
+import io.legado.app.model.localBook.LocalBookSemanticHtml
+import io.legado.app.help.book.isLocal
 import io.legado.app.model.reader.ReaderChapterInput
 import io.legado.app.receiver.NetworkChangedListener
 import io.legado.app.receiver.TimeBatteryReceiver
 import io.legado.app.service.BaseReadAloudService
-import io.legado.app.ui.association.OpenUrlConfirmActivity
 import io.legado.app.ui.book.read.page.entities.PageDirection
 import io.legado.app.ui.login.SourceLoginJsExtensions
 import io.legado.app.ui.widget.PopupAction
@@ -414,8 +415,13 @@ class ReadBookController(
 
     private fun directReaderPageContext(index: Int): ReaderPageContext? {
         val page = directReaderPages.getOrNull(index) ?: return null
+        val input = ReadBook.readerChapterInputFor(page.id.chapterIndex) ?: return null
+        val owner = if (page.id.chapterIndex in directReaderStreamingChapters) {
+            readerChapterPaginationJobs[page.id.chapterIndex]?.identity
+        } else paginatedChapterIdentities[page.id.chapterIndex]
+        if (owner != null && owner.sourceHash != input.sourceHash) return null
         return directReaderPageContexts.getOrPut(page.id) {
-            ReaderPageNavigator.pageContext(directReaderPages, index) ?: return null
+            ReaderPageNavigator.pageContext(directReaderPages, index, input.source.semanticContent) ?: return null
         }
     }
     private var directReaderChapterPageCounts = emptyMap<Int, Int>()
@@ -591,7 +597,7 @@ class ReadBookController(
         is ReaderElement.Text -> when {
             element.markingId != null -> { onMarkingClick(element.markingId); true }
             element.link != null -> {
-                activity.startActivity(Intent(activity, OpenUrlConfirmActivity::class.java).putExtra("uri", element.link))
+                handleComposeLinkClick(element.link)
                 true
             }
             else -> false
@@ -620,6 +626,21 @@ class ReadBookController(
         is ReaderElement.Spacer -> false
         is ReaderElement.ParagraphMarker -> false
         is ReaderElement.Rule -> false
+    }
+
+    private fun handleComposeLinkClick(rawLink: String) {
+        val book = ReadBook.book ?: return
+        val link = LocalBookSemanticHtml.resolveReaderLink(rawLink, book.isLocal,
+            ReadBook.readerChapterInputWindow.current?.chapter?.url.orEmpty()) ?: return
+        if (LocalBookSemanticHtml.isExternalLink(link)) {
+            viewModel.onIntent(
+                ReadBookIntent.ShowDialog(ReadBookDialog.ConfirmOpenExternalUrl(if (link.startsWith("//")) "https:$link" else link))
+            )
+            return
+        }
+        if (LocalBookSemanticHtml.classifyLink(link) == LocalBookSemanticHtml.LinkKind.INTERNAL) {
+            viewModel.openInternalBookLink(link)
+        }
     }
 
     fun onComposeReaderElementLongPress(element: ReaderElement, x: Float, y: Float): Boolean {
@@ -2145,7 +2166,7 @@ class ReadBookController(
         // 选区含标题时 bodyStart 会被压成 0，落不到正确的段上，直接判不可用
         val bodyStart = selection?.bodyStart?.takeIf { !selection.includesTitle }
         val positions = ReadBook.readerChapterInputWindow.current?.source
-            ?.let { BgmSceneStore.positionsToOrdinals(it.semanticContent) }
+            ?.let { BgmSceneStore.positionsToOrdinals(it) }
             .orEmpty()
         var ordinal = -1
         if (bodyStart != null) {

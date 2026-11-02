@@ -360,8 +360,10 @@ class VideoPlaySessionTest {
         VideoPlay.upDurIndex(1)
         awaitState("Episode 2") { it.chapterTitle == "Episode 2" }
         VideoPlay.upDurIndex(1)
-        awaitState("Episode 3") { it.chapterTitle == "Episode 3" }
-        assertEquals(1, VideoPlay.state.value.volumeIndex)
+        awaitState("Episode 3 in volume 1") {
+            it.volumeIndex == 1 && it.chapterTitle == "Episode 3"
+        }
+        assertEquals("Episode 3", VideoPlay.state.value.chapterTitle)
 
         // 最后一集再往后不越界
         VideoPlay.upDurIndex(1)

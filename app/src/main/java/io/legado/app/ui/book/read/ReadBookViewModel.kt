@@ -263,6 +263,7 @@ class ReadBookViewModel(
         bookRepository = bookRepository,
         verifyUseCase = verifyBookmarkTargetUseCase,
         relocateMarkingTargetUseCase = relocateMarkingTargetUseCase,
+        readAloudSettingsGateway = readAloudSettingsRepository,
         host = object : ReadBookmarkNavigateDelegate.Host {
             override val pendingTarget: PendingBookmarkTarget?
                 get() = _uiState.value.pendingBookmarkTarget
@@ -2222,9 +2223,9 @@ class ReadBookViewModel(
 
     suspend fun uploadBookProgress(book: Book) = loadDelegate.uploadBookProgress(book)
 
-    fun openChapter(index: Int, durChapterPos: Int = 0, success: (() -> Unit)? = null) {
+    fun openChapter(index: Int, durChapterPos: Int = 0, success: (() -> Unit)? = null) =
         ReadBook.openChapter(index, durChapterPos, success = success)
-    }
+    fun openInternalBookLink(link: String) = bookmarkNavigateDelegate.navigateToInternalLink(link)
 
     fun removeFromBookshelf(success: (() -> Unit)? = null) {
         val book = ReadBook.book

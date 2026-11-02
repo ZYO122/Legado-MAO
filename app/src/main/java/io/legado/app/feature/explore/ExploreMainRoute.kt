@@ -52,9 +52,7 @@ import io.legado.app.ui.widget.components.topbar.DynamicTopAppBar
 import io.legado.app.ui.widget.components.topbar.GlassMediumFlexibleTopAppBar
 import io.legado.app.ui.widget.components.topbar.GlassTopAppBarDefaults
 import io.legado.app.ui.widget.components.topbar.TopBarActionButton
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -101,29 +99,12 @@ fun ExploreMainRoute(
             }
             // 只订阅列表/网格布局字段供书源 sheet 呈现，其余状态仍由各分类界面自己持有。
             val showViewModel = activeViewModel
-            val showLayoutMode = if (showViewModel != null) {
-                // 流的组合结果必须缓存：直接在组合里 map/distinctUntilChanged 会每次重组新建流。
-                val layoutFlow = remember(showViewModel) {
-                    showViewModel.uiState.map { it.layoutState }.distinctUntilChanged()
-                }
-                val initialLayout = remember(showViewModel) {
-                    showViewModel.uiState.value.layoutState
-                }
-                layoutFlow.collectAsStateWithLifecycle(initialLayout).value
-            } else {
-                null
+            val showLayoutMode = showViewModel?.let { vm ->
+                vm.layoutState.collectAsStateWithLifecycle().value
             }
-            val showGridCount = if (showViewModel != null) {
-                val gridFlow = remember(showViewModel) {
-                    showViewModel.uiState.map { it.gridCount }.distinctUntilChanged()
-                }
-                val initialGridCount = remember(showViewModel) {
-                    showViewModel.uiState.value.gridCount
-                }
-                gridFlow.collectAsStateWithLifecycle(initialGridCount).value
-            } else {
-                3
-            }
+            val showGridCount = showViewModel?.let { vm ->
+                vm.gridCount.collectAsStateWithLifecycle().value
+            } ?: 3
             var sourceSheetVisible by remember { mutableStateOf(false) }
             var kindSheetVisible by remember { mutableStateOf(false) }
 

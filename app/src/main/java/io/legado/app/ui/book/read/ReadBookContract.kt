@@ -1378,6 +1378,7 @@ sealed interface ReadBookDialog {
     data object ConfirmSkipToChapter : ReadBookDialog
     data class ConfirmChapterPay(val chapterTitle: String) : ReadBookDialog
     data class ConfirmAddToBookshelf(val bookName: String) : ReadBookDialog
+    data class ConfirmOpenExternalUrl(val url: String) : ReadBookDialog
     data object ConfirmRetranslate : ReadBookDialog
 }
 
