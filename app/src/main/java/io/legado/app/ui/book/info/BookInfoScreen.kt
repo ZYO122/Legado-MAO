@@ -1338,7 +1338,7 @@ private fun BookInfoHeader(
                                     )
                                 }
                             }
-                        } else {
+                        } else if (book.realAuthor.isNotBlank()) {
                             AnimatedTextLine(
                                 text = stringResource(R.string.author_show, book.realAuthor),
                                 style = LegadoTheme.typography.bodyLarge,
