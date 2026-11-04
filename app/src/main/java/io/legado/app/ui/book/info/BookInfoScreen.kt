@@ -1924,6 +1924,8 @@ private fun buildBookInfoWebIntroHtml(html: String, textColorHex: String): Strin
     </html>
 """.trimIndent()
 
+// MissingOnRenderProcessGone：该规则按 Java PSI 查构造调用，看不到 Kotlin 匿名对象里的 override。
+@SuppressLint("MissingOnRenderProcessGone")
 private fun buildBookInfoWebIntroClient(
     context: Context,
     isCurrentLoad: () -> Boolean,
@@ -1974,7 +1976,9 @@ private fun buildBookInfoWebIntroClient(
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
+// MissingOnRenderProcessGone：onCreateWindow 里的弹窗 WebViewClient 已实现该回调，
+// 但规则按 Java PSI 查构造调用，看不到 Kotlin 匿名对象里的 override。
+@SuppressLint("SetJavaScriptEnabled", "MissingOnRenderProcessGone")
 private fun buildBookInfoWebChromeClient(): WebChromeClient = object : WebChromeClient() {
 
     override fun onCreateWindow(
