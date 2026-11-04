@@ -227,7 +227,6 @@ class BookInfoViewModel(
         currentBook?.bookUrl?.let {
             privateAccessGateway.revoke(PrivateUnlockTarget.Book(it))
         }
-        super.onCleared()
     }
 
     /** 详情页溢出菜单里的"标记/取消私密" */
