@@ -1,49 +1,49 @@
 {
-  "tag_name": "3.26.2-Beta.11",
-  "name": "Pre-release 3.26.2-Beta.11",
-  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* book-info：作者为空时不再渲染空白行\n* reader：EPUB/MOBI 富文本语义渲染与正文投影\n* manga：翻译面板顶栏改为重新排版/重译，诊断入口下移\n* manga：阅读器文字改用 LegadoTheme\n* reader：长按翻译按钮可重翻当前章节\n* reader：下划线保持落在内容裁剪框内\n",
+  "tag_name": "3.26.2-Beta.12",
+  "name": "Pre-release 3.26.2-Beta.12",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* update：启动自动检查更新并补齐更新源设置\n* lint：补繁中方向数组缺项并处理 WebView 渲染进程崩溃\n* reader：优化间距\n* tts：同声线朗读预取并修复队列接播\n* reader：离线缓存弹窗显示范围预览与待缓存章数\n* reader：离线缓存只入队待下载章节并去重已缓存计数\n* reader：重做离线缓存弹窗并补齐派发反馈\n* theme：修复自定义字体加粗丢失与 content:// 文件提前关闭\n* rss：支持订阅源网页选择上传文件\n* reader：修复 EPUB 跨章首图留白和漫画首帧拉伸\n* bookshelf：书架网格新增固定列数与固定封面宽度两种模式\n* ui：修复覆盖卡片边框下相邻卡片边框贴合\n* reader：修复滚动模式 epub 图片闪灰并自适应图片缓存容量\n* a11y：修复阅读与听书控件的无障碍语义\n* login：修复 WebView 周边圆角离屏残影\n* reader：修复英文符号断行与行尾标点越界\n* reorder：修复列表拖拽状态与书源排序不同步\n",
   "prerelease": true,
-  "created_at": "2026-11-02T06:21:31Z",
+  "created_at": "2026-11-04T23:15:37Z",
   "assets": [
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.11/MAO-3.26.2-Beta.11-A.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.12/MAO-3.26.2-Beta.12-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-02T06:41:29Z",
+      "created_at": "2026-11-05T00:52:24Z",
       "download_count": 0,
-      "id": 700795804,
-      "name": "MAO-3.26.2-Beta.11-A.apk",
+      "id": 711517771,
+      "name": "MAO-3.26.2-Beta.12-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/700795804"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/711517771"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.11/MAO-3.26.2-Beta.11-B.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.12/MAO-3.26.2-Beta.12-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-02T06:41:29Z",
+      "created_at": "2026-11-05T00:52:24Z",
       "download_count": 0,
-      "id": 700795812,
-      "name": "MAO-3.26.2-Beta.11-B.apk",
+      "id": 711517770,
+      "name": "MAO-3.26.2-Beta.12-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/700795812"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/711517770"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.11/MAO-3.26.2-Beta.11.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.12/MAO-3.26.2-Beta.12.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-02T06:41:29Z",
+      "created_at": "2026-11-05T00:52:24Z",
       "download_count": 0,
-      "id": 700795811,
-      "name": "MAO-3.26.2-Beta.11.apk",
+      "id": 711517767,
+      "name": "MAO-3.26.2-Beta.12.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/700795811"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/711517767"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.11/mapping.txt",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2-Beta.12/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-11-02T06:41:29Z",
+      "created_at": "2026-11-05T00:52:24Z",
       "download_count": 0,
-      "id": 700795814,
+      "id": 711517768,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/700795814"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/711517768"
     }
   ]
 }
