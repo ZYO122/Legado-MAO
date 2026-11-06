@@ -568,7 +568,7 @@ fun MainActivity.mainEntryProvider(
                             sharedCoverKey = sharedCoverKey
                         )
                     )
-                } else if (book.isImage && showMangaUi) {
+                } else if (book.shouldOpenMangaReader(showMangaUi)) {
                     onNavigateToRoute(
                         MainRouteReadManga(
                             bookUrl = book.bookUrl,

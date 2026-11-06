@@ -2,6 +2,7 @@ package io.legado.app.data.repository.manga
 
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.documentfile.provider.DocumentFile
 import androidx.core.net.toUri
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
@@ -10,6 +11,7 @@ import io.legado.app.domain.model.manga.MangaPageContent
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.LocalMangaChapters
 import io.legado.app.utils.ArchiveUtils
+import io.legado.app.utils.FileDoc
 import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.treeChildren
 import splitties.init.appCtx
@@ -125,6 +127,46 @@ internal class LocalMangaLoader(private val cacheRoot: File) : AutoCloseable {
         extractedRoots.forEach { it.deleteRecursively() }
         extractedRoots.clear()
         extractedBooks.clear()
+    }
+
+    companion object {
+        private fun localDirectory(book: Book): Any? {
+            if (book.bookUrl.startsWith("content://")) {
+                return runCatching {
+                    val uri = book.bookUrl.toUri()
+                    // 子目录形态 content://…/tree/<root>/document/<docId>：
+                    // DocumentFile.fromTreeUri 只按 treeDocumentId 解析，会退化成树根，
+                    // 这里显式按 documentId 重建目录 URI（与 FileDoc.asDocumentFile 一致）。
+                    val segments = uri.pathSegments
+                    val isSubDirectory = segments.firstOrNull() == "tree" &&
+                        segments.size >= 4 &&
+                        segments[segments.size - 2] == "document"
+                    val documentFile = if (isSubDirectory) {
+                        val directoryUri = DocumentsContract.buildDocumentUriUsingTree(
+                            uri,
+                            DocumentsContract.getDocumentId(uri),
+                        )
+                        FileDoc("", true, 0, 0, directoryUri).asDocumentFile()
+                    } else {
+                        DocumentFile.fromTreeUri(appCtx, uri)
+                    }
+                    documentFile?.takeIf { it.isDirectory }
+                }.getOrNull()
+            }
+            val path = if (book.bookUrl.startsWith("file:")) {
+                java.net.URI(book.bookUrl).path
+            } else book.bookUrl
+            return File(path).takeIf { it.isDirectory }
+        }
+
+        /**
+         * 目录型本地书（图片目录）存在性判断，走 DocumentFile/File 元数据，不开任何流。
+         * 必须 runCatching：SAF 单文档 content:// URI（document/xxx）会让
+         * [DocumentFile.fromTreeUri] 抛 IllegalArgumentException，而本函数会用于所有本地书。
+         */
+        fun directoryExists(book: Book): Boolean =
+            runCatching { localDirectory(book) }.getOrNull() != null
+
     }
 
     private data class ImageEntry(val path: String, val url: String)
