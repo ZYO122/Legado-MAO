@@ -136,7 +136,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 134,
+    version = 135,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -285,6 +285,9 @@ val appDb by lazy {
         // 老规则三列取默认值，读回来不描边、与旧行为逐字节等价。本地 133 已随 3.26.1
         // 发布（subTag），故边框三列走 133 → 134。
         AutoMigration(from = 133, to = 134),
+        // read_aloud_audio_downloads 新增 expectedSentenceCount：旧下载记录只有成功文件清单，
+        // 无法从中判断是否整章完成。上游把这次升级放在 134，本地 134 已被高亮边框占用，故走 135。
+        AutoMigration(from = 134, to = 135),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
