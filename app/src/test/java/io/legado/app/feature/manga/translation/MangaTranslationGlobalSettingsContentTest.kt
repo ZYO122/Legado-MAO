@@ -70,7 +70,8 @@ class MangaTranslationGlobalSettingsContentTest {
         compose.onNodeWithText(app.getString(R.string.manga_translation_clear)).assertDoesNotExist()
         compose.onNodeWithText(app.getString(R.string.manga_translation_automatic_book)).assertDoesNotExist()
         compose.onNodeWithText(app.getString(R.string.manga_translation_glossary)).assertDoesNotExist()
-        row(R.string.manga_translation_model_relation).performClick()
+        row(R.string.manga_translation_model_relation_hint).performScrollTo()
+        compose.onNodeWithContentDescription(app.getString(R.string.manga_translation_model_relation)).performClick()
         compose.onNodeWithText(app.getString(R.string.manga_translation_model_relation_roles)).assertIsDisplayed()
         compose.onNodeWithText(app.getString(R.string.manga_translation_model_relation_merge)).assertIsDisplayed()
     }
