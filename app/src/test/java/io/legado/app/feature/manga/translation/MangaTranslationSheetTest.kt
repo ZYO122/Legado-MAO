@@ -180,45 +180,6 @@ class MangaTranslationSheetTest {
     @Test @Config(qualifiers = "w1000dp-h700dp")
     fun `expanded languages use dropdowns and cleanup requires confirmation`() = languageAndCleanupControls()
 
-    private fun ocrControls() {
-        val app = RuntimeEnvironment.getApplication().also { it.injectAsAppCtx() }
-        val state = mutableStateOf(MangaTranslationUiState(open = true, loaded = true,
-            settings = MangaTranslationSettings(locator = MangaLocator.LOCAL, localOcrEngine = MangaLocalOcrEngine.PADDLE_V5),
-            ocrModels = persistentMapOf(MangaLocalOcrEngine.PADDLE_V5 to MangaOcrModelState(MangaOcrModelPhase.MISSING, totalBytes = 21_509_645))))
-        val intents = mutableListOf<MangaTranslationIntent>()
-        compose.setContent { CompositionLocalProvider(LocalInspectionMode provides true) { AppTheme(AppUiConfiguration()) {
-            MangaTranslationSheet(state.value) { intent ->
-                intents += intent
-                if (intent is MangaTranslationIntent.ChangeSettings) state.value = state.value.copy(settings = intent.transform(state.value.settings))
-            }
-        } } }
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_download)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.DownloadOcr(MangaLocalOcrEngine.PADDLE_V5)))
-        state.value = state.value.copy(ocrModels = persistentMapOf(MangaLocalOcrEngine.PADDLE_V5 to MangaOcrModelState(MangaOcrModelPhase.DOWNLOADING, 1024, 21_509_645)), ocrOperation = MangaLocalOcrEngine.PADDLE_V5)
-        // Switching engines must not hide the running download's cancellation control.
-        state.value = state.value.copy(settings = state.value.settings.copy(localOcrEngine = MangaLocalOcrEngine.ML_KIT))
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_downloading)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(app.getString(R.string.cancel)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.CancelOcrDownload(MangaLocalOcrEngine.PADDLE_V5)))
-        state.value = state.value.copy(settings = state.value.settings.copy(localOcrEngine = MangaLocalOcrEngine.PADDLE_V5),
-            ocrModels = persistentMapOf(MangaLocalOcrEngine.PADDLE_V5 to MangaOcrModelState(MangaOcrModelPhase.READY, 21_509_645, 21_509_645)), ocrOperation = null)
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_delete)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.DeleteOcr(MangaLocalOcrEngine.PADDLE_V5)))
-        state.value = state.value.copy(ocrModels = (state.value.ocrModels + (MangaLocalOcrEngine.PADDLE_V6_SMALL to
-            MangaOcrModelState(MangaOcrModelPhase.MISSING, totalBytes = 31_190_469))).toImmutableMap())
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_local_engine)).performScrollTo().performClick()
-        compose.onNodeWithText("PP-OCRv6 Small").performClick()
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_v6_small_hint)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(app.getString(R.string.manga_ocr_download)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.DownloadOcr(MangaLocalOcrEngine.PADDLE_V6_SMALL)))
-        assertTrue(state.value.settings.localOcrEngine == MangaLocalOcrEngine.PADDLE_V6_SMALL)
-        assertTrue(state.value.ocrModels.getValue(MangaLocalOcrEngine.PADDLE_V5).phase == MangaOcrModelPhase.READY)
-    }
-
-    @Test fun `compact OCR controls support download cancel and deletion`() = ocrControls()
-    @Test @Config(qualifiers = "w1000dp-h700dp")
-    fun `expanded OCR controls support download cancel and deletion`() = ocrControls()
-
     @Test fun `compact sheet scrolls to image editing and dispatches translate`() = exercise()
 
     @Test
@@ -344,36 +305,5 @@ class MangaTranslationSheetTest {
     @Test fun `compact AI typesetting mode hides crop refinement and keeps the published image`() = aiTypesettingControls()
     @Test @Config(qualifiers = "w1000dp-h700dp")
     fun `expanded AI typesetting mode hides crop refinement and keeps the published image`() = aiTypesettingControls()
-
-    private fun inpaintControls() {
-        val app = RuntimeEnvironment.getApplication().also { it.injectAsAppCtx() }
-        val state = mutableStateOf(MangaTranslationUiState(open = true, loaded = true,
-            settings = MangaTranslationSettings(inpaintEngine = MangaInpaintEngine.MI_GAN),
-            inpaintModels = persistentMapOf(MangaInpaintEngine.MI_GAN to MangaInpaintModelState(MangaInpaintModelPhase.MISSING, totalBytes = 28_079_181)),
-            currentPageKey = "p", images = persistentMapOf("p" to MangaTranslatedImageUi("/saved.png", "saved", true))))
-        val intents = mutableListOf<MangaTranslationIntent>()
-        compose.setContent { CompositionLocalProvider(LocalInspectionMode provides true) { AppTheme(AppUiConfiguration()) {
-            MangaTranslationSheet(state.value) { intent ->
-                intents += intent
-                if (intent is MangaTranslationIntent.ChangeSettings) state.value = state.value.copy(settings = intent.transform(state.value.settings))
-            }
-        } } }
-        compose.onNodeWithText(app.getString(R.string.manga_inpaint_engine)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(app.getString(R.string.manga_inpaint_download)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.DownloadInpaint(MangaInpaintEngine.MI_GAN)))
-        state.value = state.value.copy(inpaintModels = persistentMapOf(MangaInpaintEngine.MI_GAN to MangaInpaintModelState(MangaInpaintModelPhase.DOWNLOADING, 100, 1000)),
-            inpaintOperation = MangaInpaintEngine.MI_GAN, settings = state.value.settings.copy(inpaintEngine = MangaInpaintEngine.LOCAL))
-        compose.onNodeWithText(app.getString(R.string.manga_inpaint_downloading)).performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText(app.getString(R.string.cancel)).performScrollTo().performClick()
-        assertTrue(intents.contains(MangaTranslationIntent.CancelInpaintDownload(MangaInpaintEngine.MI_GAN)))
-        state.value = state.value.copy(inpaintOperation = null)
-        compose.onNodeWithText(app.getString(R.string.manga_inpaint_engine)).performScrollTo().performClick()
-        compose.onNodeWithText("LaMa").performClick()
-        assertTrue(state.value.settings.inpaintEngine == MangaInpaintEngine.LAMA && state.value.currentPageCanRecompose)
-        compose.onNodeWithText(app.getString(R.string.manga_inpaint_lama_hint)).performScrollTo().assertIsDisplayed()
-    }
-    @Test fun `compact inpainting selection and downloads retain the published page`() = inpaintControls()
-    @Test @Config(qualifiers = "w1000dp-h700dp")
-    fun `expanded inpainting selection and downloads retain the published page`() = inpaintControls()
 
 }

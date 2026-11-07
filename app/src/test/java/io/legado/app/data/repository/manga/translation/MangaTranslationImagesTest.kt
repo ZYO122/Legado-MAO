@@ -44,18 +44,13 @@ class MangaTranslationImagesTest {
         MangaTranslationPlan(listOf(local)).validate()
         assertNotNull(region.recognitionBox)
     }
-    @Test fun `line orientation distinguishes a tall paragraph from vertical columns`() {
-        assertFalse(mangaVerticalText((0..5).map { Rect(10, it * 50, 180, it * 50 + 30) }))
-        assertTrue(mangaVerticalText(listOf(Rect(20, 10, 50, 200), Rect(70, 10, 100, 200))))
-        assertFalse(mangaVerticalText(emptyList()))
-    }
     @Test fun `ordinary page planning never decodes a strip or runs auxiliary OCR`() = runBlocking {
         val decoder = object : MangaRegionDecoder<Bitmap> {
             override val imageSize = MangaImageSize(6000, 9000)
             override suspend fun decodeRegion(region: MangaImageRegion, sampleSize: Int): Bitmap = error("No preview needed to partition an ordinary page")
             override fun close() = Unit
         }
-        assertEquals(listOf(MangaTranslationBand(0, 9000, 0, 9000)), mangaAnalysisBands(decoder, "ja"))
+        assertEquals(listOf(MangaTranslationBand(0, 9000, 0, 9000)), mangaAnalysisBands(decoder))
     }
 
     @Test fun `large page preview requests sampled pixels and keeps the complete page frame`() = runBlocking {
@@ -90,7 +85,7 @@ class MangaTranslationImagesTest {
             }
             override fun close() = Unit
         }
-        val bands = mangaAnalysisBands(decoder, "und")
+        val bands = mangaAnalysisBands(decoder)
         assertEquals(1700, bands.first().coreBottom)
         assertEquals(6000, bands.sumOf { it.coreBottom - it.coreTop })
         bands.zipWithNext().forEach { (left, right) ->

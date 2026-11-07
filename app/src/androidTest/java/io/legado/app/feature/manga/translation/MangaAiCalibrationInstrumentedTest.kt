@@ -141,7 +141,7 @@ class MangaAiCalibrationInstrumentedTest {
             }
         }.toString())
         if (mode == "inventory") return@runBlocking
-        listOf("response.json", "normalized-response.json", "plan.json", "summary.json", "progress.json", "request-metadata.json", "anchors.json")
+        listOf("response.json", "normalized-response.json", "plan.json", "summary.json", "progress.json", "request-metadata.json")
             .forEach { File(folder, it).delete() }
 
         // Some device vendors freeze even an active background instrumentation process.
@@ -163,7 +163,6 @@ class MangaAiCalibrationInstrumentedTest {
         if (mode in setOf("pipeline", "replay")) {
             val replay = mode == "replay"
             val engine = args.getString("mangaAiCalibrationInpaint")?.let(MangaInpaintEngine::valueOf) ?: MangaInpaintEngine.LOCAL
-            val inpaintRuntime = MangaLocalInpainter(app, MangaInpaintModelRepository(app, File(folder, "models")))
             val gateway: MangaTranslationGateway = if (!replay) {
                 val live = GlobalContext.get().get<AiTextGateway>()
                 var responseIndex = 0
@@ -179,8 +178,7 @@ class MangaAiCalibrationInstrumentedTest {
                         }
                     }
                 }
-                MangaTranslationRepository(app, GlobalContext.get().get<AppDatabase>(), profiles, captured,
-                    inpaintReady = inpaintRuntime::requireReady, inpaint = inpaintRuntime::erase)
+                MangaTranslationRepository(app, GlobalContext.get().get<AppDatabase>(), profiles, captured)
             } else {
                 val response = File(folder, "replay-plan.json").readText().trim().let {
                     if (it.startsWith("```")) it.substringAfter('\n').substringBeforeLast("```").trim() else it
@@ -205,7 +203,7 @@ class MangaAiCalibrationInstrumentedTest {
                         emit(AiStreamEvent.Content(JsonObject(saved + ("regions" to JsonArray(regions))).toString()))
                     }
                     override suspend fun fetchModels(provider: AiProviderConfig): Result<List<AiAvailableModel>> = error("Replay does not fetch models")
-                }, inpaintReady = inpaintRuntime::requireReady, inpaint = inpaintRuntime::erase)
+                })
             }
             val bookUrl = "manga-ai-calibration:${UUID.randomUUID()}"
             val hash = MessageDigest.getInstance("SHA-256").digest(bookUrl.toByteArray()).joinToString("") { "%02x".format(it) }
@@ -285,33 +283,6 @@ class MangaAiCalibrationInstrumentedTest {
             return@runBlocking
         }
         val preparationStarted = SystemClock.elapsedRealtime()
-        val anchorMode = args.getString("mangaAiCalibrationAnchors") == "true"
-        var sheetImage: AiImageInput? = null
-        val anchors = if (!anchorMode) emptyList() else {
-            val original = checkNotNull(BitmapFactory.decodeFile(source.absolutePath))
-            try {
-                val detected = MangaBubbleDetector.detect(app, original)
-                File(folder, "detections.json").writeText(buildJsonArray {
-                    detected.forEach { d -> add(buildJsonObject {
-                        put("kind", d.kind); put("confidence", d.confidence)
-                        put("bounds", buildJsonArray { listOf(d.bounds.left, d.bounds.top, d.bounds.right, d.bounds.bottom).forEach { add(it) } })
-                    }) }
-                }.toString())
-                mangaAiAnchors(original, detected).also { candidates ->
-                    if (candidates.isNotEmpty()) {
-                        val sheet = mangaAiAnchorSheet(original, candidates)
-                        try {
-                            val bytes = ByteArrayOutputStream().use { out ->
-                                check(sheet.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)); out.toByteArray()
-                            }
-                            File(folder, "sheet.png").writeBytes(bytes)
-                            sheetImage = AiImageInput("image/png", Base64.encodeToString(bytes, Base64.NO_WRAP))
-                        } finally { sheet.recycle() }
-                    }
-                }
-            } finally { original.recycle() }
-        }
-        File(folder, "anchors.json").writeText(json.encodeToString(anchors))
         val localPreparationMillis = SystemClock.elapsedRealtime() - preparationStarted
         checkpoint("settings")
         val lastSettings = File(app.filesDir, "manga-translation").listFiles().orEmpty()
@@ -325,7 +296,7 @@ class MangaAiCalibrationInstrumentedTest {
             maxOutputTokens = (config.defaultParams.maxOutputTokens?.takeIf { it > 0 } ?: 16384).coerceAtMost(16384),
         )
         val pixelCoordinates = args.getString("mangaAiCalibrationCoordinates") == "pixels"
-        val prompt = if (anchors.isNotEmpty()) MANGA_AI_ANCHORED_LAYOUT_PROMPT else if (!pixelCoordinates) MANGA_AI_LAYOUT_PROMPT else MANGA_AI_LAYOUT_PROMPT.lineSequence().map { line ->
+        val prompt = if (!pixelCoordinates) MANGA_AI_LAYOUT_PROMPT else MANGA_AI_LAYOUT_PROMPT.lineSequence().map { line ->
             when {
                 line.startsWith("Every box uses") -> "Every box uses ORIGINAL IMAGE PIXELS in the ENTIRE attached ${width}x${height} image. " +
                     "Origin top-left. All left/right values are physical pixel X in 0..$width, and all top/bottom values are physical pixel Y in 0..$height. " +
@@ -340,16 +311,15 @@ class MangaAiCalibrationInstrumentedTest {
         val request = AiGenerateRequest(config, params = params, timeoutMillis = 120_000L,
             messages = listOf(AiMessage(AiMessageRole.SYSTEM, prompt), AiMessage(AiMessageRole.USER,
                 "Source language: $language. Target language: zh-CN. Echo frame: ${json.encodeToString(frame)}. Glossary: {}. Previous dialogue (context only): []. " +
-                    "Return complete source blocks whose SOURCE center Y is in [0.0,${if (pixelCoordinates) height.toFloat() else 1000f}), in the WHOLE image frame; other areas are context." +
-                    if (anchors.isNotEmpty()) " Anchor data (original pixels): ${mangaAiAnchorHints(anchors, width, height)}" else "",
-                images = listOfNotNull(AiImageInput("image/png", Base64.encodeToString(source.readBytes(), Base64.NO_WRAP)), sheetImage))))
+                    "Return complete source blocks whose SOURCE center Y is in [0.0,${if (pixelCoordinates) height.toFloat() else 1000f}), in the WHOLE image frame; other areas are context.",
+                images = listOf(AiImageInput("image/png", Base64.encodeToString(source.readBytes(), Base64.NO_WRAP)))))
         val started = SystemClock.elapsedRealtime()
         File(folder, "request-metadata.json").writeText(buildJsonObject {
             put("modelId", config.modelId); put("width", width); put("height", height)
             put("sourceLanguage", language)
             put("reasoningLevel", params.reasoningLevel.storageValue); put("maxOutputTokens", params.maxOutputTokens)
             put("coordinateSystem", if (pixelCoordinates) "pixels" else "normalized_1000")
-            put("anchorCount", anchors.size); put("localPreparationMillis", localPreparationMillis)
+            put("anchorCount", 0); put("localPreparationMillis", localPreparationMillis)
         }.toString())
         if (mode == "prepare") return@runBlocking
         checkpoint("resolve-gateway")
@@ -375,8 +345,7 @@ class MangaAiCalibrationInstrumentedTest {
             File(folder, "response.json").writeText(response)
             val validation = runCatching {
                 validateMangaAiFrame(response, frame)
-                val normalized = if (anchors.isNotEmpty()) resolveMangaAiAnchors(response, anchors, frame = frame)
-                    else if (!pixelCoordinates) response else normalizePixels(response, width, height)
+                val normalized = if (!pixelCoordinates) response else normalizePixels(response, width, height)
                 File(folder, "normalized-response.json").writeText(normalized)
                 parseMangaAiTypesetting(normalized).also { File(folder, "plan.json").writeText(json.encodeToString(it)) }
             }
@@ -387,7 +356,7 @@ class MangaAiCalibrationInstrumentedTest {
                 put("reasoningLevel", params.reasoningLevel.storageValue); put("reasoningParameters", reasoningParameters)
                 put("maxOutputTokens", params.maxOutputTokens); put("elapsedMillis", SystemClock.elapsedRealtime() - started)
                 put("coordinateSystem", if (pixelCoordinates) "pixels" else "normalized_1000")
-                put("anchorCount", anchors.size); put("localPreparationMillis", localPreparationMillis)
+                put("anchorCount", 0); put("localPreparationMillis", localPreparationMillis)
                 put("thinkingMillis", thinkingMillis); put("outputCharacters", response.length)
                 put("validPlan", validation.isSuccess); put("validationError", validation.exceptionOrNull()?.message?.take(300))
             }.toString())

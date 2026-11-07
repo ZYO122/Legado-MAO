@@ -14,21 +14,6 @@ import org.robolectric.annotation.GraphicsMode
 @Config(application = Application::class, sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class MangaInpaintPixelsTest {
-    @Test fun `inference mask includes bilinear fringes while composition keeps original selection`() {
-        val bitmap = Bitmap.createBitmap(24, 24, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
-        try {
-            Canvas(bitmap).drawRect(8f, 8f, 12f, 16f, Paint().apply { color = Color.BLACK })
-            val mask = BooleanArray(24 * 24) { i -> i % 24 in 8 until 12 && i / 24 in 8 until 16 }
-            val input = mangaInpaintInput(bitmap, mask)
-            input.pixels.forEachIndexed { i, pixel ->
-                if (pixel != Color.WHITE) assertTrue("Resampled ink leaked into model context at $i", input.mask[i])
-            }
-            val original = IntArray(mask.size).also { bitmap.getPixels(it, 0, 24, 0, 0, 24, 24) }
-            val result = mangaCompositeInpainting(original, IntArray(mask.size) { Color.RED }, mask)
-            result.indices.filter { !mask[it] }.forEach { assertEquals(original[it], result[it]) }
-        } finally { bitmap.recycle() }
-    }
-
     @Test fun `mask extraction leaves source untouched and protects neighbors`() {
         val bitmap = Bitmap.createBitmap(200, 150, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
         try {
@@ -44,17 +29,6 @@ class MangaInpaintPixelsTest {
             val repaired = mangaCompositeInpainting(before, IntArray(before.size) { Color.RED }, mask)
             assertEquals(Color.RED, repaired[60 * 200 + 60]); assertEquals(Color.BLACK, repaired[60 * 200 + 95])
             assertEquals(Color.WHITE, repaired[0])
-        } finally { bitmap.recycle() }
-    }
-
-    @Test fun `aspect fit and conservative mask reduction retain single pixel text strokes`() {
-        val bitmap = Bitmap.createBitmap(1024, 256, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.WHITE) }
-        try {
-            val mask = BooleanArray(1024 * 256).apply { this[11 * 1024 + 777] = true }
-            val input = mangaInpaintInput(bitmap, mask)
-            assertEquals(512, input.width); assertEquals(128, input.height); assertEquals(192, input.top)
-            assertTrue(input.mask[(192 + 5) * 512 + 388])
-            assertFalse(input.mask.take(192 * 512).any { it })
         } finally { bitmap.recycle() }
     }
 
