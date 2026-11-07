@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RssFeed
 import androidx.compose.material.icons.outlined.Sell
@@ -50,6 +51,7 @@ import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.Filter
+import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.MoreCircle
 import top.yukonga.miuix.kmp.icon.extended.Notes
@@ -97,6 +99,10 @@ object AppIcons {
     val Settings: ImageVector
         @Composable
         get() = if (isMiuix) MiuixIcons.Settings else Icons.Default.Settings
+
+    val Info: ImageVector
+        @Composable
+        get() = if (isMiuix) MiuixIcons.Info else Icons.Outlined.Info
 
     val BugReport: ImageVector
         @Composable
