@@ -43,7 +43,6 @@ jobs:
       versionL: ${{ steps.set-ver.outputs.full_version_name }}
       version: ${{ steps.set-ver.outputs.current_version }}
       build_number: ${{ steps.set-ver.outputs.build_number }}
-      version_code: ${{ steps.set-ver.outputs.version_code }}
       latest_tag: ${{ steps.set-ver.outputs.last_tag }}
       is_release: ${{ steps.set-ver.outputs.is_release }}
     steps:
@@ -116,42 +115,13 @@ jobs:
           
           # 3. 构造最终版本信息
           FULL_VERSION_NAME="${CURRENT_VERSION}${VERSION_SUFFIX_NAME}"
-          
-          # 按渠道读取对应的 versionCode（正式/测试各自独立递增）
-          VCODE_RELEASE=$(grep '^VERSION_CODE_RELEASE' "$PROPERTIES_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
-          VCODE_BETA=$(grep '^VERSION_CODE_BETA' "$PROPERTIES_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
-          if [[ "$IS_RELEASE" == "true" ]]; then
-            VERSION_CODE="$VCODE_RELEASE"
-          else
-            VERSION_CODE="$VCODE_BETA"
-          fi
 
           # 4. 设置输出供后续作业使用
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "full_version_name=$FULL_VERSION_NAME" >> $GITHUB_OUTPUT
           echo "build_number=$NEW_BUILD_NUM" >> $GITHUB_OUTPUT
-          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "last_tag=$LAST_TAG_FOR_LOG" >> $GITHUB_OUTPUT
           echo "is_release=$IS_RELEASE" >> $GITHUB_OUTPUT
-
-      # 仅在真正的发布流程里，把对应渠道的 versionCode +1 并回写仓库（下次发布接着递增）
-      - name: 递增 versionCode 并回写
-        if: inputs.publish
-        run: |
-          FILE="app/version.properties"
-          if [[ "${{ steps.set-ver.outputs.is_release }}" == "true" ]]; then
-            KEY="VERSION_CODE_RELEASE"
-          else
-            KEY="VERSION_CODE_BETA"
-          fi
-          CUR=$(grep "^$KEY=" "$FILE" | cut -d'=' -f2 | tr -d '[:space:]')
-          NEW=$((CUR + 1))
-          sed -i "s/^$KEY=.*/$KEY=$NEW/" "$FILE"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$FILE"
-          git commit -m "chore(release): bump $KEY to $NEW [skip ci]"
-          git push
 
   build:
     needs: prepare
@@ -167,7 +137,6 @@ jobs:
       # 使用 prepare job 的输出
       VERSION: ${{ needs.prepare.outputs.version }}
       VERSIONL: ${{ needs.prepare.outputs.versionL }}
-      VERSION_CODE: ${{ needs.prepare.outputs.version_code }}
 
     steps:
       - uses: actions/checkout@v5
@@ -208,15 +177,13 @@ jobs:
         run: |
           echo "开始 ${{ env.product }} ${{ env.type }} 构建"
           echo "VersionName: $APP_VERSION_NAME"
-          echo "VersionCode: $VERSION_CODE"
           chmod +x gradlew
           # 首字母大写以匹配 Gradle Task（app->App, releaseA->ReleaseA）
           PRODUCT_CAP=$(echo ${{ env.product }} | awk '{print toupper(substr($0,1,1))substr($0,2)}')
           TYPE_CAP=$(echo ${{ env.type }} | awk '{print toupper(substr($0,1,1))substr($0,2)}')
-          ./gradlew assemble${PRODUCT_CAP}${TYPE_CAP} -PversionCode=${{ env.VERSION_CODE }} -PenableAbiSplits=false --no-configuration-cache
+          ./gradlew assemble${PRODUCT_CAP}${TYPE_CAP} -PenableAbiSplits=false --no-configuration-cache
         env:
           APP_VERSION_NAME: ${{ env.VERSIONL }}
-          VERSION_CODE: ${{ env.VERSION_CODE }}
 
       - name: Move Mapping Files
         if: matrix.type == 'release'
