@@ -14,7 +14,9 @@ import io.legado.app.domain.model.manga.*
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.SplicedColumnGroup
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
-import io.legado.app.ui.widget.components.settingItem.ClickableSettingItem
+import io.legado.app.ui.widget.components.card.InfoCard
+import io.legado.app.ui.widget.components.card.InfoNote
+import io.legado.app.ui.widget.components.icon.AppIcons
 import io.legado.app.ui.widget.components.settingItem.DropdownListSettingItem
 import io.legado.app.ui.widget.components.settingItem.SwitchSettingItem
 import io.legado.app.ui.widget.components.text.AppText
@@ -55,6 +57,10 @@ internal fun MangaTranslationOptions(
         })
     Column(Modifier.fillMaxWidth()) {
         if (!pageEdit) SplicedColumnGroup(title = stringResource(R.string.manga_translation_recognition)) {
+            InfoNote(
+                text = stringResource(R.string.manga_translation_recognition_hint),
+                detail = stringResource(R.string.manga_translation_recognition_detail),
+                detailTitle = stringResource(R.string.manga_translation_recognition))
             DropdownListSettingItem(
                 stringResource(R.string.manga_translation_locator),
                 settings.locator.name,
@@ -124,6 +130,10 @@ internal fun MangaTranslationOptions(
             if (settings.locator != MangaLocator.AI) MangaOcrOptionsControls(settings, onIntent)
         }
         SplicedColumnGroup(title = stringResource(R.string.manga_translation_basic)) {
+            InfoNote(
+                text = stringResource(R.string.manga_translation_basic_hint),
+                detail = stringResource(R.string.manga_translation_basic_detail),
+                detailTitle = stringResource(R.string.manga_translation_basic))
             if (separateTextStage) {
                 DropdownListSettingItem(
                     stringResource(R.string.manga_translation_engine),
@@ -212,11 +222,12 @@ internal fun MangaTranslationOptions(
             ) { value ->
                 onIntent(MangaTranslationIntent.ChangeSettings { it.copy(reasoningLevel = value) })
             }
-            if (!pageEdit) ClickableSettingItem(
-                stringResource(R.string.manga_translation_model_relation),
-                onClick = { relationHelp = true })
         }
         SplicedColumnGroup(title = stringResource(R.string.manga_translation_processing)) {
+            InfoNote(
+                text = stringResource(R.string.manga_translation_processing_hint),
+                detail = stringResource(R.string.manga_translation_processing_detail),
+                detailTitle = stringResource(R.string.manga_translation_processing))
             DropdownListSettingItem(
                 stringResource(R.string.manga_translation_composition),
                 settings.composition.name,
@@ -268,6 +279,16 @@ internal fun MangaTranslationOptions(
                 }
             }
         }
+        // 三段关系横跨所有分组，不归属某一组；整页重绘没有识别与翻译，不显示。
+        if (!pageEdit) InfoCard(
+            text = stringResource(R.string.manga_translation_model_relation_hint),
+            modifier = Modifier.padding(vertical = 8.dp),
+            containerColor = LegadoTheme.colorScheme.surfaceContainerLow,
+            textStyle = LegadoTheme.typography.bodySmall,
+            textColor = LegadoTheme.colorScheme.onSurfaceVariant,
+            actionIcon = AppIcons.Info,
+            actionDescription = stringResource(R.string.manga_translation_model_relation),
+            onAction = { relationHelp = true })
         SplicedColumnGroup {
             MangaSettingsExpansion(
                 title = stringResource(R.string.manga_translation_advanced),
