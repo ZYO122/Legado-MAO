@@ -427,3 +427,11 @@ internal object MangaPageComposer {
     }
     private fun luminance(color: Int): Int = (Color.red(color) * 299 + Color.green(color) * 587 + Color.blue(color) * 114) / 1000
 }
+
+/** Keep original pixels outside [mask] so a stored erase result only differs where lettering was. */
+internal fun mangaCompositeInpainting(original: IntArray, repaired: IntArray, mask: BooleanArray): IntArray {
+    require(original.size == repaired.size && original.size == mask.size)
+    return IntArray(original.size) { i ->
+        if (mask[i]) (original[i] and 0xff000000.toInt()) or (repaired[i] and 0x00ffffff) else original[i]
+    }
+}
