@@ -28,8 +28,8 @@ val versionPatch = versionProps["VERSION_PATCH"]?.toString()?.toInt() ?: 0
 val appName = "legado"
 val isBetaBuild = providers.gradleProperty("beta").isPresent
 val versionCodeOverride = providers.gradleProperty("versionCode").map(String::toInt).orNull
-val versionCodeRelease = versionProps["VERSION_CODE_RELEASE"]?.toString()?.toInt() ?: 1
-val versionCodeBeta = versionProps["VERSION_CODE_BETA"]?.toString()?.toInt() ?: 1
+// 正式版与测试版共用同一个 versionCode，手工递增，发版前确认大于已发布版本
+val currentVersionCode = 22
 val baseVersionName = "$versionMajor.$versionMinor.$versionPatch"
 val versionSuffix = versionProps["VERSION_SUFFIX"]?.toString()?.toInt() ?: 1
 // 正式版即基础版本号；加 -Pbeta 构建测试版，后缀取 version.properties 的 VERSION_SUFFIX（如 3.26.1-Beta.1）
@@ -65,7 +65,7 @@ android {
         applicationId = "io.legado.mao"
         minSdk = 26
         targetSdk = 37
-        versionCode = versionCodeOverride ?: (if (isBetaBuild) versionCodeBeta else versionCodeRelease)
+        versionCode = versionCodeOverride ?: currentVersionCode
         versionName = System.getenv("APP_VERSION_NAME") ?: projectVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
