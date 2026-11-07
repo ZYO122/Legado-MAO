@@ -3,47 +3,47 @@
   "name": "Release 3.26.2",
   "body": "### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* manga：识别、翻译、合成三组接入说明卡片\n* ui：新增说明卡片与 Info 图标\n* manga：设置界面移除端侧 OCR 与擦字入口\n* update：启动自动检查更新并补齐更新源设置\n* lint：补繁中方向数组缺项并处理 WebView 渲染进程崩溃\n* reader：优化间距\n* tts：同声线朗读预取并修复队列接播\n* reader：离线缓存弹窗显示范围预览与待缓存章数\n* reader：离线缓存只入队待下载章节并去重已缓存计数\n* reader：重做离线缓存弹窗并补齐派发反馈\n* theme：修复自定义字体加粗丢失与 content:// 文件提前关闭\n* rss：支持订阅源网页选择上传文件\n* reader：修复 EPUB 跨章首图留白和漫画首帧拉伸\n* bookshelf：书架网格新增固定列数与固定封面宽度两种模式\n* ui：修复覆盖卡片边框下相邻卡片边框贴合\n* reader：修复滚动模式 epub 图片闪灰并自适应图片缓存容量\n* a11y：修复阅读与听书控件的无障碍语义\n* login：修复 WebView 周边圆角离屏残影\n* reader：修复英文符号断行与行尾标点越界\n* reorder：修复列表拖拽状态与书源排序不同步\n* book-info：作者为空时不再渲染空白行\n* reader：EPUB/MOBI 富文本语义渲染与正文投影\n* manga：翻译面板顶栏改为重新排版/重译，诊断入口下移\n* manga：阅读器文字改用 LegadoTheme\n* reader：长按翻译按钮可重翻当前章节\n* reader：下划线保持落在内容裁剪框内\n* manga：引擎抽取、全局清理与字号自适应排版\n* 漫画：相邻章插入后按实测页保持位置，修复翻页回跳\n* manga：设置面板分类 tab 移到底部，点击区域改为整屏配置\n* reader：点击区域改为格子内下拉，修复与更多面板的层级冲突\n* 漫画：新增漫画翻译、OCR、图像修复与阅读器工具的可配置项\n* video：修复分页规则兼容、解析线程与后台进度保存\n* video：评审修复——效果重放、失败重试与控制层联动\n* book-info：kind 标签按链接格式校验后再拆分跳转\n* explore：翻页参数兜底只对标签跳转的运行时地址生效\n* explore：发现页网格改瀑布流布局，网格封面接入比例自适应\n* import：批量导入预览列表改用 entryId 作 item key，重复条目不再崩溃\n* book-info：作者名拆分为多个可点击标签\n* explore：书源级翻页参数 pageParam\n* video：支持 HLS 播放并隐藏单章上下章按钮\n* book-info：分类标签可点击跳转发现页\n* video：视频路由补私密闸门并同步 Fragment 入口\n* video：修复整分支评审的 Critical/Important 问题\n* bookshelf：视频类型标签\n* video：补视频路由导航与全屏判定\n* video：视频播放路由与入口\n* video：缓冲中切后台也暂停播放\n* video：配置变化不暂停，后台加载不自动开播\n* video：后台暂停并保证播放器初始化幂等\n* video：视频播放界面\n* video：修复播放进度覆盖与保存可靠性\n* video：视频播放器 ViewModel 与契约\n* bookshelf：修正视频分组预览与网络未分组查询\n* 书架：新增视频分组的常量、查询与清理\n* source：补齐视频类型的本地化与类型转换\n* source：新增视频类型书源\n* 配置：修复版本升级时默认数据迁移被跳过\n* 缓存：新增缓存维护，清理孤立章节缓存与重算字数\n* reader：Google/视差翻页的就绪等待加上限、保留帧自愈、重捕获不闪烁\n* reader：iOS 仿真翻页的就绪等待加上限，重捕获时保持卷曲\n* 阅读器：快速连翻时保留已提交页状态\n* 阅读器：新增 Google 仿真与视差翻页\n* 阅读器：翻页速度挡位接入 iOS 仿真翻页\n* 阅读器：新增 iOS 仿真翻页\n* 书架：分组弹窗的勾选跟随当前分组\n* 备份：恢复阅读背景图与字体并修正失效路径\n* 备份：备份打包被引用的阅读背景图与字体\n* 备份：收集与改写阅读排版的背景图字体引用\n* config：补 ReadSettings 导入\n* config：ReadBookConfig 未初始化时回退默认设置\n* explore：组合内缓存布局与网格流\n* 段评：修正单元测试期望并处理 lint 的 WrongConstant\n* cast：胶囊只剩两个 + 分配窗口加复制按钮\n* explore：发现顶栏改为单书源搜索入口，书源选择改为可筛选底部 sheet\n* 备份：气泡包纳入备份并支持整树恢复\n* 阅读器：阅读菜单快速切换段评气泡\n* 设置：新增段评气泡包管理页\n* 设置：段评气泡包选择与旧值迁移\n* 阅读器：段评气泡改为模板渲染\n* 阅读器：段评取数补齐显示文本与段评语义\n* 段评：新增气泡包格式与资源校验\n* manga：整章拼接超长条漫图拆段渲染，修复 Constraints 尺寸溢出崩溃\n* book-info：简介纯文本分支二次转义，& < > 显示为 HTML 实体\n* reader：开标点连同 Latin 单词整体换行，不再拆词\n* book-info：useweb 简介经 FrameLayout 容器承载，规避 Vulkan drawVk 原生崩溃\n* highlight：高亮规则新增边框样式，预览渲染修复与示例句加长\n* book-info：关联书籍移至简介下方，支持无规则时按作者搜索兜底\n* reader：关联书籍位置\n* 关联书籍调试之\n* cast：AI 分配角色带上「过了几章没开口」与下一章开头\n* cast：人物档案读取被夹到 80 个，配音页与人物列表少列人\n* ui：搜索/发现/详情页封面按原图宽高比自适应（默认固定 5:7，设置可关）\n* 阅读器：AI 对话入口可携带阅读上下文\n* 界面：备用启动入口不再重复避让输入法\n* reader：阅读主题列表弹窗（网格/流式/管理/导入导出）\n* reader：分页失败原因带上异常 message 与栈顶\n* reader：引号跨段时角色气泡不再把整章排版打挂\n* 内置词典规则更新为汉典并清理失效的百度汉语规则\n* 书架：分组选择弹窗均分两列并铺满气泡\n* 阅读器：仿真折页补上弯折月牙与纸背底色，修背景图下的异色带\n* 设置：其他设置新增「阻止书源打开内置浏览器」开关\n* 朗读：重做听书音色面板，引擎默认音色可单独选，选中即起播\n* 朗读：当前章合成完再预合成下一章，修 HTTP 朗读抢占导致的断流卡顿\n* 关于页：检测更新弹窗的更新按钮移到底部常驻，更新日志可选中复制\n* read-aloud：段落恢复时保留停顿\n* reader：西文断行时保留行末空格\n* 阅读器：书源详情弹层改纵向布局\n* 搜索：正则搜索加超时保护，结果缓存按查询收敛\n* reader：角色胶囊与整串标点不再把一行顶出空洞\n* read-aloud：段落间隔不再重建本章合成任务，纯符号段不再被跳过\n* 私密：详情页下拉刷新不再清除单本私密标记\n* 书架：多选工具栏移除反选与下载缓存按钮\n* 朗读/多角色：保留用户编辑，按配置朗读章标题旁白\n* read-aloud：章标题跟着正文旁白一起退备用音色\n* cast：别名跟着记忆涨跌、简介跟着更新，认得出是谁写的才动\n* cast：AI 分配角色窗口里直接换当前模型\n* cast：一趟分配跑完把角色记忆与人物列表收敛到一起\n* read-aloud：开多角色朗读时章标题由旁白念\n* read-aloud：关掉多角色朗读时旁白不再顶替引擎默认发音人\n* 笔记优化\n* 共享元素动画开关\n* 发现点击问题\n* reader：图片点击问题\n* reader：九宫格的一些问题\n* 换源卡住\n* 新增书籍按书源类型初始化\n* 条漫优化\n* 滚动翻页时上下边距不对\n* 朗读快捷设置定时\n* 朗读系列优化\n* read-aloud：修复运行中控制指令重复请求前台启动导致的超时崩溃\n* tts：修复外部 HTTP 音色兼容与数据一致性\n* 本地漫画：zip/目录导入后能列章节，并按漫画分章打开\n* 缓存管理：每本书可导出 zip、按缓存目录缓存章节\n* 导出：新增缓存 zip 导出与「缓存目录」范围\n* 阅读：文本阅读图片按章节缓存\n* 漫画：章节图片按章内页码缓存\n* 缓存：章节目录与正文改为 MAO-章节标题 命名\n* 书架：再次长按搜索按钮收起筛选\n* 书架：支持标签来源设置和搜索按钮长按\n* 分屏：平板、折叠屏支持分屏，外观设置控制\n* web：保留当前服务状态，接口错误返回 JSON\n* 资源：内置默认数据与 web 资源改用 APK 路径\n* web：处理 Legado Reader 插件的重复书籍\n* 音色池：添加音色的搜索框不再越筛越小\n* 音色池：导入确认页可选来源引擎包名\n* 音色池：兼容 TTS Server 导出的第二种层级\n* 音色：角色补音改为随机，音色被删自动重挑\n* 朗读：准备还在跑时 play() 不再重起一次\n* 朗读：切下一章不再取消脚下的准备作业\n* 支持听书与阅读不同书籍\n* 朗读：分配覆盖层出错不再带走整章朗读准备\n* 朗读：常挂弹层的当前章每次重组都重读\n* 朗读：翻页模式下点朗读从当前页开始\n* 阅读器：整图也带上 src 尾随 JSON 里的 click\n* 阅读器：恢复滑动翻页对斜划的响应\n* 阅读器：支持阅读时闪烁效果\n",
   "prerelease": false,
-  "created_at": "2026-11-07T13:11:14Z",
+  "created_at": "2026-11-07T14:11:49Z",
   "assets": [
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2/MAO-3.26.2-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-07T13:27:41Z",
+      "created_at": "2026-11-07T14:30:21Z",
       "download_count": 0,
-      "id": 720785768,
+      "id": 720934417,
       "name": "MAO-3.26.2-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720785768"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720934417"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2/MAO-3.26.2-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-07T13:27:41Z",
+      "created_at": "2026-11-07T14:30:21Z",
       "download_count": 0,
-      "id": 720785765,
+      "id": 720934418,
       "name": "MAO-3.26.2-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720785765"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720934418"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2/MAO-3.26.2.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-07T13:27:41Z",
+      "created_at": "2026-11-07T14:30:21Z",
       "download_count": 0,
-      "id": 720785766,
+      "id": 720934415,
       "name": "MAO-3.26.2.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720785766"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720934415"
     },
     {
       "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.2/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-11-07T13:27:41Z",
+      "created_at": "2026-11-07T14:30:21Z",
       "download_count": 0,
-      "id": 720785764,
+      "id": 720934419,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720785764"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/720934419"
     }
   ]
 }
