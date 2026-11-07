@@ -12,7 +12,6 @@ import io.legado.app.R
 import io.legado.app.domain.model.AiReasoningLevel
 import io.legado.app.domain.model.manga.*
 import io.legado.app.ui.theme.LegadoTheme
-import io.legado.app.ui.widget.components.SettingItemWithDivider
 import io.legado.app.ui.widget.components.SplicedColumnGroup
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
 import io.legado.app.ui.widget.components.settingItem.ClickableSettingItem
@@ -61,17 +60,14 @@ internal fun MangaTranslationOptions(
                 settings.locator.name,
                 displayEntries = arrayOf(
                     stringResource(R.string.manga_translation_locator_ai),
-                    stringResource(R.string.manga_translation_locator_local),
                     stringResource(R.string.manga_cloud_ocr_title)
                 ),
-                entryValues = MangaLocator.entries.map { it.name }.toTypedArray()
+                entryValues = arrayOf(MangaLocator.AI.name, MangaLocator.CLOUD.name)
             ) { value ->
                 onIntent(MangaTranslationIntent.ChangeSettings { current ->
                     val locator = MangaLocator.valueOf(value)
                     current.copy(
                         locator = locator,
-                        sourceLanguage = if (locator == MangaLocator.LOCAL && current.sourceLanguage !in current.localOcrEngine.sourceLanguages)
-                            current.localOcrEngine.sourceLanguages.first() else current.sourceLanguage,
                         // Keeping a non-AI engine here would leave the fused request without a text stage.
                         textEngine = if (locator == MangaLocator.AI && current.textEngine != MangaTranslateEngine.AI &&
                             current.ocrModelId.isBlank()
@@ -79,8 +75,7 @@ internal fun MangaTranslationOptions(
                     )
                 })
             }
-            val sourceLanguages = if (settings.locator == MangaLocator.LOCAL)
-                settings.localOcrEngine.sourceLanguages.toList() else listOf(
+            val sourceLanguages = listOf(
                 "und",
                 "ja",
                 "en",
@@ -122,29 +117,9 @@ internal fun MangaTranslationOptions(
                     }
                 }
 
-                MangaLocator.LOCAL -> {
-                    DropdownListSettingItem(
-                        stringResource(R.string.manga_ocr_local_engine),
-                        settings.localOcrEngine.name,
-                        displayEntries = MangaLocalOcrEngine.entries.map { mangaOcrEngineName(it) }
-                            .toTypedArray(),
-                        entryValues = MangaLocalOcrEngine.entries.map { it.name }.toTypedArray()
-                    ) { value ->
-                        onIntent(MangaTranslationIntent.ChangeSettings { current ->
-                            val engine = MangaLocalOcrEngine.valueOf(value)
-                            current.copy(
-                                localOcrEngine = engine,
-                                sourceLanguage = if (current.sourceLanguage in engine.sourceLanguages)
-                                    current.sourceLanguage else engine.sourceLanguages.first()
-                            )
-                        })
-                    }
-                    if (settings.localOcrEngine.downloadable) SettingItemWithDivider {
-                        MangaOcrModelControls(settings.localOcrEngine, state, onIntent)
-                    }
-                }
-
                 MangaLocator.CLOUD -> MangaCloudOcrControls(state, onIntent)
+                // Legacy value kept only for settings saved by builds that still had on-device OCR.
+                MangaLocator.LOCAL -> Unit
             }
             if (settings.locator != MangaLocator.AI) MangaOcrOptionsControls(settings, onIntent)
         }
@@ -262,26 +237,6 @@ internal fun MangaTranslationOptions(
                         textEngine = if (composition == MangaComposition.AI_PAGE) MangaTranslateEngine.AI else current.textEngine
                     )
                 })
-            }
-            if (settings.composition == MangaComposition.SMART) {
-                DropdownListSettingItem(
-                    stringResource(R.string.manga_inpaint_engine),
-                    settings.inpaintEngine.name,
-                    displayEntries = MangaInpaintEngine.entries.map { mangaInpaintEngineName(it) }
-                        .toTypedArray(),
-                    entryValues = MangaInpaintEngine.entries.map { it.name }.toTypedArray()
-                ) { value ->
-                    onIntent(MangaTranslationIntent.ChangeSettings {
-                        it.copy(
-                            inpaintEngine = MangaInpaintEngine.valueOf(
-                                value
-                            )
-                        )
-                    })
-                }
-                if (settings.inpaintEngine.downloadable) SettingItemWithDivider {
-                    MangaInpaintModelControls(settings.inpaintEngine, state, onIntent)
-                }
             }
             if (settings.composition in setOf(
                     MangaComposition.AI_PAGE,
