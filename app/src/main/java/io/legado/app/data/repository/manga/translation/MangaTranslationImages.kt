@@ -8,7 +8,6 @@ import android.graphics.Rect
 import io.legado.app.domain.model.manga.*
 import io.legado.app.domain.reader.MangaImageRegion
 import io.legado.app.domain.reader.MangaRegionDecoder
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -42,7 +41,7 @@ internal fun mangaMutableBitmap(decoded: Bitmap): Bitmap {
     finally { decoded.recycle() }
 }
 
-internal suspend fun mangaAnalysisBands(decoder: MangaRegionDecoder<Bitmap>, language: String): List<MangaTranslationBand> {
+internal suspend fun mangaAnalysisBands(decoder: MangaRegionDecoder<Bitmap>): List<MangaTranslationBand> {
     val (width, height) = decoder.imageSize
     if (mangaTranslationWholePage(width, height)) return listOf(MangaTranslationBand(0, height, 0, height))
     val target = max(1536, width * 5 / 2)
@@ -59,23 +58,11 @@ internal suspend fun mangaAnalysisBands(decoder: MangaRegionDecoder<Bitmap>, lan
             val probeBottom = min(height, maximum + width / 2)
             val preview = mangaAnalysisPreview(decoder, probeTop, probeBottom, 1024 * 1024, 2048)
             try {
-                // Auxiliary local detection protects text blocks before any paid request. Unsupported
-                // languages still use gutters; actual LOCAL recognition failures propagate later.
-                val detected = if (language in setOf("ja", "zh", "ko", "en")) {
-                    try { MangaLocalTextDetector.detect(preview, language) }
-                    catch (cancelled: CancellationException) { throw cancelled }
-                    catch (_: Exception) { emptyList() }
-                } else emptyList()
-                val protected = detected.map {
-                    val h = probeBottom - probeTop
-                    (probeTop + (it.textBox.top * h / 1000).toInt() - 8).coerceAtLeast(0)..
-                        (probeTop + kotlin.math.ceil(it.textBox.bottom * h / 1000).toInt() + 8).coerceAtMost(height)
-                }
                 val gaps = mangaBlankRows(preview).map {
                     (probeTop + it.first * (probeBottom - probeTop) / preview.height)..
                         (probeTop + it.last * (probeBottom - probeTop) / preview.height)
                 }
-                mangaTranslationBoundary(nominal, minimum, maximum, protected, gaps)
+                mangaTranslationBoundary(nominal, minimum, maximum, emptyList(), gaps)
             } finally { preview.recycle() }
         }
         check(end > top) { "Translation partition made no progress" }

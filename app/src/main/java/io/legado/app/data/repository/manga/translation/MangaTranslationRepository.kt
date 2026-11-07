@@ -63,8 +63,11 @@ class MangaTranslationRepository(
     private val translationSettings: TranslationSettingsGateway,
     private val googleTranslate: suspend (text: String, targetLanguage: String) -> Result<String> = GoogleTranslateClient()::translate,
     private val imageEditor: suspend (Bitmap, AiModelConfig, String, String) -> Bitmap = MangaImageEditor()::edit,
-    private val textDetector: suspend (Bitmap, String) -> List<MangaTranslatedRegion> = MangaLocalTextDetector::detect,
-    private val bubbleDetector: suspend (Bitmap) -> List<MangaBubbleDetection> = { MangaBubbleDetector.detect(application, it) },
+    private val textDetector: suspend (Bitmap, String) -> List<MangaTranslatedRegion> = { _, _ ->
+        throw IllegalStateException(application.getString(io.legado.app.R.string.manga_translation_engine_unavailable))
+    },
+    /** Container hints are optional: without a detector the layout falls back to gutters and vision. */
+    private val bubbleDetector: suspend (Bitmap) -> List<MangaBubbleDetection> = { emptyList() },
     private val paddleDetector: (suspend (Bitmap, String, MangaLocalOcrEngine, MangaOcrOptions) -> List<MangaTranslatedRegion>)? = null,
     private val cloudDetector: (suspend (Bitmap, String, MangaCloudOcrProvider) -> List<MangaTranslatedRegion>)? = null,
     private val cloudIdentity: suspend (MangaCloudOcrProvider) -> String = { "" },
@@ -457,7 +460,7 @@ class MangaTranslationRepository(
         val height = decoder.imageSize.height
         val bandFile = File(directory(bookUrl), "$analysis-analysis-bands-v2.json")
         val bands = if (!force && bandFile.exists()) json.decodeFromString<List<MangaTranslationBand>>(bandFile.readText())
-            else mangaAnalysisBands(decoder, settings.sourceLanguage).also { write(bandFile, json.encodeToString(it)) }
+            else mangaAnalysisBands(decoder).also { write(bandFile, json.encodeToString(it)) }
         require(bands.isNotEmpty() && bands.first().coreTop == 0 && bands.last().coreBottom == height &&
             bands.all { it.top >= 0 && it.top <= it.coreTop && it.coreTop < it.coreBottom && it.coreBottom <= it.bottom && it.bottom <= height } &&
             bands.zipWithNext().all { (left, right) -> left.coreBottom == right.coreTop }) { "Invalid cached analysis partition" }
