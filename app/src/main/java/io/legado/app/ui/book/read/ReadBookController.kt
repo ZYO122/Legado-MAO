@@ -58,6 +58,7 @@ import io.legado.app.feature.reader.legacy.failureReasonFor
 import io.legado.app.feature.reader.legacy.paginateLegacyReaderChapterSafely
 import io.legado.app.feature.reader.platform.ReaderAndroidPaginationStyle
 import io.legado.app.feature.reader.platform.ReaderPerfTrace
+import io.legado.app.feature.reader.platform.ReviewBubbleSourcePolicy
 import io.legado.app.help.TTS
 import io.legado.app.help.book.isOnLineTxt
 import io.legado.app.help.config.ReadBookConfig
@@ -667,7 +668,7 @@ class ReadBookController(
         is ReaderElement.Review -> {
             val action = element.action?.takeIf(String::isNotBlank)
             if (action != null) {
-                clickImg(action, "")
+                clickImg(action, "", isParagraphComment = true)
                 true
             } else false
         }
@@ -2081,7 +2082,7 @@ class ReadBookController(
         return false
     }
 
-    fun clickImg(click: String, src: String) {
+    fun clickImg(click: String, src: String, isParagraphComment: Boolean = false) {
         if (LegacyReaderImageOptionsResolver.isParagraphRuleAction(click)) {
             activity.toastOnUi(R.string.reader_paragraph_image_action_unsupported)
             return
@@ -2089,7 +2090,17 @@ class ReadBookController(
         activity.lifecycleScope.launch(IO) {
             try {
                 val source = ReadBook.bookSource ?: return@launch
-                val java = SourceLoginJsExtensions(activity, source, BookType.text)
+                val heightPercent = readSettingsGateway.currentSettings.paragraphCommentHeightPercent
+                val java = SourceLoginJsExtensions(
+                    activity, source, BookType.text,
+                    browserHeightPercent = if (heightPercent != 0 &&
+                        (isParagraphComment || ReviewBubbleSourcePolicy.isParagraphComment(src))
+                    ) {
+                        heightPercent
+                    } else {
+                        0
+                    },
+                )
                 val book = ReadBook.book ?: return@launch
                 val chapter =
                     appDb.bookChapterDao.getChapter(book.bookUrl, ReadBook.durChapterIndex)

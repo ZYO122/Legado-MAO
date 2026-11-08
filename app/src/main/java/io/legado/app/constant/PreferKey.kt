@@ -442,6 +442,7 @@ object PreferKey {
     const val moreActionsConfig = "moreActionsConfig"
     const val disableReturnKey = "disableReturnKey"
     const val selectText = "selectText"
+    const val paragraphCommentHeightPercent = "paragraphCommentHeightPercent"
     //我在干什么
 
     const val disableMangaScrollAnimation = "disableMangaScrollAnimation"

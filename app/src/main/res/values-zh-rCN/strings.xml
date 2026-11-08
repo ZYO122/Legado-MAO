@@ -4009,6 +4009,9 @@
     <string name="battery_optimization_status_ignored">已开启无限制（点击可检查厂商后台策略）</string>
     <string name="battery_optimization_status_not_ignored">未开启无限制，后台可能被系统终止</string>
     <string name="reader_paragraph_image_action_unsupported">此图片使用段落规则动作，当前版本尚不支持。</string>
+    <string name="paragraph_comment_height">段评弹窗高度</string>
+    <string name="paragraph_comment_height_follow_source">跟随书源</string>
+    <string name="paragraph_comment_height_percent">%1$d%%</string>
     <string name="page_anim_ios_curl">iOS仿真</string>
     <string name="page_anim_google_curl">Google仿真</string>
     <string name="page_anim_parallax">视差</string>

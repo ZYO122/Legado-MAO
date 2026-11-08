@@ -36,6 +36,15 @@ object ReviewBubbleSourcePolicy {
     private val colorPattern = Regex("^#?[0-9a-fA-F]{3,8}$")
 
     /**
+     * 该图片源是否表示段评入口。只在打开书源段评页时决定是否应用自定义弹窗高度。
+     */
+    fun isParagraphComment(source: String): Boolean {
+        if (source.length > MAX_SOURCE_CHARS) return false
+        val parsed = ImageSourceOptions.parse(source) ?: return false
+        return resolve(parsed, parsed.style, parsed.click) != null
+    }
+
+    /**
      * @param source 正文里的图片源（可能带 `,{...}` 选项）
      * @param style 段落/整图样式（`TEXT` 表示文字嵌入）
      * @param click 调用方已经解析出的点击动作

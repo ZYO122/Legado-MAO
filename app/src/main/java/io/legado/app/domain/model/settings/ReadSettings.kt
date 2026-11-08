@@ -123,4 +123,10 @@ data class ReadSettings(
     val reviewBubbleStyle: String = "source",
     /** 当前段评气泡包目录名（`bubblePackages/<dirName>`）；空值用内置包。 */
     val reviewBubblePackage: String = "",
-)
+    /** 0 表示使用书源提供的弹窗高度。 */
+    val paragraphCommentHeightPercent: Int = 0,
+) {
+    companion object {
+        internal val paragraphCommentHeightOptions = listOf(0, 30, 50, 70, 90, 100)
+    }
+}

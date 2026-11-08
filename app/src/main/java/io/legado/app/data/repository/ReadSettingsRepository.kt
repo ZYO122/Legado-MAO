@@ -422,6 +422,9 @@ class ReadSettingsRepository(
             showReadTitleAddition = compatDsValue(Keys.ShowReadTitleAddition, true),
             autoReadSpeed = compatDsValue(Keys.AutoReadSpeed, 10),
             systemTypefaces = compatDsValue(Keys.SystemTypefaces, 0),
+            paragraphCommentHeightPercent =
+                compatDsValue(Keys.ParagraphCommentHeightPercent, 0)
+                    .takeIf { it in ReadSettings.paragraphCommentHeightOptions } ?: 0,
             preDownloadNum = compatDsValue(Keys.PreDownloadNum, 1),
             preDownloadNumPrev = compatDsValue(Keys.PreDownloadNumPrev, 0),
             prevKeys = compatDsValue(Keys.PrevKeys, ""),
@@ -552,6 +555,8 @@ class ReadSettingsRepository(
         val ShowReadTitleAddition = booleanPreferencesKey(PreferKey.showReadTitleAddition)
         val AutoReadSpeed = intPreferencesKey(PreferKey.autoReadSpeed)
         val SystemTypefaces = intPreferencesKey(PreferKey.systemTypefaces)
+        val ParagraphCommentHeightPercent =
+            intPreferencesKey(PreferKey.paragraphCommentHeightPercent)
         val PreDownloadNum = intPreferencesKey(PreferKey.preDownloadNum)
         val PreDownloadNumPrev = intPreferencesKey(PreferKey.preDownloadNumPrev)
         val PrevKeys = stringPreferencesKey(PreferKey.prevKeys)
@@ -688,6 +693,7 @@ internal fun ReadSettings.toGatewayPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.showReadTitleAddition to showReadTitleAddition,
     PreferKey.autoReadSpeed to autoReadSpeed,
     PreferKey.systemTypefaces to systemTypefaces,
+    PreferKey.paragraphCommentHeightPercent to paragraphCommentHeightPercent,
     PreferKey.preDownloadNum to preDownloadNum,
     PreferKey.preDownloadNumPrev to preDownloadNumPrev,
     PreferKey.prevKeys to prevKeys,

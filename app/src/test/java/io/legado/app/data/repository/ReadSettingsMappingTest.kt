@@ -34,11 +34,11 @@ class ReadSettingsMappingTest {
     }
 
     @Test
-    fun `gateway 持久化映射覆盖 ReadSettings 全部 116 个字段`() {
+    fun `gateway 持久化映射覆盖 ReadSettings 全部 117 个字段`() {
         val actualKeys = ReadSettings().toGatewayPrefMap().keys
         val expectedKeys = ReadSettings().expectedGatewayPrefMap().keys
 
-        assertEquals(116, actualKeys.size)
+        assertEquals(117, actualKeys.size)
         assertEquals(expectedKeys, actualKeys)
     }
 
@@ -368,4 +368,5 @@ private fun ReadSettings.expectedGatewayPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.moreActionsConfig to moreActionsConfig,
     PreferKey.reviewBubbleStyle to reviewBubbleStyle,
     PreferKey.paragraphBubblePackage to reviewBubblePackage,
+    PreferKey.paragraphCommentHeightPercent to paragraphCommentHeightPercent,
 )
