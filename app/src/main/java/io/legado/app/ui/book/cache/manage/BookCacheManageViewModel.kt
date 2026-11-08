@@ -12,6 +12,7 @@ import io.legado.app.domain.usecase.CacheBookChaptersUseCase
 import io.legado.app.domain.usecase.ClearBookCacheUseCase
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.isAudio
+import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isNotShelf
 import io.legado.app.help.book.isVideo
@@ -100,7 +101,7 @@ sealed interface BookCacheManageIntent {
         BookCacheManageIntent
 
     /** 把这本书的缓存导出为 zip（目标目录已在 UI 选定）。 */
-    data class ExportCacheZip(val bookUrl: String, val path: String) : BookCacheManageIntent
+    data class ExportCache(val bookUrl: String, val path: String) : BookCacheManageIntent
     data class StopChapterDownload(val bookUrl: String, val chapterIndex: Int) : BookCacheManageIntent
     data class DeleteChapterCache(
         val bookUrl: String,
@@ -160,7 +161,7 @@ class BookCacheManageViewModel(
                 intent.start,
                 intent.end,
             )
-            is BookCacheManageIntent.ExportCacheZip -> exportCacheZip(intent.bookUrl, intent.path)
+            is BookCacheManageIntent.ExportCache -> exportCache(intent.bookUrl, intent.path)
             is BookCacheManageIntent.StopChapterDownload -> stopChapterDownload(
                 intent.bookUrl,
                 intent.chapterIndex,
@@ -870,10 +871,19 @@ class BookCacheManageViewModel(
         }
     }
 
-    /** 导出 zip：交给导出服务，结果由 [ExportBookService.exportFinishedFlow] 回报。 */
-    private fun exportCacheZip(bookUrl: String, path: String) {
+    /** 按书类型导出缓存：漫画走 CBZ/文件夹，文本书导出一个只含已缓存章节的 txt；结果由 exportFinishedFlow 回报。 */
+    private fun exportCache(bookUrl: String, path: String) {
         pendingExportBookUrls.add(bookUrl)
-        startExport(context, path, bookUrl, "zip")
+        viewModelScope.launch {
+            val isManga = repository.getBook(bookUrl)?.isImage == true
+            startExport(
+                context = context,
+                path = path,
+                bookUrl = bookUrl,
+                exportType = if (isManga) ExportBookService.typeManga else "txt",
+                cachedOnly = !isManga,
+            )
+        }
     }
 
     private fun stopChapterDownload(bookUrl: String, chapterIndex: Int) {
