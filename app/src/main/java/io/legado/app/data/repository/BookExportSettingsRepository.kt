@@ -4,6 +4,7 @@ import androidx.datastore.preferences.core.Preferences
 import io.legado.app.constant.PreferKey
 import io.legado.app.domain.gateway.BookExportSettingsGateway
 import io.legado.app.domain.model.settings.BookExportSettings
+import io.legado.app.domain.model.settings.MangaExportFormat
 import io.legado.app.help.config.AppConfigStore
 import io.legado.app.help.config.compatDsBoolean
 import io.legado.app.help.config.compatDsInt
@@ -38,6 +39,9 @@ internal fun Preferences.toBookExportSettings() = BookExportSettings(
     exportNoChapterName = compatDsBoolean(PreferKey.exportNoChapterName) ?: false,
     enableCustomExport = compatDsBoolean(PreferKey.enableCustomExport) ?: false,
     exportType = compatDsInt(PreferKey.exportType) ?: 0,
+    mangaExportFormat = MangaExportFormat.fromValue(
+        compatDsString(PreferKey.mangaExportFormat)
+    ),
     exportPictureFile = compatDsBoolean(PreferKey.exportPictureFile) ?: false,
     parallelExportBook = compatDsBoolean(PreferKey.parallelExportBook) ?: false,
     exportChapterStart = compatDsInt(PreferKey.exportChapterStart),
@@ -53,6 +57,7 @@ internal fun BookExportSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.exportNoChapterName to exportNoChapterName,
     PreferKey.enableCustomExport to enableCustomExport,
     PreferKey.exportType to exportType,
+    PreferKey.mangaExportFormat to mangaExportFormat.value,
     PreferKey.exportPictureFile to exportPictureFile,
     PreferKey.parallelExportBook to parallelExportBook,
     PreferKey.exportChapterStart to exportChapterStart,

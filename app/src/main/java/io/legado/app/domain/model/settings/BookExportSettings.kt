@@ -9,6 +9,8 @@ data class BookExportSettings(
     val exportNoChapterName: Boolean = false,
     val enableCustomExport: Boolean = false,
     val exportType: Int = 0,
+    /** 漫画书导出成 CBZ 还是文件夹；文本书不受影响。 */
+    val mangaExportFormat: MangaExportFormat = MangaExportFormat.Cbz,
     val exportPictureFile: Boolean = false,
     val parallelExportBook: Boolean = false,
     /** 缓存目录：起始章/结束章（1-based），null 表示该端不限。 */
