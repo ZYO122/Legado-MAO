@@ -11,6 +11,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.help.config.BubblePackageArchive
 import io.legado.app.help.config.BubblePackageManager
 import io.legado.app.model.localBook.LocalBook
+import io.legado.app.model.localBook.LocalMangaFiles
 import io.legado.app.utils.*
 import java.io.File
 
@@ -54,6 +55,10 @@ class FileAssociationViewModel(application: Application) : BaseAssociationViewMo
                             )
                             return@execute
                         }
+                    }
+                    if (LocalMangaFiles.archiveImageEntries(fileDoc).isNotEmpty()) {
+                        importBookLiveData.postValue(fileDoc.uri)
+                        return@execute
                     }
                     ArchiveUtils.deCompress(fileDoc, ArchiveUtils.TEMP_PATH) {
                         it.matches(bookFileRegex)
