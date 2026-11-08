@@ -1232,11 +1232,11 @@
     <string name="chapter_range_invalid">请输入有效的章节范围</string>
     <string name="cache_selection">缓存选择</string>
     <string name="cache_directory">缓存目录</string>
-    <string name="export_cache_zip">导出zip</string>
+    <string name="export_cache">导出缓存</string>
     <string name="export_no_cached_chapter">没有可导出的缓存章节</string>
     <string name="export_local_manga_unsupported">本地漫画暂不支持导出</string>
     <string name="manga_export_format">漫画导出格式</string>
-    <string name="a11y_export_book_cache_zip">导出《%1$s》的缓存为 zip</string>
+    <string name="a11y_export_book_cache">导出《%1$s》的缓存</string>
     <string name="a11y_select_book_cache_range">选择《%1$s》要缓存的章节</string>
     <string name="reset">重置</string>
     <string name="null_url">URL 为空</string>

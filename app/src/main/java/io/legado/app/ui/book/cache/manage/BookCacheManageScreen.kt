@@ -161,22 +161,22 @@ private fun BookCacheManageScreen(
     val noGroupText = stringResource(R.string.net_no_group)
     val cacheDirectoryText = stringResource(R.string.cache_directory)
 
-    fun startCacheZipExport(path: String) {
+    fun startCacheExport(path: String) {
         val bookUrl = pendingExportBookUrl ?: return
         pendingExportBookUrl = null
         ACache.get().put(ExportBookPathCacheKey, path)
-        onIntent(BookCacheManageIntent.ExportCacheZip(bookUrl, path))
+        onIntent(BookCacheManageIntent.ExportCache(bookUrl, path))
     }
 
     // 导出文件夹与书架导出共用 ACache 里的同一个上次选择
     val exportDirLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
-        uri?.let(::exportFolderPathOf)?.let(::startCacheZipExport)
+        uri?.let(::exportFolderPathOf)?.let(::startCacheExport)
     }
 
-    /** 点「导出 zip」先让用户选目标目录（系统选择器或手动输入），不静默开导。 */
-    fun exportBookCacheZip(bookUrl: String) {
+    /** 点「导出缓存」先让用户选目标目录（系统选择器或手动输入），不静默开导。 */
+    fun exportBookCache(bookUrl: String) {
         pendingExportBookUrl = bookUrl
         showExportFolderPicker = true
     }
@@ -291,7 +291,7 @@ private fun BookCacheManageScreen(
                     onIntent = onIntent,
                     onDeleteBook = { pendingDeleteBook = it },
                     onDeleteChapter = { book, chapter -> pendingDeleteChapter = book to chapter },
-                    onExportZip = { exportBookCacheZip(it.bookUrl) },
+                    onExportCache = { exportBookCache(it.bookUrl) },
                     onSelectChapterRange = { rangeBook = it },
                 )
                 if (selectedGroupId == BookGroup.IdAll) {
@@ -309,7 +309,7 @@ private fun BookCacheManageScreen(
                         onDeleteChapter = { book, chapter ->
                             pendingDeleteChapter = book to chapter
                         },
-                        onExportZip = { exportBookCacheZip(it.bookUrl) },
+                        onExportCache = { exportBookCache(it.bookUrl) },
                         onSelectChapterRange = { rangeBook = it },
                     )
                 }
@@ -341,7 +341,7 @@ private fun BookCacheManageScreen(
         onDismiss = { pendingDeleteChapter = null }
     )
 
-    // 导出 zip 的目标目录：先弹选择（系统选择器 / 手动输入路径），选完才开导
+    // 导出缓存的目标目录：先弹选择（系统选择器 / 手动输入路径），选完才开导
     FilePickerSheet(
         show = showExportFolderPicker,
         onDismissRequest = {
@@ -380,7 +380,7 @@ private fun BookCacheManageScreen(
         onConfirm = {
             val path = exportPathInput.trim()
             showExportPathInput = false
-            if (path.isNotEmpty()) startCacheZipExport(path)
+            if (path.isNotEmpty()) startCacheExport(path)
         },
         dismissText = stringResource(android.R.string.cancel),
         onDismiss = {
@@ -430,7 +430,7 @@ private fun LazyListScope.cacheSection(
     onIntent: (BookCacheManageIntent) -> Unit,
     onDeleteBook: (BookCacheBookItem) -> Unit,
     onDeleteChapter: (BookCacheBookItem, BookCacheChapterItem) -> Unit,
-    onExportZip: (BookCacheBookItem) -> Unit,
+    onExportCache: (BookCacheBookItem) -> Unit,
     onSelectChapterRange: (BookCacheBookItem) -> Unit,
 ) {
     item(key = "$title-header") {
@@ -461,7 +461,7 @@ private fun LazyListScope.cacheSection(
                     onToggleExpanded = { onToggleExpanded(bookUrl) },
                     onIntent = onIntent,
                     onDeleteBook = onDeleteBook,
-                    onExportZip = onExportZip,
+                    onExportCache = onExportCache,
                     onSelectChapterRange = onSelectChapterRange,
                     modifier = Modifier.animateItem()
                 )
@@ -505,7 +505,7 @@ private fun BookCacheBookCard(
     onToggleExpanded: () -> Unit,
     onIntent: (BookCacheManageIntent) -> Unit,
     onDeleteBook: (BookCacheBookItem) -> Unit,
-    onExportZip: (BookCacheBookItem) -> Unit,
+    onExportCache: (BookCacheBookItem) -> Unit,
     onSelectChapterRange: (BookCacheBookItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -641,12 +641,12 @@ private fun BookCacheBookCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SmallTonalButton(
-                    onClick = { onExportZip(item) },
+                    onClick = { onExportCache(item) },
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.UploadFile,
-                    text = stringResource(R.string.export_cache_zip),
+                    text = stringResource(R.string.export_cache),
                     contentDescription = stringResource(
-                        R.string.a11y_export_book_cache_zip,
+                        R.string.a11y_export_book_cache,
                         item.name
                     )
                 )
