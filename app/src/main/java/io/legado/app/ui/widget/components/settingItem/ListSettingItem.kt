@@ -8,8 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import io.legado.app.ui.theme.ComposeEngine
 import io.legado.app.ui.theme.LegadoTheme
-import io.legado.app.ui.theme.ThemeResolver
 import io.legado.app.ui.widget.components.SplicedColumnDivider
 import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenuItem
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -28,60 +28,63 @@ fun DropdownListSettingItem(
     val composeEngine = LegadoTheme.composeEngine
     SplicedColumnDivider()
 
-    if (ThemeResolver.isMiuixEngine(composeEngine)) {
-        val selectedIndex = entryValues.indexOf(selectedValue).coerceAtLeast(0)
-        val spinnerItems = displayEntries.map { display ->
-            DropdownItem(title = display)
+    when (composeEngine) {
+        ComposeEngine.Miuix -> {
+            val selectedIndex = entryValues.indexOf(selectedValue).coerceAtLeast(0)
+            val spinnerItems = displayEntries.map { display ->
+                DropdownItem(title = display)
+            }
+
+            OverlaySpinnerPreference(
+                title = title,
+                summary = description,
+                items = spinnerItems,
+                selectedIndex = selectedIndex,
+                startAction = imageVector?.let { icon ->
+                    {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null
+                        )
+                    }
+                },
+                onSelectedIndexChange = { index ->
+                    onValueChange(entryValues[index])
+                }
+            )
         }
 
-        OverlaySpinnerPreference(
-            title = title,
-            summary = description,
-            items = spinnerItems,
-            selectedIndex = selectedIndex,
-            startAction = imageVector?.let { icon ->
-                {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null
-                    )
-                }
-            },
-            onSelectedIndexChange = { index ->
-                onValueChange(entryValues[index])
-            }
-        )
-    } else {
+        ComposeEngine.Material, ComposeEngine.Mochi -> {
+            val currentEntry =
+                displayEntries.getOrNull(entryValues.indexOf(selectedValue)) ?: selectedValue
 
-        val currentEntry =
-            displayEntries.getOrNull(entryValues.indexOf(selectedValue)) ?: selectedValue
-
-        SettingItem(
-            title = title,
-            description = description,
-            option = currentEntry,
-            imageVector = imageVector,
-            onClick = { },
-            dropdownMenu = { onDismiss ->
-                displayEntries.forEachIndexed { index, display ->
-                    RoundDropdownMenuItem(
-                        text = display,
-                        onClick = {
-                            onValueChange(entryValues[index])
-                            onDismiss()
-                        },
-                        trailingIcon = if (selectedValue == entryValues[index]) {
-                            {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        } else null
-                    )
+            SettingItem(
+                title = title,
+                description = description,
+                option = currentEntry,
+                imageVector = imageVector,
+                onClick = { },
+                dropdownMenu = { onDismiss ->
+                    displayEntries.forEachIndexed { index, display ->
+                        RoundDropdownMenuItem(
+                            text = display,
+                            onClick = {
+                                onValueChange(entryValues[index])
+                                onDismiss()
+                            },
+                            trailingIcon = if (selectedValue == entryValues[index]) {
+                                {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            } else null
+                        )
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
