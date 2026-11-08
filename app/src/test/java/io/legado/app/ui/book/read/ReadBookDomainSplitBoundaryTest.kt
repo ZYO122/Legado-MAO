@@ -117,11 +117,12 @@ class ReadBookDomainSplitBoundaryTest {
      * 行数只作粗棘轮：散落在 VM 的域内状态比总行数更能说明边界是否干净，各域另受
      * `域状态不回流进 ReadBookViewModel` 守卫约束。
      *
-     * 当前上限 2775：上游 2772 之上再 +3，来自本地既有的按章节图片缓存定制
+     * 当前上限 2774：朗读进度初值的快照捕获与身份组装已归还 `ReadAloudDelegate`，
+     * VM 只保留 Flow 初始化接线，按实际行数收紧棘轮；本地按章节图片缓存的定制
      * （`refreshImage`/`refreshImages`/`refreshImageFiles`/`saveImage` 传递 `chapterIndex`
-     * 并调用 `ImageProvider.chapterOf`），属该文件已登记能力，不是新的域回流。
-     *
-     * 上一档 2772：由 2763 放宽 9 行，全部是新增「离线缓存」域的接线，实现已摘进
+     * 并调用 `ImageProvider.chapterOf`）仍计入实际行数，属该文件已登记能力。
+     * 回溯（上一档 2778）：段评 intent +3。
+     * 回溯（再上一档 2772）：由 2763 放宽 9 行，全部是新增「离线缓存」域的接线，实现已摘进
      * `ReadBookCacheDelegate`（章节筛选、范围预览的 IO 与文案都在里面），VM 只剩：
      * 两个意图分支转发（相对上一档净增 0）、`cacheDelegate` 的 lazy 装配（+7）与
      * 预览投影进 `_uiState`（+1，`_uiState` 只有 VM 能碰）、一条域注释与空行（+2）。
@@ -188,14 +189,14 @@ class ReadBookDomainSplitBoundaryTest {
      * （TocViewModel 自持 flow）。
      */
     @Test
-    fun `ReadBookViewModel 不超过 2778 行`() {
+    fun `ReadBookViewModel 不超过 2774 行`() {
         val lineCount = mainSourceFile("io/legado/app/ui/book/read/ReadBookViewModel.kt")
             .readLines().size
         assertTrue(
-            "ReadBookViewModel 涨到了 $lineCount 行，超过上限 2778。\n" +
+            "ReadBookViewModel 涨到了 $lineCount 行，超过上限 2774。\n" +
                 "新功能请摘成 io/legado/app/ui/book/read/ 下的 XxxDelegate，" +
                 "并在本测试的 DOMAINS 里加一条边界。",
-            lineCount <= 2778,
+            lineCount <= 2774,
         )
     }
 
