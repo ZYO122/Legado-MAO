@@ -40,8 +40,8 @@ import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import io.legado.app.ui.main.MainDestination
+import io.legado.app.ui.theme.ComposeEngine
 import io.legado.app.ui.theme.LegadoTheme
-import io.legado.app.ui.theme.ThemeResolver
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Album
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -66,7 +66,7 @@ object AppIcons {
 
     private val isMiuix: Boolean
         @Composable
-        get() = ThemeResolver.isMiuixEngine(LegadoTheme.composeEngine)
+        get() = LegadoTheme.composeEngine == ComposeEngine.Miuix
 
     val Search: ImageVector
         @Composable
