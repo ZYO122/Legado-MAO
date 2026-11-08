@@ -11,6 +11,7 @@ import io.legado.app.model.localBook.LocalMangaFiles
 import io.legado.app.model.localBook.groupLocalMangaPages
 import io.legado.app.model.localBook.isLocalMangaArchive
 import io.legado.app.model.localBook.isLocalMangaImage
+import io.legado.app.model.localBook.toLocalMangaImageUrl
 import io.legado.app.utils.ArchiveUtils
 import java.io.File
 import java.nio.file.Files
@@ -54,7 +55,7 @@ internal class LocalMangaLoader(private val cacheRoot: File) : AutoCloseable {
                 }
             } ?: root
             return ExtractedBook(root, files.map {
-                ImageEntry(it.relativeTo(common).invariantSeparatorsPath, it.toURI().toString())
+                ImageEntry(it.relativeTo(common).invariantSeparatorsPath, it.toLocalMangaImageUrl())
             })
         } catch (error: Exception) {
             root.deleteRecursively()
