@@ -27,16 +27,16 @@ object LocalMangaChapters {
     /**
      * 图片路径 → 章标题 → 该章图片路径（已按文件名排序，即阅读顺序）。
      *
-     * 按父目录分章；每个目录只有一张图说明没分章，整本当一章、章名用 [fallbackTitle]。
+     * 按父目录分章；直接放在根目录的图片归入 [fallbackTitle]。每个目录哪怕只有一张图
+     * 也独立成章，否则「一个目录一页」的条漫会被整本当一章。
      */
     fun group(paths: List<String>, fallbackTitle: String): Map<String, List<String>> {
         val images = paths.filter(::isImagePath)
         if (images.isEmpty()) return emptyMap()
         val sorted = images.sortedWith(AlphanumComparator)
-        val grouped = sorted.groupBy { path ->
+        return sorted.groupBy { path ->
             path.substringBeforeLast('/', "").takeIf { it.isNotBlank() } ?: fallbackTitle
         }
-        return if (grouped.size == sorted.size) mapOf(fallbackTitle to sorted) else grouped
     }
 
     /** 本地漫画的图片路径：目录（File/SAF）与 zip/cbz 压缩包都支持，只列表不读内容。 */
