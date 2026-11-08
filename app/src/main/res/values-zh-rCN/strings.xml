@@ -1235,6 +1235,7 @@
     <string name="export_cache_zip">导出zip</string>
     <string name="export_no_cached_chapter">没有可导出的缓存章节</string>
     <string name="export_local_manga_unsupported">本地漫画暂不支持导出</string>
+    <string name="manga_export_format">漫画导出格式</string>
     <string name="a11y_export_book_cache_zip">导出《%1$s》的缓存为 zip</string>
     <string name="a11y_select_book_cache_range">选择《%1$s》要缓存的章节</string>
     <string name="reset">重置</string>
