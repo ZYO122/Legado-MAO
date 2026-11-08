@@ -1270,9 +1270,9 @@
     <string name="cache_directory">Chapter range</string>
     <string name="export_cache">Export cache</string>
     <string name="export_no_cached_chapter">No cached chapter to export</string>
-    <string name="export_local_manga_unsupported">Local manga cannot be exported</string>
-    <string name="manga_export_format">Manga export format</string>
     <string name="a11y_export_book_cache">Export cached chapters of %1$s</string>
+    <string name="manga_export_format">Manga export format</string>
+    <string name="export_local_manga_unsupported">Local manga cannot be exported</string>
     <string name="a11y_select_book_cache_range">Select chapters of %1$s to cache</string>
     <string name="reset">Reset</string>
     <string name="theme_config_reset_defaults">Restore default theme configuration</string>

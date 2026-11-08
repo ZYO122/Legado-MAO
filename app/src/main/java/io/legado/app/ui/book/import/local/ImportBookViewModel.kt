@@ -19,6 +19,7 @@ import io.legado.app.domain.gateway.ImportBookSettingsGateway
 import io.legado.app.domain.gateway.OtherSettingsGateway
 import io.legado.app.domain.model.settings.ImportBookSettings
 import io.legado.app.domain.model.settings.OtherSettings
+import io.legado.app.help.book.LocalMangaChapters
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.ui.widget.components.list.InteractionState
 import io.legado.app.ui.widget.components.list.ListUiState
@@ -617,10 +618,32 @@ class ImportBookViewModel(
         when {
             item.isDir -> navigateNext(item.file)
             item.isOnBookShelf -> onImportedFileClick(item.file)
-            item.name.matches(archiveFileRegex) ->
-                _effects.tryEmit(ImportBookEffect.ConfirmAddArchive(item))
-
+            item.name.matches(archiveFileRegex) -> addArchiveOrComic(item)
             else -> toggleSelection(item.selectionId)
+        }
+    }
+
+    /**
+     * 纯图片压缩包（CBZ / 漫画 zip）整包当本地漫画加入书架；
+     * 里面是书文件（txt/epub/…）的压缩包仍走「从包内选书」。
+     */
+    private fun addArchiveOrComic(item: ImportBook) {
+        execute {
+            val entries = ArchiveUtils.getArchiveFilesName(item.file)
+            if (entries.any { LocalMangaChapters.isImagePath(it) }) {
+                LocalBook.importFiles(listOf(item.file.uri))
+                true
+            } else {
+                false
+            }
+        }.onSuccess { imported ->
+            if (imported) {
+                _effects.tryEmit(ImportBookEffect.ShowToast("添加书架成功"))
+            } else {
+                _effects.tryEmit(ImportBookEffect.ConfirmAddArchive(item))
+            }
+        }.onError {
+            _effects.tryEmit(ImportBookEffect.ShowToast("添加书架失败\n${it.localizedMessage}"))
         }
     }
 
