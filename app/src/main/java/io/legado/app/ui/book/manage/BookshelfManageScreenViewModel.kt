@@ -17,6 +17,7 @@ import io.legado.app.domain.gateway.BookExportSettingsGateway
 import io.legado.app.domain.gateway.BookshelfSettingsGateway
 import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
 import io.legado.app.domain.model.settings.BookExportSettings
+import io.legado.app.domain.model.settings.MangaExportFormat
 import io.legado.app.domain.usecase.BatchCacheDownloadUseCase
 import io.legado.app.domain.usecase.BatchChangeSourceCandidate
 import io.legado.app.domain.usecase.BatchChangeSourcePreviewItem
@@ -86,6 +87,7 @@ data class BookshelfManageScreenExportConfig(
     val exportPictureFile: Boolean = false,
     val parallelExportBook: Boolean = false,
     val exportType: Int = 0,
+    val mangaExportFormat: MangaExportFormat = MangaExportFormat.Cbz,
     val exportCharset: String = "UTF-8",
     val bookExportFileName: String? = null,
     val episodeExportFileName: String = "",
@@ -181,6 +183,7 @@ sealed interface BookshelfManageScreenIntent {
     data class SetExportPictureFile(val enabled: Boolean) : BookshelfManageScreenIntent
     data class SetParallelExportBook(val enabled: Boolean) : BookshelfManageScreenIntent
     data class SetExportType(val type: Int) : BookshelfManageScreenIntent
+    data class SetMangaExportFormat(val format: MangaExportFormat) : BookshelfManageScreenIntent
     data class SetExportCharset(val charset: String) : BookshelfManageScreenIntent
     data class SetBookExportFileName(val fileName: String?) : BookshelfManageScreenIntent
     data class SetEpisodeExportFileName(val fileName: String) : BookshelfManageScreenIntent
@@ -352,6 +355,10 @@ class BookshelfManageScreenViewModel(
 
             is BookshelfManageScreenIntent.SetExportType -> {
                 updateExportSetting { it.copy(exportType = intent.type) }
+            }
+
+            is BookshelfManageScreenIntent.SetMangaExportFormat -> {
+                updateExportSetting { it.copy(mangaExportFormat = intent.format) }
             }
 
             is BookshelfManageScreenIntent.SetExportCharset -> {
@@ -570,7 +577,8 @@ class BookshelfManageScreenViewModel(
                     exportToWebDav = settings.exportToWebDav,
                     exportPictureFile = settings.exportPictureFile,
                     parallelExportBook = settings.parallelExportBook,
-                    exportType = settings.exportType,
+                    exportType = settings.exportType.coerceIn(0, 1),
+                    mangaExportFormat = settings.mangaExportFormat,
                     exportCharset = settings.exportCharset,
                     bookExportFileName = settings.bookExportFileName,
                     episodeExportFileName = settings.episodeExportFileName,

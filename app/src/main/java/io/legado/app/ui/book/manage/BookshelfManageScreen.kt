@@ -72,6 +72,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.domain.model.settings.MangaExportFormat
 import io.legado.app.domain.usecase.BatchChangeSourcePreviewItem
 import io.legado.app.domain.usecase.BatchChangeSourcePreviewStatus
 import io.legado.app.domain.usecase.ChangeSourceMigrationOptions
@@ -202,7 +203,8 @@ private fun BookshelfManageScreen(
     val selectedBookUrls: Set<String> = state.selectedBookUrls
     var deleteOriginalBookFile by remember { mutableStateOf(state.deleteBookOriginal) }
     val exportBookPathKey = remember { ExportBookPathCacheKey }
-    val exportTypes = remember { arrayListOf("txt", "epub", "zip") }
+    val exportTypes = remember { arrayListOf("txt", "epub") }
+    val mangaExportFormats = remember { listOf("CBZ", "文件夹") }
     val commonCharsets = remember { listOf("UTF-8", "GBK", "GB2312", "GB18030", "Big5", "UTF-16") }
     val focusRequester = remember { FocusRequester() }
     val exportFolderText = stringResource(R.string.export_folder)
@@ -314,7 +316,12 @@ private fun BookshelfManageScreen(
             return@rememberLauncherForActivityResult
         }
         pendingBooks.forEach { book ->
-            startExport(context, dirPath, book.bookUrl, state.exportConfig.exportTypeName(exportTypes))
+            startExport(
+                context,
+                dirPath,
+                book.bookUrl,
+                exportTypeFor(book, state.exportConfig.exportTypeName(exportTypes))
+            )
         }
     }
 
@@ -351,7 +358,12 @@ private fun BookshelfManageScreen(
             showCustomExportDialog = true
         } else {
             books.forEach { book ->
-                startExport(context, path, book.bookUrl, state.exportConfig.exportTypeName(exportTypes))
+                startExport(
+                    context,
+                    path,
+                    book.bookUrl,
+                    exportTypeFor(book, state.exportConfig.exportTypeName(exportTypes))
+                )
             }
         }
     }
@@ -1055,6 +1067,22 @@ private fun BookshelfManageScreen(
                                 viewModel.dispatch(
                                     BookshelfManageScreenIntent.SetExportType(
                                         type.toInt()
+                                    )
+                                )
+                            },
+                        )
+                    }
+                    item {
+                        TinyDropdownSettingItem(
+                            title = stringResource(R.string.manga_export_format),
+                            selectedValue = state.exportConfig.mangaExportFormat.value,
+                            displayEntries = mangaExportFormats.toTypedArray(),
+                            entryValues = MangaExportFormat.entries
+                                .map(MangaExportFormat::value).toTypedArray(),
+                            onValueChange = { format ->
+                                viewModel.dispatch(
+                                    BookshelfManageScreenIntent.SetMangaExportFormat(
+                                        MangaExportFormat.fromValue(format)
                                     )
                                 )
                             },
