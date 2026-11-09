@@ -3,14 +3,16 @@ package io.legado.app.model.localBook
 import android.net.Uri
 import android.provider.DocumentsContract
 import io.legado.app.R
+import io.legado.app.constant.AppPattern.bookFileRegex
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
+import io.legado.app.exception.LocalMangaDirectoryEmptyException
 import io.legado.app.exception.LocalMangaDirectoryUnavailableException
 import io.legado.app.exception.TocEmptyException
-import io.legado.app.help.book.LocalMangaChapters
 import io.legado.app.help.book.getLocalUri
 import io.legado.app.help.book.isArchive
 import io.legado.app.help.book.isImage
+import io.legado.app.utils.AlphanumComparator
 import io.legado.app.utils.FileDoc
 import io.legado.app.utils.compress.LibArchiveUtils
 import io.legado.app.utils.openReadPfd
@@ -37,17 +39,29 @@ internal fun File.toLocalMangaImageUrl(): String =
 internal val Book.isLocalMangaArchive: Boolean
     get() = isArchive || (!isImage && originName.endsWith(".cbz", ignoreCase = true))
 
+internal const val LEGACY_FLAT_MANGA_CHAPTER_URL = "local-manga://chapter/0"
+
 internal object LocalMangaFiles {
     fun chapters(book: Book): List<BookChapter> {
-        val paths = if (book.isLocalMangaArchive) {
-            val archive = FileDoc.fromUri(book.getLocalUri(), false)
-            relativeMangaArchivePaths(archiveImageEntries(archive))
-        } else {
-            buildList { visitDirectory(book) { path, _ -> add(path) } }
+        val firstPages = mutableMapOf<String, String>()
+        fun visit(path: String) {
+            val title = localMangaChapterTitle(book.name, path)
+            val firstPage = firstPages[title]
+            if (firstPage == null || AlphanumComparator.compare(path, firstPage) < 0) {
+                firstPages[title] = path
+            }
         }
-        return groupLocalMangaPages(book.name, paths) { it }.keys.mapIndexed { index, title ->
+        if (book.isLocalMangaArchive) {
+            val archive = FileDoc.fromUri(book.getLocalUri(), false)
+            relativeMangaArchivePaths(archiveImageEntries(archive)).forEach(::visit)
+        } else {
+            visitDirectory(book) { path, _ -> visit(path) }
+        }
+        if (firstPages.isEmpty()) throw emptyMangaToc()
+        val titles = firstPages.entries.sortedWith(compareBy(AlphanumComparator) { it.value }).map { it.key }
+        return titles.mapIndexed { index, title ->
             BookChapter(
-                url = "local-manga://chapter/$index",
+                url = "local-manga://chapter/v2/$index",
                 title = title,
                 bookUrl = book.bookUrl,
                 index = index,
@@ -55,7 +69,17 @@ internal object LocalMangaFiles {
         }
     }
 
-    fun archiveImageEntries(archive: FileDoc): List<String> =
+    fun isMangaArchive(archive: FileDoc): Boolean {
+        val entries = archive.openReadPfd().getOrThrow().use {
+            LibArchiveUtils.getFilesName(it) { name ->
+                name.matches(bookFileRegex) || isLocalMangaImage(name)
+            }
+        }
+        // A supported ebook takes precedence over standalone cover art.
+        return entries.isNotEmpty() && entries.none { it.matches(bookFileRegex) }
+    }
+
+    private fun archiveImageEntries(archive: FileDoc): List<String> =
         archive.openReadPfd().getOrThrow().use {
             LibArchiveUtils.getFilesName(it, ::isLocalMangaImage)
         }
@@ -69,16 +93,24 @@ internal object LocalMangaFiles {
     // A chapter exists only if its directory contains images. Walk names and MIME types to keep
     // nested/flat chapter rules, and use one provider query per SAF directory.
     fun visitDirectory(book: Book, visit: (String, () -> String) -> Unit) {
+        var foundImage = false
+        val visitImage: (String, () -> String) -> Unit = { path, url ->
+            foundImage = true
+            visit(path, url)
+        }
         withDirectoryAccess {
             val url = book.bookUrl
             val children = if (url.startsWith("content://")) null else {
                 localFile(url).listFiles()
             }
             if (children == null) {
-                visitResolvedDirectory(book.getLocalUri(directory = true), visit)
+                visitResolvedDirectory(book.getLocalUri(directory = true), visitImage)
             } else {
-                visitFiles(children, "", visit)
+                visitFiles(children, "", visitImage)
             }
+        }
+        if (!foundImage) {
+            throw LocalMangaDirectoryEmptyException(appCtx.getString(R.string.chapter_list_empty))
         }
     }
 
@@ -223,10 +255,12 @@ internal fun <T> groupLocalMangaPages(
     path: (T) -> String,
 ): Map<String, List<T>> {
     if (pages.isEmpty()) throw emptyMangaToc()
-    val byPath = pages.associateBy(path)
-    return LocalMangaChapters.group(pages.map(path), bookName)
-        .mapValues { (_, paths) -> paths.mapNotNull(byPath::get) }
+    val sorted = pages.sortedWith(compareBy(AlphanumComparator, path))
+    return sorted.groupBy { localMangaChapterTitle(bookName, path(it)) }
 }
+
+private fun localMangaChapterTitle(bookName: String, pagePath: String): String =
+    pagePath.substringBeforeLast('/', "").ifBlank { bookName }
 
 private fun emptyMangaToc(): TocEmptyException =
     TocEmptyException(appCtx.getString(R.string.chapter_list_empty))

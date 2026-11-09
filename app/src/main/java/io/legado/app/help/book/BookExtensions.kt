@@ -238,10 +238,11 @@ fun Book.getLocalUri(directory: Boolean = false): Uri {
             val fileDoc = treeFileDoc.takeIf { directory && it.name == originName }
                 ?: treeFileDoc.find(originName, 5, 100, if (directory) true else null)
             if (fileDoc != null) {
-                val newBookUrl = fileDoc.toString()
+                val readableUri = if (directory) readableMangaDirectoryUri(fileDoc.uri) else fileDoc.uri
+                val newBookUrl = if (directory && fileDoc.isContentScheme) readableUri.toString() else fileDoc.toString()
                 val oldBook = copy()
                 if (!oldBook.canSafelyRebindTo(newBookUrl)) {
-                    return fileDoc.uri
+                    return readableUri
                 }
                 appDb.runInTransaction {
                     if (oldBook.bookUrl == newBookUrl) {
@@ -258,8 +259,8 @@ fun Book.getLocalUri(directory: Boolean = false): Uri {
                         this.latestChapterTime = 0
                     }
                 }
-                localUriCache[newBookUrl] = fileDoc.uri
-                return fileDoc.uri
+                localUriCache[newBookUrl] = readableUri
+                return readableUri
             }
         }
     }
@@ -275,10 +276,11 @@ fun Book.getLocalUri(directory: Boolean = false): Uri {
         val fileDoc = treeFileDoc.takeIf { directory && it.name == originName }
             ?: treeFileDoc.find(originName, 5, 100, if (directory) true else null)
         if (fileDoc != null) {
-            val newBookUrl = fileDoc.toString()
+            val readableUri = if (directory) readableMangaDirectoryUri(fileDoc.uri) else fileDoc.uri
+            val newBookUrl = if (directory && fileDoc.isContentScheme) readableUri.toString() else fileDoc.toString()
             val oldBook = copy()
             if (!oldBook.canSafelyRebindTo(newBookUrl)) {
-                return fileDoc.uri
+                return readableUri
             }
 
             appDb.runInTransaction {
@@ -294,8 +296,8 @@ fun Book.getLocalUri(directory: Boolean = false): Uri {
                     this.latestChapterTime = 0
                 }
             }
-            localUriCache[newBookUrl] = fileDoc.uri
-            return fileDoc.uri
+            localUriCache[newBookUrl] = readableUri
+            return readableUri
         }
     }
 

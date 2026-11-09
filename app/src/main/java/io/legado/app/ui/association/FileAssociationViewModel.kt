@@ -56,7 +56,7 @@ class FileAssociationViewModel(application: Application) : BaseAssociationViewMo
                             return@execute
                         }
                     }
-                    if (LocalMangaFiles.archiveImageEntries(fileDoc).isNotEmpty()) {
+                    if (LocalMangaFiles.isMangaArchive(fileDoc)) {
                         importBookLiveData.postValue(fileDoc.uri)
                         return@execute
                     }
