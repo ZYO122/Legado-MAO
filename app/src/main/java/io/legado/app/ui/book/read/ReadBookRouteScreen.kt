@@ -749,6 +749,7 @@ fun ReadBookRouteScreen(
                 onAutoPageStop = controller::stopAutoPage,
                 onShowSelectionMenu = controller::showComposeTextActionMenu,
                 onDismissSelectionMenu = controller::dismissTextActionMenu,
+                onTurnToSelectionPage = { controller.completeComposePageTurn(PageDirection.NEXT, it) },
                 onElementClick = controller::onComposeReaderElementClick,
                 onElementLongPress = controller::onComposeReaderElementLongPress,
                 selectionEnabled = readPreferences.selectText,
@@ -770,6 +771,7 @@ fun ReadBookRouteScreen(
                 noAnimationScrollPage = readPreferences.noAnimScrollPage,
                 externalPageTurns = controller.composePageTurns,
                 externalSelectionCancels = controller.composeSelectionCancels,
+                externalSelectionExtensions = controller.composeSelectionExtensions,
                     externalSelections = controller.composeSelections,
                     onVisibleBodyTextPositionProvider = controller::setComposeVisibleBodyTextPositionProvider,
                 )
