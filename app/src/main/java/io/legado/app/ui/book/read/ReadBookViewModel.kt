@@ -1085,9 +1085,6 @@ class ReadBookViewModel(
             is ReadBookIntent.OpenChapterUrl -> openChapterUrl()
             is ReadBookIntent.SourceCustomButton -> runSourceCustomButton(intent.longClick)
             is ReadBookIntent.ToggleReadUrlInBrowser -> toggleReadUrlInBrowser()
-            is ReadBookIntent.SetParagraphCommentHeight -> viewModelScope.launch {
-                readSettingsRepository.update { it.copy(paragraphCommentHeightPercent = intent.percent) }
-            }
             is ReadBookIntent.OpenContentEdit -> contentEditDelegate.open()
             is ReadBookIntent.LoadContentEdit -> contentEditDelegate.load()
             is ReadBookIntent.SaveContentEdit ->

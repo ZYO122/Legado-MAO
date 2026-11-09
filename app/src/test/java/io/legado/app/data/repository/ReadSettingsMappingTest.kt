@@ -125,6 +125,7 @@ class ReadSettingsMappingTest {
         assertEquals(1, settings.preDownloadNum)
         assertEquals(0, settings.preDownloadNumPrev)
         assertEquals(4, settings.themeGridColumns)
+        assertEquals(0, settings.paragraphCommentHeightPercent)
     }
 }
 

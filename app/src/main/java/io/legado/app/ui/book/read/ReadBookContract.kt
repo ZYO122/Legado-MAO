@@ -734,7 +734,6 @@ sealed interface ReadBookIntent {
     data object OpenChapterUrl : ReadBookIntent
     data class SourceCustomButton(val longClick: Boolean) : ReadBookIntent
     data object ToggleReadUrlInBrowser : ReadBookIntent
-    data class SetParagraphCommentHeight(val percent: Int) : ReadBookIntent
 
     // Content edit
     data object OpenContentEdit : ReadBookIntent
@@ -2044,6 +2043,9 @@ sealed interface ConfigUpdate {
     }
 
     data class BookmarkBadgeSize(val value: Int) : ConfigUpdate {
+        override val actions = emptySet<ConfigUpdateAction>()
+    }
+    data class ParagraphCommentHeight(val percent: Int) : ConfigUpdate {
         override val actions = emptySet<ConfigUpdateAction>()
     }
     data class SliderVibrator(val value: Boolean) : ConfigUpdate {
