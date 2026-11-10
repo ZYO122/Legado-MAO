@@ -23,6 +23,7 @@ import io.legado.app.help.http.await
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.localBook.LocalBook
+import io.legado.app.model.localBook.MarkdownFile
 import io.legado.app.model.localBook.MarkdownImageSource
 import io.legado.app.model.localBook.TextFile
 import io.legado.app.utils.ArchiveUtils
@@ -131,6 +132,7 @@ object BookHelp {
     fun clearCache(book: Book) {
         val filePath = FileUtils.getPath(downloadDir, cacheFolderName, book.getFolderName())
         deleteImageCacheDirectory(File(filePath))
+        if (book.isMarkdown) MarkdownFile.clear()
     }
 
     private fun deleteImageCacheDirectory(directory: File) {
