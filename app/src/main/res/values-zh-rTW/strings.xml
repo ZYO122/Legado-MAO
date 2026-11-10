@@ -3159,4 +3159,6 @@
     <string name="paragraph_comment_height">段評彈窗高度</string>
     <string name="paragraph_comment_height_follow_source">跟隨書源</string>
     <string name="paragraph_comment_height_percent">%1$d%%</string>
+    <string name="hyper_os4_components">HyperOS 4 風格元件</string>
+    <string name="hyper_os4_components_summary">在 Miuix 主題下使用新的玻璃頂欄、標籤頁與下拉選單。</string>
 </resources>

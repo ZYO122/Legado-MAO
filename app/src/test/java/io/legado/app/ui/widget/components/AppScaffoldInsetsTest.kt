@@ -218,7 +218,8 @@ class AppScaffoldInsetsTest {
                         statusBar(false)
                         assertEquals(
                             "$engine medium=$medium parentConsumed=$consumed status bar height delta",
-                            if (consumed) 0 else 24, visibleHeight - topBarHeight
+                            if (consumed) 0 else 24,
+                            visibleHeight - topBarHeight
                         )
                     }
                 }

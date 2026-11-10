@@ -27,7 +27,7 @@ import io.legado.app.ui.theme.ThemeResolver
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.LocalAppUiConfiguration
 import io.legado.app.ui.theme.LocalHazeState
-import io.legado.app.ui.theme.miuixBarBlur
+import io.legado.app.ui.theme.MiuixBlurredTopBar
 import io.legado.app.ui.theme.responsiveHazeEffect
 import io.legado.app.ui.widget.components.GlassDefaults
 import io.legado.app.ui.widget.components.mochi.AppMochiTitleBar
@@ -54,6 +54,8 @@ fun GlassMediumFlexibleTopAppBar(
     titleContent: (@Composable () -> Unit)? = null,
     /** 强制单行栏：标题与动作图标同一行，不用可伸缩大标题（标题本身就是入口时用） */
     compact: Boolean = false,
+    isContentScrolled: Boolean? = null,
+    compactMiuixActions: Boolean = false,
     bottomContent: @Composable (ColumnScope.() -> Unit)? = null
 ) {
 
@@ -70,138 +72,122 @@ fun GlassMediumFlexibleTopAppBar(
         }
         return
     }
-    val isMiuix = composeEngine == ComposeEngine.Miuix
-
-    val containerColor = when (LegadoTheme.composeEngine) {
-        ComposeEngine.Material, ComposeEngine.Mochi -> {
-            GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.containerColor() }
+    val subtitleText = subtitle?.takeIf { it.isNotBlank() }
+    if (composeEngine == ComposeEngine.Miuix) {
+        val miuixBehavior = (scrollBehavior as? MiuixGlassScrollBehavior)?.miuixBehavior
+        val contentModifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets)
+        MiuixNativeTopBar(
+            // Miuix 的标题只收字符串，自定义标题改从导航图标位渲染
+            title = if (titleContent == null) title else "",
+            modifier = modifier,
+            contentModifier = contentModifier,
+            subtitle = subtitleText.orEmpty(),
+            scrollBehavior = miuixBehavior,
+            navigationIcon = { if (titleContent != null) titleContent() else navigationIcon() },
+            actions = actions,
+            bottomContent = { if (bottomContent != null) Column(content = bottomContent) },
+            isContentScrolled = isContentScrolled,
+            compactActions = compactMiuixActions,
+        ) {
+            MiuixBlurredTopBar(modifier.background(GlassTopAppBarDefaults.getMiuixAppBarColor()), miuixBehavior) {
+                Column {
+                    MiuixTopAppBar(
+                        modifier = contentModifier,
+                        title = if (titleContent == null) title else "",
+                        subtitle = subtitleText.orEmpty(),
+                        navigationIcon = { if (titleContent != null) titleContent() else navigationIcon() },
+                        actions = actions,
+                        color = Color.Transparent,
+                        defaultWindowInsetsPadding = false,
+                        scrollBehavior = miuixBehavior,
+                    )
+                    bottomContent?.invoke(this)
+                }
+            }
         }
-        ComposeEngine.Miuix -> {
-            GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.getMiuixAppBarColor() }
-        }
+        return
     }
 
-    val scrolledColor = when (LegadoTheme.composeEngine) {
-        ComposeEngine.Material, ComposeEngine.Mochi -> {
-            GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.scrolledContainerColor() }
-        }
-        ComposeEngine.Miuix -> {
-            GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.getMiuixAppBarColor() }
-        }
-    }
-
-    val animatedColor = when (LegadoTheme.composeEngine) {
-        ComposeEngine.Material, ComposeEngine.Mochi -> {
-            val fraction = scrollBehavior?.collapsedFraction ?: 0f
-            lerp(containerColor, scrolledColor, fraction)
-        }
-        ComposeEngine.Miuix -> {
-            containerColor
-        }
-    }
-
+    val containerColor = GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.containerColor() }
+    val scrolledColor = GlassDefaults.secondaryColorOr { GlassTopAppBarDefaults.scrolledContainerColor() }
+    val fraction = scrollBehavior?.collapsedFraction ?: 0f
+    val animatedColor = lerp(containerColor, scrolledColor, fraction)
     val background = modifier.background(color = animatedColor)
-    val finalModifier = when {
-        isMiuix -> background.miuixBarBlur()
-        hazeState != null -> background.responsiveHazeEffect(state = hazeState)
-        else -> background
-    }
+    val finalModifier = hazeState?.let { background.responsiveHazeEffect(state = it) } ?: background
 
     val transparentColors = TopAppBarDefaults.topAppBarColors(
         containerColor = Color.Transparent,
         scrolledContainerColor = Color.Transparent
     )
-    val subtitleText = subtitle?.takeIf { it.isNotBlank() }
-
     Column(
         modifier = finalModifier
     ) {
-        when {
-            isMiuix -> {
-                // Match M3's visible system bars and cutout insets, including parent consumption.
-                MiuixTopAppBar(
-                    modifier = Modifier.windowInsetsPadding(TopAppBarDefaults.windowInsets),
-                    // Miuix 的标题只收字符串，自定义标题改从导航图标位渲染
-                    title = if (titleContent == null) title else "",
-                    subtitle = subtitleText.orEmpty(),
-                    navigationIcon = { if (titleContent != null) titleContent() else navigationIcon() },
-                    actions = actions,
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    scrollBehavior = (scrollBehavior as? MiuixGlassScrollBehavior)?.miuixBehavior
-                )
-            }
-
-            else -> {
-                if (themeSettings.useFlexibleTopAppBar && !compact) {
-                    MediumFlexibleTopAppBar(
-                        modifier = Modifier,
-                        title = {
-                            if (titleContent != null) {
-                                titleContent()
-                            } else {
-                                AdaptiveAnimatedText(
-                                    text = title,
-                                    useCharMode = useCharMode,
-                                    maxLines = 2,
+        if (themeSettings.useFlexibleTopAppBar && !compact) {
+            MediumFlexibleTopAppBar(
+                modifier = Modifier,
+                title = {
+                    if (titleContent != null) {
+                        titleContent()
+                    } else {
+                        AdaptiveAnimatedText(
+                            text = title,
+                            useCharMode = useCharMode,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
+                subtitle = subtitleText?.let { text ->
+                    {
+                        AnimatedTextLine(text = text)
+                    }
+                },
+                navigationIcon = navigationIcon,
+                actions = {
+                    Box(modifier = Modifier.padding(end = 12.dp)) {
+                        TopBarActionsRow { actions() }
+                    }
+                },
+                scrollBehavior = (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
+                colors = transparentColors
+            )
+        } else {
+            TopAppBar(
+                modifier = Modifier,
+                title = {
+                    if (titleContent != null) {
+                        titleContent()
+                    } else {
+                        Column {
+                            AdaptiveAnimatedText(
+                                text = title,
+                                useCharMode = useCharMode,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            subtitleText?.let { text ->
+                                AnimatedTextLine(
+                                    text = text,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
-                        },
-                        subtitle = subtitleText?.let { text ->
-                            {
-                                AnimatedTextLine(text = text)
-                            }
-                        },
-                        navigationIcon = navigationIcon,
-                        actions = {
-                            Box(modifier = Modifier.padding(end = 12.dp)) {
-                                TopBarActionsRow { actions() }
-                            }
-                        },
-                        scrollBehavior = (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
-                        colors = transparentColors
-                    )
-                } else {
-                    TopAppBar(
-                        modifier = Modifier,
-                        title = {
-                            if (titleContent != null) {
-                                titleContent()
-                            } else {
-                                Column {
-                                    AdaptiveAnimatedText(
-                                        text = title,
-                                        useCharMode = useCharMode,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    subtitleText?.let { text ->
-                                        AnimatedTextLine(
-                                            text = text,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        },
-                        navigationIcon = navigationIcon,
-                        actions = {
-                            Box(modifier = Modifier.padding(end = 12.dp)) {
-                                TopBarActionsRow { actions() }
-                            }
-                        },
-                        scrollBehavior = if (compact) null
-                        else (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
-                        colors = transparentColors
-                    )
-                }
-            }
+                        }
+                    }
+                },
+                navigationIcon = navigationIcon,
+                actions = {
+                    Box(modifier = Modifier.padding(end = 12.dp)) {
+                        TopBarActionsRow { actions() }
+                    }
+                },
+                scrollBehavior = if (compact) null
+                else (scrollBehavior as? M3GlassScrollBehavior)?.m3Behavior,
+                colors = transparentColors
+            )
         }
-
         bottomContent?.invoke(this)
     }
 }
