@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - master
+      # 上游同步分支先跑一遍 verify，全绿后再快进 main
+      - 'sync/**'
     paths-ignore:
       - '**/modules/web/**'
   pull_request:
