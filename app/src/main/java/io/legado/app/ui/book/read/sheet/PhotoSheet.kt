@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -44,6 +45,7 @@ fun PhotoSheet(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val scope = rememberCoroutineScope()
     // JPEG 压缩与 MediaStore 写入都不能留在主线程（Bitmap.compress 是 @WorkerThread）；
     // toastOnUi 内部会切回主线程提示。
@@ -55,8 +57,8 @@ fun PhotoSheet(
             }
             val success = saveImageToGallery(context, byteArray)
             context.toastOnUi(
-                if (success) context.getString(R.string.save_success)
-                else context.getString(R.string.save_failed)
+                if (success) resources.getString(R.string.save_success)
+                else resources.getString(R.string.save_failed)
             )
         }
     }
