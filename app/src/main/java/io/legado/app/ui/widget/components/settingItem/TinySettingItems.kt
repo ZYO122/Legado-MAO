@@ -69,6 +69,8 @@ import io.legado.app.ui.widget.components.TinySwitch
 import io.legado.app.ui.widget.components.ValueStepper
 import io.legado.app.ui.widget.components.card.NormalCard
 import io.legado.app.ui.widget.components.card.TextCard
+import io.legado.app.ui.widget.components.coui.CouiSettingMenu
+import io.legado.app.ui.widget.components.coui.canUseCouiSettingMenu
 import io.legado.app.ui.widget.components.icon.AppIcon
 import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenu
 import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenuItem
@@ -242,12 +244,55 @@ fun TinyDropdownSettingItem(
     imageVector: ImageVector? = null,
     modifier: Modifier = Modifier,
     color: Color? = LegadoTheme.colorScheme.surfaceContainerLow,
+    enabled: Boolean = true,
+    /** 本产物跑不了的档位：仍然列出并压灰，点了由 [onUnavailableSelected] 说明原因。 */
+    unavailableValues: Set<String> = emptySet(),
+    onUnavailableSelected: ((String) -> Unit)? = null,
     onValueChange: (String) -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val currentEntry =
         selectedDisplay ?: displayEntries.getOrNull(entryValues.indexOf(selectedValue))
         ?: selectedValue
+    val row: @Composable (onOpen: () -> Unit, anchoredMenu: (@Composable () -> Unit)?) -> Unit =
+        { onOpen, anchoredMenu ->
+            TinySettingItem(
+                title = title,
+                description = description,
+                imageVector = imageVector,
+                modifier = modifier,
+                color = color,
+                enabled = enabled,
+                trailingContent = {
+                    Box {
+                        TextCard(
+                            cornerRadius = 8.dp,
+                            horizontalPadding = 8.dp,
+                            verticalPadding = 4.dp,
+                            text = currentEntry,
+                            backgroundColor = LegadoTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = LegadoTheme.colorScheme.onSurface,
+                        )
+                        anchoredMenu?.invoke()
+                    }
+                },
+                onClick = onOpen,
+            )
+        }
+    if (canUseCouiSettingMenu()) {
+        CouiSettingMenu(
+            selectedValue = selectedValue,
+            displayEntries = displayEntries,
+            entryValues = entryValues,
+            enabled = enabled,
+            unavailableValues = unavailableValues,
+            onUnavailableSelected = onUnavailableSelected,
+            onValueChange = onValueChange,
+        ) { openMenu ->
+            row(openMenu, null)
+        }
+        return
+    }
     val useValueAnchor = LegadoTheme.composeEngine == ComposeEngine.Mochi
     val menu: @Composable () -> Unit = {
         RoundDropdownMenu(
@@ -256,13 +301,21 @@ fun TinyDropdownSettingItem(
             mochiAnchorMaxWidth = 48.dp,
         ) { dismiss ->
             displayEntries.forEachIndexed { index, display ->
+                val value = entryValues[index]
+                val unavailable = value in unavailableValues
                 RoundDropdownMenuItem(
                     text = display,
+                    enabled = !unavailable || onUnavailableSelected != null,
+                    // 压灰但仍可点：由调用方说明该档位不可用的原因。
+                    color = if (unavailable) {
+                        LegadoTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    } else Color.Unspecified,
                     onClick = {
-                        onValueChange(entryValues[index])
                         dismiss()
+                        if (unavailable) onUnavailableSelected?.invoke(value)
+                        else onValueChange(value)
                     },
-                    trailingIcon = if (selectedValue == entryValues[index]) {
+                    trailingIcon = if (selectedValue == value) {
                         {
                             AppIcon(
                                 Icons.Default.Check,
@@ -277,27 +330,7 @@ fun TinyDropdownSettingItem(
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        TinySettingItem(
-            title = title,
-            description = description,
-            imageVector = imageVector,
-            modifier = modifier,
-            color = color,
-            trailingContent = {
-                Box {
-                    TextCard(
-                        cornerRadius = 8.dp,
-                        horizontalPadding = 8.dp,
-                        verticalPadding = 4.dp,
-                        text = currentEntry,
-                        backgroundColor = LegadoTheme.colorScheme.surfaceContainerHigh,
-                        contentColor = LegadoTheme.colorScheme.onSurface,
-                    )
-                    if (useValueAnchor) menu()
-                }
-            },
-            onClick = { showMenu = true },
-        )
+        row({ showMenu = true }, menu.takeIf { useValueAnchor })
 
         if (!useValueAnchor) menu()
     }

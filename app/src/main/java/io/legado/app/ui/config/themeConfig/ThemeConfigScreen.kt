@@ -322,14 +322,23 @@ fun ThemeConfigScreen(
                         }
                     }
                     SearchableSetting("theme.compose_engine") {
+                        val couiSupported = ThemeResolver.isCouiSupported()
+                        val coui = ThemeResolver.COMPOSE_ENGINE_COUI
+                        val selectedValue = if (appShell.composeEngine.equals(coui, ignoreCase = true)) {
+                            if (couiSupported) coui else "material"
+                        } else {
+                            appShell.composeEngine
+                        }
                         // Switching the root theme disposes the menu. Keep it in a separate
                         // window so disposal cannot remove a DecorView child during measurement.
                         CompositionLocalProvider(LocalUseWindowPopupForMochiMenu provides true) {
                             DropdownListSettingItem(
                                 title = stringResource(R.string.compose_engine),
-                                selectedValue = appShell.composeEngine,
-                                displayEntries = stringArrayResource(R.array.composeEngine),
-                                entryValues = stringArrayResource(R.array.composeEngine_value),
+                                selectedValue = selectedValue,
+                                displayEntries = stringArrayResource(R.array.composeEngine) +
+                                    (if (couiSupported) "COUI" else stringResource(R.string.coui_theme_requires_android_14)),
+                                entryValues = stringArrayResource(R.array.composeEngine_value) + coui,
+                                unavailableValues = if (couiSupported) emptySet() else setOf(coui),
                                 onValueChange = { onIntent(ThemeConfigIntent.SetComposeEngine(it)) },
                             )
                         }
@@ -675,8 +684,12 @@ fun ThemeConfigScreen(
 
                 SplicedColumnGroup(title = stringResource(R.string.blur_effects)) {
                     val isMochi = composeEngine == ComposeEngine.Mochi
-                    val blurSupported = composeEngine == ComposeEngine.Material ||
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                    val blurSupported = when (composeEngine) {
+                        ComposeEngine.Material -> true
+                        ComposeEngine.Miuix, ComposeEngine.Mochi ->
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ComposeEngine.Coui -> ThemeResolver.isCouiSupported()
+                    }
                     val blurEnabled = if (isMochi) theme.mochiScrollEdgeBlurEnabled else theme.enableBlur
                     SearchableSetting("theme.is_blur_enable") {
                         SwitchSettingItem(
@@ -689,7 +702,9 @@ fun ThemeConfigScreen(
                             }
                         )
                     }
-                    AnimatedVisibility(visible = !isMochi && blurSupported && theme.enableBlur) {
+                    AnimatedVisibility(visible = !isMochi && composeEngine != ComposeEngine.Coui &&
+                        blurSupported && theme.enableBlur
+                    ) {
                         SearchableSetting("theme.is_blur_progressive_enable") {
                             SwitchSettingItem(
                                 title = stringResource(R.string.is_blur_progressive_enable),
@@ -1315,9 +1330,12 @@ fun ThemeColorSelector(
         modifier = Modifier.fillMaxWidth()
     ) {
         items(themes) { (label, value) ->
+            val displayLabel = if (LegadoTheme.composeEngine == ComposeEngine.Coui && value == "0") {
+                stringResource(R.string.coui_default_palette)
+            } else label
             ThemeColorButton(
                 context = context,
-                label = label,
+                label = displayLabel,
                 value = value,
                 isSelected = selectedTheme == value,
                 isDark = isDark,
@@ -1346,8 +1364,9 @@ fun ThemeColorButton(
     onClick: () -> Unit
 ) {
     // 配色方案由种子色实时生成，开销不小，缓存避免无关重组时重复计算
+    val composeEngine = LegadoTheme.composeEngine
     val colors = remember(
-        value, isDark, isAmoled, paletteStyle, customLightSeedColor, customNightSeedColor
+        value, isDark, isAmoled, paletteStyle, customLightSeedColor, customNightSeedColor, composeEngine
     ) {
         getThemeColorPalette(
             context = context,
@@ -1356,7 +1375,8 @@ fun ThemeColorButton(
             isAmoled = isAmoled,
             paletteStyle = paletteStyle,
             customLightSeedColor = customLightSeedColor,
-            customNightSeedColor = customNightSeedColor
+            customNightSeedColor = customNightSeedColor,
+            composeEngine = composeEngine,
         )
     }
     val borderWidth by animateDpAsState(
@@ -1451,8 +1471,9 @@ fun ThemeCard(
     customLightSeedColor: Int,
     customNightSeedColor: Int
 ) {
+    val composeEngine = LegadoTheme.composeEngine
     val colors = remember(
-        value, isDark, isAmoled, paletteStyle, customLightSeedColor, customNightSeedColor
+        value, isDark, isAmoled, paletteStyle, customLightSeedColor, customNightSeedColor, composeEngine
     ) {
         getThemeColors(
             context = context,
@@ -1461,7 +1482,8 @@ fun ThemeCard(
             isAmoled = isAmoled,
             paletteStyle = paletteStyle,
             customLightSeedColor = customLightSeedColor,
-            customNightSeedColor = customNightSeedColor
+            customNightSeedColor = customNightSeedColor,
+            composeEngine = composeEngine,
         )
     }
 
@@ -1563,7 +1585,8 @@ private fun getThemeColorPalette(
     paletteStyle: String?,
     materialVersion: String? = null,
     customLightSeedColor: Int = 0,
-    customNightSeedColor: Int = 0
+    customNightSeedColor: Int = 0,
+    composeEngine: ComposeEngine,
 ): ThemeColorPalette {
     val appThemeMode = ThemeResolver.resolveThemeMode(value)
     val customSeedColor = if (isDark) customNightSeedColor else customLightSeedColor
@@ -1574,7 +1597,8 @@ private fun getThemeColorPalette(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         materialVersion = materialVersion,
-        customSeedColor = customSeedColor
+        customSeedColor = customSeedColor,
+        composeEngine = composeEngine,
     )
 
     return ThemeColorPalette(
@@ -1594,7 +1618,8 @@ private fun getThemeColors(
     paletteStyle: String?,
     materialVersion: String? = null,
     customLightSeedColor: Int = 0,
-    customNightSeedColor: Int = 0
+    customNightSeedColor: Int = 0,
+    composeEngine: ComposeEngine,
 ): ThemeColors {
     val appThemeMode = ThemeResolver.resolveThemeMode(value)
     val customSeedColor = if (isDark) customNightSeedColor else customLightSeedColor
@@ -1605,7 +1630,8 @@ private fun getThemeColors(
         isAmoled = isAmoled,
         paletteStyle = paletteStyle,
         materialVersion = materialVersion,
-        customSeedColor = customSeedColor
+        customSeedColor = customSeedColor,
+        composeEngine = composeEngine,
     )
 
     return ThemeColors(

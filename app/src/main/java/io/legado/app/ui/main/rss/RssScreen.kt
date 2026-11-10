@@ -54,6 +54,7 @@ import io.legado.app.data.entities.RssSource
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.adaptiveContentPadding
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
+import io.legado.app.ui.widget.components.coui.rememberAppVerticalOverscrollEffect
 import io.legado.app.ui.widget.components.card.GlassCard
 import io.legado.app.ui.widget.components.divider.PillDivider
 import io.legado.app.ui.widget.components.divider.PillHeaderDivider
@@ -197,6 +198,7 @@ fun RssScreen(
             contentWindowInsets = WindowInsets(0)
         ) { paddingValues ->
             LazyVerticalGrid(
+                overscrollEffect = rememberAppVerticalOverscrollEffect(),
                 columns = GridCells.Adaptive(minSize = 72.dp),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = adaptiveContentPadding(

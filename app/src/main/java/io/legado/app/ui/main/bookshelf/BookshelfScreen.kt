@@ -139,11 +139,11 @@ import io.legado.app.ui.widget.components.AppPullToRefresh
 import io.legado.app.ui.widget.components.AppScaffold
 import io.legado.app.ui.widget.components.AppTextField
 import io.legado.app.ui.widget.components.EmptyMessage
+import io.legado.app.ui.widget.components.button.series.SmallToggleButton
+import io.legado.app.ui.widget.components.button.series.ToggleStyle
 import io.legado.app.ui.widget.components.SearchBar
 import io.legado.app.ui.widget.components.alert.AppAlertDialog
 import io.legado.app.ui.widget.components.button.series.SmallPlainButton
-import io.legado.app.ui.widget.components.button.series.SmallToggleButton
-import io.legado.app.ui.widget.components.button.series.ToggleStyle
 import io.legado.app.ui.widget.components.card.NormalCard
 import io.legado.app.ui.widget.components.card.TextCard
 import io.legado.app.ui.widget.components.checkBox.AppCheckbox
@@ -564,7 +564,8 @@ fun BookshelfScreen(
     }
 
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
-    val useNativeSearchButton = isMiuixHyperOs4Enabled()
+    val showAlternateSearchInMenu = LegadoTheme.composeEngine == ComposeEngine.Coui ||
+            isMiuixHyperOs4Enabled()
     var showTopBarMenu by remember { mutableStateOf(false) }
     val toggleShelfFilter = {
         toggleBookshelfFilter(
@@ -633,7 +634,7 @@ fun BookshelfScreen(
                 scrollBehavior = scrollBehavior,
                 isContentScrolled = isContentScrolled,
                 onSearchClick = onSearchClick,
-                onSearchLongClick = onAlternateSearch.takeUnless { useNativeSearchButton },
+                onSearchLongClick = onAlternateSearch.takeUnless { showAlternateSearchInMenu },
                 onSearchQueryChange = { onIntent(BookshelfIntent.SetSearchKey(it)) },
                 onSearchSubmit = { rawQuery ->
                     rawQuery.trim()
@@ -706,7 +707,7 @@ fun BookshelfScreen(
                             expanded = showTopBarMenu,
                             onExpandedChange = { showTopBarMenu = it },
                         ) { dismiss ->
-                            if (useNativeSearchButton) {
+                            if (showAlternateSearchInMenu) {
                                 val searchFirst = uiState.settings.bookshelfSearchActionDirectToSearch
                                 RoundDropdownMenuItem(
                                     text = stringResource(if (searchFirst) R.string.bookshelf_filter else R.string.search),
