@@ -60,6 +60,7 @@ import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.isEpub
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalTxt
+import io.legado.app.help.book.isMarkdown
 import io.legado.app.help.book.isMobi
 import io.legado.app.help.book.removeType
 import io.legado.app.help.config.ReadBookConfig
@@ -1108,6 +1109,10 @@ class ReadBookViewModel(
                     }
                     if (book.isMobi) {
                         io.legado.app.model.localBook.MobiFile.clear()
+                    }
+                    if (book.isMarkdown) {
+                        BookHelp.clearCache(book)
+                        io.legado.app.model.localBook.MarkdownFile.clear()
                     }
                     loadChapterList(book)
                 }
