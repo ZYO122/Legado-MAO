@@ -5,6 +5,12 @@ import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -23,7 +29,11 @@ import io.legado.app.ui.widget.components.modalBottomSheet.AppModalBottomSheet
 import io.legado.app.ui.widget.image.PhotoView
 import io.legado.app.utils.ImageSaveUtils.saveImageToGallery
 import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.File
 
 @Composable
 fun PhotoSheet(
@@ -34,28 +44,53 @@ fun PhotoSheet(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // JPEG 压缩与 MediaStore 写入都不能留在主线程（Bitmap.compress 是 @WorkerThread）；
+    // toastOnUi 内部会切回主线程提示。
+    val saveImage: (Bitmap) -> Unit = { bitmap ->
+        scope.launch(Dispatchers.IO) {
+            val byteArray = ByteArrayOutputStream().use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                stream.toByteArray()
+            }
+            val success = saveImageToGallery(context, byteArray)
+            context.toastOnUi(
+                if (success) context.getString(R.string.save_success)
+                else context.getString(R.string.save_failed)
+            )
+        }
+    }
+
+    // 章节图路径要查章节表（Room），不能在组合/工厂里同步做：先在 IO 上解析，
+    // 解析完成前不建 AndroidView，避免先按 URL 分支加载再闪成错误图。
+    val cachedBitmap = remember(src) { ImageProvider.get(src) }
+    var localFile by remember(src, chapterIndex) { mutableStateOf<File?>(null) }
+    var resolved by remember(src, chapterIndex) { mutableStateOf(cachedBitmap != null) }
+    LaunchedEffect(src, sourceOrigin, chapterIndex, cachedBitmap) {
+        if (cachedBitmap != null) return@LaunchedEffect
+        localFile = withContext(Dispatchers.IO) {
+            ReadBook.book?.let { book ->
+                ImageProvider.imageFile(
+                    book, src, ImageProvider.chapterOf(book, chapterIndex),
+                )
+            }
+        }
+        resolved = true
+    }
 
     AppModalBottomSheet(
         show = show,
         onDismissRequest = onDismissRequest,
         title = stringResource(R.string.photo),
     ) {
-        AndroidView(
-            factory = { ctx ->
-                PhotoView(ctx).apply {
-                    // Try to load from ImageProvider first
-                    val bitmap = ImageProvider.get(src)
-                    if (bitmap != null) {
-                        setImageBitmap(bitmap)
-                    } else {
-                        // Try to load from local file
-                        val file = ReadBook.book?.let { book ->
-                            ImageProvider.imageFile(
-                                book, src, ImageProvider.chapterOf(book, chapterIndex),
-                            )
-                        }
-                        if (file?.exists() == true) {
-                            ImageLoader.load(ctx, file)
+        if (resolved) {
+            AndroidView(
+                factory = { ctx ->
+                    PhotoView(ctx).apply {
+                        if (cachedBitmap != null) {
+                            setImageBitmap(cachedBitmap)
+                        } else if (localFile?.exists() == true) {
+                            ImageLoader.load(ctx, localFile)
                                 .error(R.drawable.image_loading_error)
                                 .dontTransform()
                                 .downsample(DownsampleStrategy.NONE)
@@ -78,30 +113,18 @@ fun PhotoSheet(
                                 .downsample(DownsampleStrategy.NONE)
                                 .into(this)
                         }
-                    }
 
-                    // Long press to save
-                    setOnLongClickListener {
-                        val drawable = drawable
-                        val bmp = (drawable as? BitmapDrawable)?.bitmap
-                        if (bmp != null) {
-                            val byteArray = ByteArrayOutputStream().use { stream ->
-                                bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                                stream.toByteArray()
-                            }
-                            val success = saveImageToGallery(context, byteArray)
-                            context.toastOnUi(
-                                if (success) context.getString(R.string.save_success)
-                                else "保存失败"
-                            )
+                        // Long press to save
+                        setOnLongClickListener {
+                            (drawable as? BitmapDrawable)?.bitmap?.let(saveImage)
+                            true
                         }
-                        true
                     }
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 8.dp),
-        )
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
+            )
+        }
     }
 }
