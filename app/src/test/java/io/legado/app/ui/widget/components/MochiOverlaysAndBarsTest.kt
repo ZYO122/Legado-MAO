@@ -849,8 +849,11 @@ class MochiOverlaysAndBarsTest {
                 )
             }
         }
-        compose.onNode(hasScrollToIndexAction() and hasAnyAncestor(hasTestTag("overflow-tabs")))
-            .performScrollToIndex(7)
+        // OS4 玻璃标签栏改用 horizontalScroll（非 LazyList）：标签全在语义树里，
+        // 直接对目标标签 performScrollTo 即可验证可滚动性。
+        compose.onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("overflow-tabs")))
+            .assertExists()
+        compose.onNodeWithText("Group 8").performScrollTo()
         compose.onNodeWithText("Group 8").performTouchInput { click() }
         compose.runOnIdle { assertEquals(7, selected) }
     }
