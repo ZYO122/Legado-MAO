@@ -34,7 +34,6 @@ import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.model.ImageProvider
 import io.legado.app.utils.dpToPx
 import kotlinx.coroutines.CancellationException
-import splitties.init.appCtx
 
 sealed interface LegacyReaderChapterPaginationResult {
     data class Success(val pages: List<ReaderPage>) : LegacyReaderChapterPaginationResult
@@ -244,7 +243,7 @@ object LegacyReaderChapterPaginator {
             },
             htmlSourceResolver = AndroidReaderHtmlSourceResolver(
                 baseTextSizePx = bodyPaint.textSize,
-                density = appCtx.resources.displayMetrics.density,
+                density = paginationStyle.density,
             ),
             imageOptionsResolver = LegacyReaderImageOptionsResolver,
             metrics = measureMetrics,
@@ -337,6 +336,7 @@ object LegacyReaderChapterPaginator {
                 reviewBubbles = ReadBookConfig.reviewBubbleStyle != "source",
                 reviewBubbleSizeScale = reviewBubbleScale,
                 reviewBubbleAspectRatio = reviewBubbleAspect,
+                localImageDensity = paginationStyle.density,
                 imageAvailableWidthPx = (
                     viewportWidthPx / paginationStyle.columnCount(viewportWidthPx, viewportHeightPx) -
                         paginationStyle.paddingLeftPx - paginationStyle.paddingRightPx -
