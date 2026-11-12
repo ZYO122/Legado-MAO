@@ -1,49 +1,49 @@
 {
-  "tag_name": "3.26.3-Beta.3",
-  "name": "Pre-release 3.26.3-Beta.3",
-  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* reader：书签角标精确贴齐页眉底边\n* backup：also ignore floating bottom bar preferences\n* reader：支持本地 EPUB 和 MOBI 富文本外观\n* manga：保留混合压缩包导入并支持空目录重选\n* read-aloud：播放出错时保护已下载音频\n* read-aloud：到达失败句后再暂停流式朗读\n* backup：keep theme preferences when ignoring theme config\n* settings：使用配置感知资源构建搜索索引\n* reader：把页眉底边传给书签角标锚点\n* reader：书签角标锚定到页眉底边\n* reader：下沉朗读进度初值并收紧行数门禁\n* manga：统一本地漫画图片 URL，修复 Coil 解析失败\n* manga：桌面快捷方式「最后阅读」支持本地漫画\n* manga：处理本地漫画导入和阅读的审查意见\n* read-aloud：保存设置子页的返回状态\n* read-aloud：为进度事件绑定书籍章节与会话\n* read-aloud：校验下载音频并区分目录状态\n* read-aloud：统一句中续读的发声坐标\n* read-aloud：保留合成失败后的整章重试\n* read-aloud：对齐离线下载与实时分页输入\n* read-aloud：隔离播放浮层输入并恢复设置面板\n* reader：正文重排后更新卷页快照\n* reader：避让横屏侧边导航栏\n* read-aloud：让翻页和高亮跟随实际媒体位置\n* read-aloud：优先播放下载音频并同步处理合成异常\n* read-aloud：区分整章下载和部分完成\n* read-aloud：分段提交系统 TTS 长文本并限制重试\n* read-aloud：保留加载中的暂停并隔离旧章定位\n* reader：隔离切书前后的进度保存\n* read-aloud：修复分卷标题朗读后无法续章\n* manga：修复本地漫画文件夹 EISDIR\n",
+  "tag_name": "3.26.3-Beta.4",
+  "name": "Pre-release 3.26.3-Beta.4",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* ui：为 Material 标签尾部按钮保留 16dp 边距\n* ui：优化 TabRow OS4 样式、阴影与引擎边距\n* reader：支持本地书行内图片与链接 (#2599)\n* theme：主题相关适配\n* photo：图片保存的压缩与相册写入移出主线程\n* theme：修复 Mochi 主题在 materialkolor 6.0.0 下的运行期崩溃\n* theme：接入 COUI 主题及组件适配\n* cache：恢复缓存维护跳过提示并补章级取消检查\n* reader：收口 iOS 仿真渲染资源生命周期（#2589 P2-1/R1）\n* markdown：处理 P2 后续（content URI 兄弟图、目录块级上下文、内嵌图短占位）\n* markdown：缓存清理收口到 BookHelp.clearCache，保持 ReadBookViewModel 行数棘轮\n* markdown：收口合并前审查项（缓存失效、HTML 清洗与图片上限）\n* video：收尾 P3 审查建议（URL 归一化、缓存断言与全屏回退）\n* video：为带请求头的本地 MPD 补 DASH mimeType\n* theme：接入 Miuix HyperOS 4 玻璃组件\n* reader：跨页文本选择改为可配置\n* reader：支持同章跨页文本选择\n* ai：修复聊天输入框深色主题下的光标颜色\n* markdown：修正 BOM 字节序解码与图片地址规则语法拦截\n* video：剧集切换时保持全屏方向\n* video：支持本地文件作为视频源\n* markdown：修复图片地址脚本执行与章节切分边界\n* cache：修复缓存维护的并发快照与查询失败处理\n* markdown：支持本地 Markdown 书籍阅读\n* cache：完善缓存维护，修复入口无响应与字数整理触发\n",
   "prerelease": true,
-  "created_at": "2026-11-10T03:39:43Z",
+  "created_at": "2026-11-12T05:28:10Z",
   "assets": [
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.3/MAO-3.26.3-Beta.3-A.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.4/MAO-3.26.3-Beta.4-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-10T04:02:14Z",
+      "created_at": "2026-11-12T05:53:35Z",
       "download_count": 0,
-      "id": 730030896,
-      "name": "MAO-3.26.3-Beta.3-A.apk",
+      "id": 738264207,
+      "name": "MAO-3.26.3-Beta.4-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/730030896"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/738264207"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.3/MAO-3.26.3-Beta.3-B.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.4/MAO-3.26.3-Beta.4-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-10T04:02:14Z",
+      "created_at": "2026-11-12T05:53:35Z",
       "download_count": 0,
-      "id": 730030897,
-      "name": "MAO-3.26.3-Beta.3-B.apk",
+      "id": 738264208,
+      "name": "MAO-3.26.3-Beta.4-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/730030897"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/738264208"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.3/MAO-3.26.3-Beta.3.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.4/MAO-3.26.3-Beta.4.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-10T04:02:14Z",
+      "created_at": "2026-11-12T05:53:35Z",
       "download_count": 0,
-      "id": 730030893,
-      "name": "MAO-3.26.3-Beta.3.apk",
+      "id": 738264210,
+      "name": "MAO-3.26.3-Beta.4.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/730030893"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/738264210"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.3/mapping.txt",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.4/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-11-10T04:02:14Z",
+      "created_at": "2026-11-12T05:53:35Z",
       "download_count": 0,
-      "id": 730030895,
+      "id": 738264216,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/730030895"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/738264216"
     }
   ]
 }
