@@ -30,7 +30,7 @@ val appName = "legado"
 val isBetaBuild = providers.gradleProperty("beta").isPresent
 val versionCodeOverride = providers.gradleProperty("versionCode").map(String::toInt).orNull
 // 正式版与测试版共用同一个 versionCode，手工递增，发版前确认大于已发布版本
-val currentVersionCode = 24
+val currentVersionCode = 25
 val baseVersionName = "$versionMajor.$versionMinor.$versionPatch"
 val versionSuffix = versionProps["VERSION_SUFFIX"]?.toString()?.toInt() ?: 1
 // 正式版即基础版本号；加 -Pbeta 构建测试版，后缀取 version.properties 的 VERSION_SUFFIX（如 3.26.1-Beta.1）
