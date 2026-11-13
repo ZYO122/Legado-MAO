@@ -1,5 +1,6 @@
 package io.legado.app.ui.widget.components.menu
 
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -302,7 +303,14 @@ private fun CouiActions(
         } else {
             // 跟随同排 TopBarActionButton：只有 COUI 原生胶囊按钮才带那层玻璃底，
             // 普通 IconButton 会让 ⋮ 成为整排里唯一没有玻璃的按钮。
-            val capsule = rememberCouiCapsuleRenderer()
+            // rememberCouiCapsuleRenderer 是 API 34 的 COUI 渲染器：低版本系统上
+            // CouiFloatingRenderer.standalone() 会触发类校验失败（不是这里 catch 的两类异常），
+            // 所以先按系统版本短路，未支持时退回普通 IconButton。
+            val capsule = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                rememberCouiCapsuleRenderer()
+            } else {
+                null
+            }
             if (ThemeResolver.isCouiSupported() && LocalAppCouiNativeToolbar.current &&
                 capsule != null
             ) {

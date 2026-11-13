@@ -54,8 +54,8 @@ class BookInfoMenuContractTest {
         assertTrue("删除提示缺少勾选态", source.contains("checked = state.deleteAlertEnabled"))
         assertTrue("私密标记缺少勾选态", source.contains("checked = state.bookPrivate"))
         assertTrue(
-            "禁用阅读记录缺少勾选态",
-            source.contains("checked = book.disableReadRecord"),
+            "独立关闭阅读记录缺少勾选态",
+            source.contains("checked = book?.disableReadRecord == true"),
         )
     }
 
@@ -71,26 +71,25 @@ class BookInfoMenuContractTest {
 
     private companion object {
         const val SCREEN = "io/legado/app/ui/book/info/BookInfoScreen.kt"
+        // 本地定制：「拷贝目录 URL」「回到顶部」「刷新」已从 ⋮ 菜单移除（刷新由详情页下拉承担，
+        // 枚举仍保留供其它入口复用）；「阅读记录」改由页面卡片入口承担。
+        // 故不要求它们在详情页源码里绑定。
         val ITEMS = listOf(
             "CustomButton",
             "Edit",
-            "Refresh",
-            "ReadRecord",
-            "ToggleReadRecordDisabled",
             "SyncRemote",
             "Upload",
             "Login",
             "SetSourceVariable",
             "SetBookVariable",
             "CopyBookUrl",
-            "CopyTocUrl",
-            "Top",
             "ToggleCanUpdate",
             "ToggleSplitLongChapter",
             "ToggleDeleteAlert",
             "ClearCache",
             "ShowLog",
             "TogglePrivate",
+            "ToggleDisableReadRecord",
         )
     }
 }

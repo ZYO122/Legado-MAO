@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 136,
-    "identityHash": "00000000000000000000000000000000",
+    "identityHash": "3c54206b775b5db7e9041b1b079adc89",
     "entities": [
       {
         "tableName": "books",
@@ -5863,8 +5863,7 @@
           {
             "fieldPath": "expectedSentenceCount",
             "columnName": "expectedSentenceCount",
-            "affinity": "INTEGER",
-            "notNull": false
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -6102,7 +6101,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6289aa3a11acfe1d9afc4a308f2988fc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3c54206b775b5db7e9041b1b079adc89')"
     ]
   }
 }

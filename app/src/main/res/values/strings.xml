@@ -1466,7 +1466,7 @@
     <string name="upload_book_fail">Upload Fail</string>
     <string name="download_book_success">Download Success</string>
     <string name="download_book_fail">Download Fail</string>
-    <string name="upload_to_remote">Upload</string>
+    <string name="upload_to_remote">Upload WebDAV</string>
     <string name="add_remote_book">Remote Books</string>
     <string name="bitmap_cache_size_summary">Current cache max size %1$s MB</string>
     <string name="bitmap_cache_size">Bitmap Cache Size</string>
@@ -1687,6 +1687,7 @@
     <string name="private_current_password_title">Current password</string>
     <string name="private_unlock_password_title">Enter the local password</string>
     <string name="private_unlock_password_error">Wrong password</string>
+    <string name="private_book">Private book</string>
     <string name="private_mark_book">Mark as private</string>
     <string name="private_unmark_book">Remove private mark</string>
     <string name="private_marked_books">Updated the private flag of %1$d books</string>
@@ -1973,9 +1974,9 @@
     <string name="onboarding_next_done">Done</string>
     <string name="onboarding_restoring">Restoring…</string>
     <string name="onboarding_jianguoyun_limit">Due to the Jianguoyun limit on the number of listed files, some backups may not be shown. Please clean up old backups.</string>
-    <string name="onboarding_restore_error_dialog">WebDavError\n%1$s\nWill restore from local backup.</string>
-    <string name="onboarding_webdav_restore_error">WebDav restore error\n%1$s</string>
-    <string name="onboarding_webdav_test_error">WebDavError\n%1$s</string>
+    <string name="onboarding_restore_error_dialog">WebDAVError\n%1$s\nWill restore from local backup.</string>
+    <string name="onboarding_webdav_restore_error">WebDAV restore error\n%1$s</string>
+    <string name="onboarding_webdav_test_error">WebDAVError\n%1$s</string>
     <string name="onboarding_local_restore_error">Local restore error\n%1$s</string>
     <string name="config_btn">Configure Bottom Buttons</string>
     <string name="more_actions_config">Configure More Menu</string>
@@ -2207,7 +2208,7 @@
     <string name="top_bar_button_style">Top Bar Button Style</string>
     <string name="merge_top_bar_actions">Merge Top Bar Buttons</string>
     <string name="enable_select_vibrator">Vibrate When Selecting Text</string>
-    <string name="re_sync_webdav">Resync Remote Books</string>
+    <string name="re_sync_webdav">Sync WebDAV</string>
     <string name="underline_padding">Underline Gap</string>
 
     <!-- Missing strings -->

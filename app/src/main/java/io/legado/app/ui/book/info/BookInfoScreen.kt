@@ -54,9 +54,9 @@ import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.outlined.Book
@@ -163,7 +163,6 @@ import io.legado.app.ui.widget.components.topbar.GlassTopAppBarScrollBehavior
 import io.legado.app.ui.widget.components.topbar.M3GlassScrollBehavior
 import io.legado.app.ui.widget.components.topbar.MiuixGlassScrollBehavior
 import io.legado.app.ui.widget.components.topbar.MiuixNativeTopBar
-import io.legado.app.ui.widget.components.topbar.TopBarActionButton
 import io.legado.app.ui.widget.components.topbar.TopBarActionsRow
 import io.legado.app.ui.widget.components.mochi.ProvideMochiScrollBlurProgress
 import io.legado.app.ui.widget.components.topbar.TopBarNavigationButton
@@ -175,6 +174,7 @@ import io.legado.app.utils.openUrl
 import kotlinx.collections.immutable.ImmutableList
 import io.legado.app.ui.widget.components.menu.AppAction
 import io.legado.app.ui.widget.components.menu.AppActionGroup
+import io.legado.app.ui.widget.components.topbar.TopBarActionButton
 import io.legado.app.ui.widget.components.topbar.TopBarActionMenu
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -904,6 +904,32 @@ private fun resolveBookInfoBackdropStyle(
 /** 详情页更多菜单的稳定 ID 前缀：`book_` + `BookInfoMenuAction.name`。 */
 private const val MENU_PREFIX = "book_"
 
+
+@Composable
+private fun BookInfoTopBarActions(
+    state: BookInfoUiState,
+    onMenuAction: (BookInfoMenuAction) -> Unit,
+) {
+    // 未验证时只留返回：编辑/分享/更多都会导出真实书信息
+    if (state.privateLocked) return
+    if (state.inBookshelf) {
+        TopBarActionButton(
+            onClick = { onMenuAction(BookInfoMenuAction.Edit) },
+            imageVector = Icons.Default.Edit,
+            contentDescription = stringResource(R.string.edit)
+        )
+    }
+    TopBarActionButton(
+        onClick = { onMenuAction(BookInfoMenuAction.Share) },
+        imageVector = Icons.Default.Share,
+        contentDescription = stringResource(R.string.share)
+    )
+    BookInfoOverflowAction(
+        state = state,
+        onMenuAction = onMenuAction,
+    )
+}
+
 @Composable
 private fun BookInfoOverflowAction(
     state: BookInfoUiState,
@@ -911,8 +937,9 @@ private fun BookInfoOverflowAction(
 ) {
     val book = state.book
     val source = state.bookSourceUi
-    // 顺序按本地定制：编辑 / 登录 / 变量 / 拷贝 / 清理缓存 / 日志 / 删除提醒 / 允许更新 / 私密 / 关阅读记录。
-    // ID = 前缀 + 枚举名，分派时无歧义还原成动作。
+    // 顺序按本地定制：编辑 / 登录 / 自定义按钮 / 变量与拷贝 / WebDAV / 拆分长章 /
+    // 清理缓存 / 日志 / 删除提醒 / 允许更新 / 私密书籍。
+    // 刷新已删除：详情页下拉即可刷新。ID = 前缀 + 枚举名，分派时无歧义还原成动作。
     TopBarActionMenu(
         groups = persistentListOf(
             AppActionGroup(
@@ -934,18 +961,14 @@ private fun BookInfoOverflowAction(
                             )
                         )
                     }
-                    add(
-                        AppAction(
-                            id = "$MENU_PREFIX${BookInfoMenuAction.Refresh.name}",
-                            label = stringResource(R.string.refresh),
+                    if (source?.hasCustomButton == true) {
+                        add(
+                            AppAction(
+                                id = "$MENU_PREFIX${BookInfoMenuAction.CustomButton.name}",
+                                label = stringResource(R.string.custom_button),
+                            )
                         )
-                    )
-                    add(
-                        AppAction(
-                            id = "$MENU_PREFIX${BookInfoMenuAction.ReadRecord.name}",
-                            label = stringResource(R.string.read_record),
-                        )
-                    )
+                    }
                     if (source != null) {
                         add(
                             AppAction(
@@ -963,6 +986,29 @@ private fun BookInfoOverflowAction(
                             AppAction(
                                 id = "$MENU_PREFIX${BookInfoMenuAction.CopyBookUrl.name}",
                                 label = stringResource(R.string.copy_book_url),
+                            )
+                        )
+                    }
+                    if (book?.isLocal == true) {
+                        add(
+                            AppAction(
+                                id = "$MENU_PREFIX${BookInfoMenuAction.SyncRemote.name}",
+                                label = stringResource(R.string.re_sync_webdav),
+                            )
+                        )
+                        add(
+                            AppAction(
+                                id = "$MENU_PREFIX${BookInfoMenuAction.Upload.name}",
+                                label = stringResource(R.string.upload_to_remote),
+                            )
+                        )
+                    }
+                    if (book?.isLocal == true && book.type and BookType.text > 0) {
+                        add(
+                            AppAction(
+                                id = "$MENU_PREFIX${BookInfoMenuAction.ToggleSplitLongChapter.name}",
+                                label = stringResource(R.string.split_long_chapter),
+                                checked = book.splitLongChapter,
                             )
                         )
                     }
@@ -1002,47 +1048,14 @@ private fun BookInfoOverflowAction(
                             checked = state.bookPrivate,
                         )
                     )
-                    if (state.inBookshelf && book != null) {
-                        add(
-                            AppAction(
-                                id = "$MENU_PREFIX${BookInfoMenuAction.ToggleReadRecordDisabled.name}",
-                                label = stringResource(R.string.book_disable_read_record),
-                                checked = book.disableReadRecord,
-                            )
+                    // 单独为本书关闭阅读记录：本地菜单项，卡片里没有替代入口
+                    add(
+                        AppAction(
+                            id = "$MENU_PREFIX${BookInfoMenuAction.ToggleDisableReadRecord.name}",
+                            label = stringResource(R.string.book_disable_read_record),
+                            checked = book?.disableReadRecord == true,
                         )
-                    }
-                    // 其余项
-                    if (source?.hasCustomButton == true) {
-                        add(
-                            AppAction(
-                                id = "$MENU_PREFIX${BookInfoMenuAction.CustomButton.name}",
-                                label = stringResource(R.string.custom_button),
-                            )
-                        )
-                    }
-                    if (book?.isLocal == true) {
-                        add(
-                            AppAction(
-                                id = "$MENU_PREFIX${BookInfoMenuAction.SyncRemote.name}",
-                                label = stringResource(R.string.re_sync_webdav),
-                            )
-                        )
-                        add(
-                            AppAction(
-                                id = "$MENU_PREFIX${BookInfoMenuAction.Upload.name}",
-                                label = stringResource(R.string.upload_to_remote),
-                            )
-                        )
-                    }
-                    if (book?.isLocal == true && book.type and BookType.text > 0) {
-                        add(
-                            AppAction(
-                                id = "$MENU_PREFIX${BookInfoMenuAction.ToggleSplitLongChapter.name}",
-                                label = stringResource(R.string.split_long_chapter),
-                                checked = book.splitLongChapter,
-                            )
-                        )
-                    }
+                    )
                 }.toImmutableList(),
             ),
         ),
@@ -1053,6 +1066,14 @@ private fun BookInfoOverflowAction(
         },
     )
 }
+
+private data class BookInfoBackdropState(
+    val name: String,
+    val author: String,
+    val coverPath: String?,
+    val sourceOrigin: String?,
+    val style: BookInfoBackdropStyle,
+)
 
 @Composable
 private fun BookInfoBackdrop(

@@ -59,12 +59,13 @@ class BatchImportConfigPageContractTest {
         assertTrue("保留原名应直接回传开关新值", source.contains("SetImportKeepName(it)"))
         assertTrue("保留分组应直接回传开关新值", source.contains("SetImportKeepGroup(it)"))
         assertTrue("保留启用应直接回传开关新值", source.contains("SetImportKeepEnable(it)"))
-        // 棘轮：行内 BookSourceItemMenu 是另一种形态，本轮刻意不动。
+        // 行内 BookSourceItemMenu 也已迁到 AppActionMenu，BookSourceScreen 不再手画混合菜单。
         assertEquals(
-            "BookSourceScreen 本轮只移除导入面板那处混合菜单",
-            1,
+            "BookSourceScreen 不应再出现 RoundDropdownMenu",
+            0,
             Regex("RoundDropdownMenu\\(").findAll(source).count(),
         )
+        assertTrue("行内菜单应走 AppActionMenu", source.contains("AppActionMenu("))
     }
 
     @Test
