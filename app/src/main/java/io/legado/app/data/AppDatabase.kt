@@ -136,7 +136,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 135,
+    version = 136,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -288,6 +288,10 @@ val appDb by lazy {
         // read_aloud_audio_downloads 新增 expectedSentenceCount：旧下载记录只有成功文件清单，
         // 无法从中判断是否整章完成。上游把这次升级放在 134，本地 134 已被高亮边框占用，故走 135。
         AutoMigration(from = 134, to = 135),
+        // highlight_rules 新增四列夜间颜色：可空（null = 跟随白天那一栏），老规则读回来
+        // 四列都是 NULL，解析口径见 HighlightRule.colorsFor。上游把这次升级放在 135，
+        // 本地 135 已随 3.26.2 发布（expectedSentenceCount），故夜间颜色走 135 → 136。
+        AutoMigration(from = 135, to = 136),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
