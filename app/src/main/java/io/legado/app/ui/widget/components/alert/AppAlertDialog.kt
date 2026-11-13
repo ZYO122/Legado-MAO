@@ -1,6 +1,5 @@
 package io.legado.app.ui.widget.components.alert
 
-import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +35,7 @@ import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.LegadoTheme.composeEngine
 import io.legado.app.ui.theme.LocalAppUiConfiguration
 import io.legado.app.ui.theme.LocalHasMiuixPopupHost
+import io.legado.app.ui.theme.ThemeResolver
 import io.legado.app.ui.theme.LocalMiuixBarBackdrop
 import io.legado.app.ui.theme.ProvideAppDensity
 import io.legado.app.ui.theme.rememberMochiOverlayBackdrop
@@ -71,15 +71,14 @@ fun AppAlertDialog(
     onDismiss: (() -> Unit)? = null,
     /** 标题居中（表单类弹窗与输入框中线对齐时用）。 */
     titleCenter: Boolean = false,
-    /** 仅 COUI 引擎：使用弹窗材质。需要 API 33+ 与页面窗口背景源，缺少时退回不透明表面。 */
-    couiMaterial: Boolean = true,
 ) {
     when (composeEngine) {
         ComposeEngine.Miuix -> {
             val themeSettings = LocalAppUiConfiguration.current.theme
+            // 开关打开后只走玻璃；无玻璃设施的独立窗口（如朗读悬浮窗）才退回窗口弹窗。
             val useGlassContainer = themeSettings.useHyperOs4Components &&
-                LocalHasMiuixPopupHost.current &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                ThemeResolver.isBlurSupported() &&
+                LocalAppGlassOverlay.current != null
             val backdrop = LocalMiuixBarBackdrop.current
             val glassOverlay = LocalAppGlassOverlay.current
             val dialogBody: @Composable () -> Unit = {
@@ -266,10 +265,8 @@ fun AppAlertDialog(
         }
         ComposeEngine.Coui -> {
             val windowBackdrop = rememberCouiWindowBackdrop()
-            // 材质实时采样页面窗口；缺源或低于 API 33 时退回不透明表面，不让库的 check 抛错。
-            val useMaterial = couiMaterial &&
-                windowBackdrop != null &&
-                CouiDialogDefaults.isMaterialSupported()
+            // COUI 弹窗只有材质形态；AppTheme 在 COUI 引擎下必定提供页面背景源。
+            val useMaterial = windowBackdrop != null && CouiDialogDefaults.isMaterialSupported()
             val dark = CouiTheme.isDark
             CouiDialog(
                 modifier = modifier,
@@ -343,7 +340,6 @@ fun <T> AppAlertDialog(
     onDismiss: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     content: (@Composable (T) -> Unit)? = null,
-    couiMaterial: Boolean = true,
 ) {
     var cachedData by remember { mutableStateOf(data) }
 
@@ -372,7 +368,6 @@ fun <T> AppAlertDialog(
             dismissText = dismissText,
             onDismiss = onDismiss,
             content = content?.let { { it(currentData) } },
-            couiMaterial = couiMaterial,
         )
     }
 }
