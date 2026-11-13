@@ -855,11 +855,10 @@ class MochiOverlaysAndBarsTest {
                 )
             }
         }
-        // OS4 玻璃标签栏改用 horizontalScroll（非 LazyList）：标签全在语义树里，
-        // 直接对目标标签 performScrollTo 即可验证可滚动性。
+        // HyperOS 4 玻璃标签栏用 horizontalScroll 承载溢出：语义树只暴露 ScrollBy，
+        // 没有 ScrollToIndex/IndexForKey，因此按内容滚动而不是按索引滚动。
         compose.onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("overflow-tabs")))
-            .assertExists()
-        compose.onNodeWithText("Group 8").performScrollTo()
+            .performScrollToNode(hasText("Group 8"))
         compose.onNodeWithText("Group 8").performTouchInput { click() }
         compose.runOnIdle { assertEquals(7, selected) }
     }
