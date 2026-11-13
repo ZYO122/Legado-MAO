@@ -39,17 +39,16 @@ buildscript {
 
 // Keep this applied script in Groovy: current Lint/FIR crashes on the Kotlin script's
 // generated script class. Lint remains enabled, including analysis of this build logic.
-// This transform patches the pinned Mochi 0.2.0 artifact before AGP extracts classes,
+// This transform patches the pinned Mochi artifact before AGP extracts classes,
 // so unit tests, D8 and R8 all see the patched bytecode:
 //  1. Redirect the one Backdrop 1.x call to the app shim.
 //  2. Rewrite material-color-utilities' DynamicScheme owner, which moved from
-//     com.materialkolor.scheme to com.materialkolor.dynamiccolor in 6.0.0. Mochi 0.2.0
-//     was compiled against 4.1.1 and the app resolves 6.0.0 (required by material3 1.5),
+//     com.materialkolor.scheme to com.materialkolor.dynamiccolor in 6.0.0. Mochi was
+//     compiled against 4.1.1 and the app resolves 6.0.0 (required by material3 1.5),
 //     so without the rewrite the Mochi theme crashes with NoSuchMethodError at runtime.
 // The Scheme* constructor shapes are unchanged across that move, only the owner differs.
 @CacheableTransform
 abstract class MochiCompatTransform implements TransformAction<TransformParameters.None> {
-    private static final String MOCHI_AAR = 'mochi-compose-0.2.0.aar'
     private static final String GLASS_PIPELINE =
         'ui/feice/mochi/effect/glass/engine/GlassPipelineKt.class'
     private static final String OLD_DYNAMIC_SCHEME = 'com/materialkolor/scheme/DynamicScheme'
@@ -63,7 +62,8 @@ abstract class MochiCompatTransform implements TransformAction<TransformParamete
     @Override
     void transform(TransformOutputs outputs) {
         File input = inputArtifact.get().asFile
-        if (input.name != MOCHI_AAR) {
+        // 按文件名前缀判断，不认版本号：升级 mochi 不用再改这里
+        if (!input.name.startsWith('mochi-compose-') || !input.name.endsWith('.aar')) {
             outputs.file(input)
             return
         }
@@ -71,12 +71,19 @@ abstract class MochiCompatTransform implements TransformAction<TransformParamete
         int[] patches = [0, 0] as int[]
         byte[] patched = rewriteArchive(input.bytes, false, patches)
         if (patches[0] != 1) {
-            throw new IllegalStateException("Mochi 0.2.0 Backdrop patch expected one call; found ${patches[0]}. Review the published artifact.")
+            throw new IllegalStateException(
+                "Mochi Backdrop patch expected exactly one RenderEffectKt.effect call in ${input.name}; " +
+                    "found ${patches[0]}. If the artifact moved to Backdrop 2.x, delete this transform " +
+                    "and MochiBackdropCompat."
+            )
         }
         if (patches[1] < 1) {
-            throw new IllegalStateException("Mochi 0.2.0 DynamicScheme patch expected references; found ${patches[1]}. Review the published artifact.")
+            throw new IllegalStateException(
+                "Mochi DynamicScheme patch expected references in ${input.name}; found ${patches[1]}. " +
+                    "Review the published artifact."
+            )
         }
-        outputs.file(MOCHI_AAR).bytes = patched
+        outputs.file(input.name).bytes = patched
     }
 
     private static byte[] rewriteArchive(byte[] bytes, boolean jar, int[] patches) {

@@ -90,6 +90,8 @@ import io.legado.app.ui.widget.components.card.GlassCard
 import io.legado.app.ui.widget.components.dialog.ColorPickerSheet
 import io.legado.app.ui.widget.components.dialog.TimePickerDialog
 import io.legado.app.ui.widget.components.icon.AppIcons
+import io.legado.app.ui.widget.components.menu.AppChoiceDropdown
+import io.legado.app.ui.widget.components.menu.AppChoiceOption
 import io.legado.app.ui.widget.components.menuItem.LocalUseWindowPopupForMochiMenu
 import io.legado.app.ui.widget.components.settingItem.ClickableSettingItem
 import io.legado.app.ui.widget.components.settingItem.DropdownListSettingItem
@@ -105,6 +107,7 @@ import io.legado.app.utils.FileUtils
 import io.legado.app.utils.launch
 import io.legado.app.utils.SelectImageContract
 import io.legado.app.utils.externalFiles
+import kotlinx.collections.immutable.toImmutableList
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -344,17 +347,27 @@ fun ThemeConfigScreen(
                         } else {
                             appShell.composeEngine
                         }
-                        // Switching the root theme disposes the menu. Keep it in a separate
-                        // window so disposal cannot remove a DecorView child during measurement.
-                        CompositionLocalProvider(LocalUseWindowPopupForMochiMenu provides true) {
-                            DropdownListSettingItem(
+                        val entries = stringArrayResource(R.array.composeEngine) +
+                            (if (couiSupported) "COUI" else stringResource(R.string.coui_theme_requires_android_14))
+                        val values = stringArrayResource(R.array.composeEngine_value) + coui
+                        val options = values.mapIndexed { index, value ->
+                            AppChoiceOption(id = value, label = entries.getOrElse(index) { value })
+                        }.toImmutableList()
+                        AppChoiceDropdown(
+                            options = options,
+                            selectedId = selectedValue,
+                            onSelect = { onIntent(ThemeConfigIntent.SetComposeEngine(it)) },
+                            title = stringResource(R.string.compose_engine),
+                            unavailableIds = if (couiSupported) emptySet() else setOf(coui),
+                            // 切换根主题会立刻重建 composition。Mochi 的浮层挂在 DecorView 上，
+                            // 必须等它收起并摘掉再提交，否则会在测量期间移除 DecorView 子视图。
+                            commitAfterDismiss = true,
+                        ) {
+                            SettingItem(
                                 title = stringResource(R.string.compose_engine),
-                                selectedValue = selectedValue,
-                                displayEntries = stringArrayResource(R.array.composeEngine) +
-                                    (if (couiSupported) "COUI" else stringResource(R.string.coui_theme_requires_android_14)),
-                                entryValues = stringArrayResource(R.array.composeEngine_value) + coui,
-                                unavailableValues = if (couiSupported) emptySet() else setOf(coui),
-                                onValueChange = { onIntent(ThemeConfigIntent.SetComposeEngine(it)) },
+                                option = entries.getOrElse(values.indexOf(selectedValue)) { selectedValue },
+                                modifier = this.modifier,
+                                interactive = false,
                             )
                         }
                     }
