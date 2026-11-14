@@ -1,49 +1,49 @@
 {
-  "tag_name": "3.26.3-Beta.5",
-  "name": "Pre-release 3.26.3-Beta.5",
-  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* book-info：合并后保留本地 ⋮ 菜单并按定制重排\n* reader：高亮规则支持白天/夜间两套颜色\n* build：本地 fork 构建复用项目 Android SDK 配置\n* ui：为其余主题的滚动标签栏补齐边缘渐隐\n* ui：恢复 COUI FAB 拖拽形变并固定白色图标\n* ui：升级 COUI 修复首次导航进入时的 FAB 透明\n* ui：接入 COUI 原生 FAB 并移除首帧补绘\n* menu：多选悬浮栏「更多」菜单原生化并统一 medium 档位\n* menu：补两处纯展示 trigger 的 COUI 锚点 modifier 透传\n* settingItem：设置行下拉锚点统一到右侧取值区\n* menu：补齐 AppActionMenu 的 Row 锚点并迁移三处列表项命令菜单\n* menu：AppChoiceDropdown 补 Icon 锚点并迁移两处顶栏分组筛选\n* menu：统一四引擎菜单入口并迁移顶栏/设置行/纯单选菜单\n",
+  "tag_name": "3.26.3-Beta.6",
+  "name": "Pre-release 3.26.3-Beta.6",
+  "body": "**此版本为测试版，会存在不稳定问题。**\n\n### [发布页](https://github.com/ZYO122/Legado-MAO/releases)\n### [Telegram 群组](https://t.me/Legado_MAO)\n\n### 更新内容\n\n* 书架：分组选择统一走居中弹窗\n* ui：Miuix 多选浮动栏还原组件库 catalog 形态\n* ui：修复 COUI 多选悬浮栏自采样导致的 native 闪退\n* theme：COUI/Miuix 主题细节与 Mochi sheet 内容自适应\n* menu：设置项下拉复用 RoundDropdownMenu\n* dialog：COUI 引擎改用原生弹窗并保留材质\n* test：修正 HyperOS 4 玻璃标签栏溢出滚动断言\n* theme：COUI 主题设置对齐 Miuix 并移除文字动画示例\n* ui：为 COUI 引擎补齐图标映射并隐藏行首图标\n",
   "prerelease": true,
-  "created_at": "2026-11-13T04:50:00Z",
+  "created_at": "2026-11-14T12:35:49Z",
   "assets": [
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.5/MAO-3.26.3-Beta.5-A.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.6/MAO-3.26.3-Beta.6-A.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-13T05:10:25Z",
+      "created_at": "2026-11-14T12:59:45Z",
       "download_count": 0,
-      "id": 742360401,
-      "name": "MAO-3.26.3-Beta.5-A.apk",
+      "id": 747502528,
+      "name": "MAO-3.26.3-Beta.6-A.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/742360401"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/747502528"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.5/MAO-3.26.3-Beta.5-B.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.6/MAO-3.26.3-Beta.6-B.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-13T05:10:25Z",
+      "created_at": "2026-11-14T12:59:44Z",
       "download_count": 0,
-      "id": 742360402,
-      "name": "MAO-3.26.3-Beta.5-B.apk",
+      "id": 747502526,
+      "name": "MAO-3.26.3-Beta.6-B.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/742360402"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/747502526"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.5/MAO-3.26.3-Beta.5.apk",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.6/MAO-3.26.3-Beta.6.apk",
       "content_type": "application/vnd.android.package-archive",
-      "created_at": "2026-11-13T05:10:25Z",
+      "created_at": "2026-11-14T12:59:45Z",
       "download_count": 0,
-      "id": 742360400,
-      "name": "MAO-3.26.3-Beta.5.apk",
+      "id": 747502531,
+      "name": "MAO-3.26.3-Beta.6.apk",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/742360400"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/747502531"
     },
     {
-      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.5/mapping.txt",
+      "browser_download_url": "https://github.com/ZYO122/Legado-MAO/releases/download/3.26.3-Beta.6/mapping.txt",
       "content_type": "text/plain",
-      "created_at": "2026-11-13T05:10:25Z",
+      "created_at": "2026-11-14T12:59:45Z",
       "download_count": 0,
-      "id": 742360399,
+      "id": 747502527,
       "name": "mapping.txt",
       "state": "uploaded",
-      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/742360399"
+      "url": "https://api.github.com/repos/ZYO122/Legado-MAO/releases/assets/747502527"
     }
   ]
 }
