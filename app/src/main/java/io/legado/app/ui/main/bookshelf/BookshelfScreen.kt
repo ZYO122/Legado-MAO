@@ -155,8 +155,6 @@ import io.legado.app.ui.widget.components.importComponents.SourceInputDialog
 import io.legado.app.ui.widget.components.lazylist.FastScrollLazyVerticalGrid
 import io.legado.app.ui.widget.components.list.TopFloatingStickyItem
 import io.legado.app.ui.widget.components.log.AppLogSheet
-import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenu
-import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenuItem
 import io.legado.app.ui.widget.components.privacy.PrivateLockedPage
 import io.legado.app.ui.widget.components.privacy.findFragmentActivity
 import io.legado.app.ui.widget.components.progressIndicator.AppCircularProgressIndicator
@@ -1156,46 +1154,6 @@ fun BookshelfScreen(
                         }
                     }
 
-
-                    if (summary.showGroupName) {
-                        RoundDropdownMenu(
-                            expanded = showGroupMenu,
-                            onDismissRequest = { onIntent(BookshelfIntent.DismissOverlay) }
-                        ) { dismiss ->
-                            uiState.groups.forEach { group ->
-                                RoundDropdownMenuItem(
-                                    text = group.groupName,
-                                    onClick = {
-                                        val targetIndex =
-                                            uiState.groups.indexOfFirst { it.groupId == group.groupId }
-                                        if (targetIndex >= 0) {
-                                            scope.launch {
-                                                if (pagerState.currentPage != targetIndex) {
-                                                    pagerState.animateScrollToPage(targetIndex)
-                                                }
-                                            }
-                                        }
-                                        if (uiState.isSearch || uiState.selectedGroupId != group.groupId) {
-                                            onIntent(BookshelfIntent.ChangeGroup(group.groupId))
-                                        }
-                                        if (bookGroupStyle == 2) {
-                                            onIntent(BookshelfIntent.SetInFolderRoot(false))
-                                        }
-                                        dismiss()
-                                    },
-                                    trailingIcon = {
-                                        if (currentMenuGroupId == group.groupId) {
-                                            AppIcon(
-                                                Icons.Default.Check,
-                                                null,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
                 }
             }
 
